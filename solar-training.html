@@ -1,0 +1,1470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Solar Training Module — SOL-U01 · REpower · ZSK Solutions</title>
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@700;800&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════════════
+   SOLAR TRAINING MODULE — Design System
+   REpower Erasmus+ KA220-VET · ZSK Solutions
+   ═══════════════════════════════════════════════════════════ */
+:root {
+  --bg0:#07100a; --bg1:#0c1a10; --bg2:#111f15; --bg3:#162419;
+  --card:#0f1c12;
+  --solar:#f5a623; --solar-d:rgba(245,166,35,0.12); --solar-g:rgba(245,166,35,0.35);
+  --green:#22c55e; --green-d:rgba(34,197,94,0.12);
+  --cyan:#00d4ff;  --cyan-d:rgba(0,212,255,0.12);
+  --red:#ef4444;   --red-d:rgba(239,68,68,0.12);
+  --amber:#f59e0b; --purple:#a855f7;
+  --text1:#f0f9f0; --text2:rgba(200,240,210,0.65); --text3:rgba(140,200,150,0.4);
+  --border:rgba(34,197,94,0.10); --borderb:rgba(34,197,94,0.25);
+  --font-ui:'Space Grotesk',sans-serif;
+  --font-mono:'JetBrains Mono',monospace;
+  --font-head:'Syne',sans-serif;
+  --r:6px;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{font-size:14px}
+body{background:var(--bg0);color:var(--text1);font-family:var(--font-ui);min-height:100vh;overflow-x:hidden}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:var(--bg1)}
+::-webkit-scrollbar-thumb{background:rgba(34,197,94,0.3);border-radius:2px}
+
+/* ── TOPBAR ── */
+#topbar{
+  height:52px;background:var(--bg1);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 20px;gap:16px;position:sticky;top:0;z-index:200;
+}
+.brand{font-family:var(--font-head);font-size:14px;font-weight:800;color:var(--solar);letter-spacing:0.06em}
+.brand-sub{font-family:var(--font-mono);font-size:9px;color:var(--text3);letter-spacing:0.1em;margin-top:1px}
+.nav-tabs{display:flex;gap:2px;flex:1;margin-left:16px}
+.nav-tab{
+  font-family:var(--font-mono);font-size:10px;letter-spacing:0.1em;
+  color:var(--text3);padding:6px 14px;border-bottom:2px solid transparent;
+  cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px;
+  text-transform:uppercase;white-space:nowrap;background:none;border-top:none;border-left:none;border-right:none;
+}
+.nav-tab:hover{color:var(--text2);border-bottom-color:rgba(34,197,94,0.3)}
+.nav-tab.active{color:var(--solar);border-bottom-color:var(--solar)}
+.eqf-switch{display:flex;gap:0;margin-left:auto}
+.eqf-btn{
+  font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:0.1em;
+  padding:6px 14px;border:1px solid var(--borderb);cursor:pointer;transition:all .2s;
+  background:transparent;color:var(--text3);
+}
+.eqf-btn:first-child{border-radius:var(--r) 0 0 var(--r)}
+.eqf-btn:last-child{border-radius:0 var(--r) var(--r) 0;border-left:none}
+.eqf-btn.active{background:var(--solar);color:#000;border-color:var(--solar)}
+.progress-ring{display:flex;align-items:center;gap:8px;margin-left:12px}
+.ring-label{font-family:var(--font-mono);font-size:9px;color:var(--text3);letter-spacing:0.1em}
+.ring-val{font-family:var(--font-mono);font-size:12px;font-weight:700;color:var(--solar)}
+
+/* ── LEVEL TABS ── */
+#level-nav{
+  display:flex;gap:0;padding:0 20px;
+  background:var(--bg1);border-bottom:1px solid var(--border);
+}
+.level-tab{
+  font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:0.12em;
+  color:var(--text3);padding:10px 20px;cursor:pointer;transition:all .2s;
+  border-bottom:3px solid transparent;text-transform:uppercase;
+  display:flex;align-items:center;gap:8px;background:none;border-top:none;border-left:none;border-right:none;
+}
+.level-tab:hover{color:var(--text2)}
+.level-tab.active{color:var(--solar);border-bottom-color:var(--solar)}
+.level-badge{
+  font-size:8px;padding:2px 6px;border-radius:10px;
+  background:var(--solar-d);color:var(--solar);border:1px solid rgba(245,166,35,0.3);
+}
+
+/* ── MAIN ── */
+#main{max-width:1600px;margin:0 auto;padding:16px 20px 40px}
+
+/* ── SECTION PANELS ── */
+.section-panel{display:none}
+.section-panel.active{display:block}
+
+/* ── CARD ── */
+.card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--r);overflow:hidden;margin-bottom:12px;
+}
+.card-hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px;border-bottom:1px solid var(--border);background:rgba(0,0,0,0.2);
+}
+.card-title{font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:0.14em;color:var(--text2);text-transform:uppercase}
+.card-body{padding:14px}
+
+/* ── KPI STRIP ── */
+.kpi-strip{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:12px}
+@media(max-width:1100px){.kpi-strip{grid-template-columns:repeat(3,1fr)}}
+.kpi{
+  background:var(--card);border:1px solid var(--border);border-top:2px solid var(--kpi-c,var(--solar));
+  border-radius:var(--r);padding:10px 12px;position:relative;overflow:hidden;
+}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:36px;background:linear-gradient(to bottom,var(--kpi-d,var(--solar-d)),transparent);pointer-events:none}
+.kpi-label{font-family:var(--font-mono);font-size:8px;letter-spacing:0.14em;color:var(--text3);text-transform:uppercase;margin-bottom:4px}
+.kpi-value{font-family:var(--font-mono);font-size:clamp(16px,1.8vw,22px);font-weight:700;color:var(--kpi-c,var(--solar));text-shadow:0 0 16px var(--kpi-c,var(--solar));line-height:1}
+.kpi-unit{font-family:var(--font-mono);font-size:9px;color:var(--text3);margin-top:2px}
+.kpi-sub{font-family:var(--font-mono);font-size:9px;color:var(--text2);margin-top:4px}
+.c-solar{--kpi-c:var(--solar);--kpi-d:var(--solar-d)}
+.c-green{--kpi-c:var(--green);--kpi-d:var(--green-d)}
+.c-cyan{--kpi-c:var(--cyan);--kpi-d:var(--cyan-d)}
+.c-red{--kpi-c:var(--red);--kpi-d:var(--red-d)}
+.c-purple{--kpi-c:var(--purple);--kpi-d:rgba(168,85,247,0.12)}
+
+/* ── PV DIAGRAM ── */
+#pv-canvas-wrap{position:relative;background:var(--bg2);border-radius:var(--r)}
+#pvCanvas{display:block;width:100%;cursor:pointer}
+#component-tooltip{
+  position:absolute;display:none;
+  background:rgba(7,16,10,0.97);border:1px solid var(--solar);
+  border-radius:var(--r);padding:12px 16px;
+  max-width:280px;z-index:100;pointer-events:none;
+}
+.tt-name{font-family:var(--font-mono);font-size:11px;font-weight:700;color:var(--solar);margin-bottom:6px;letter-spacing:0.1em}
+.tt-func{font-size:12px;color:var(--text2);line-height:1.5;margin-bottom:6px}
+.tt-kpi{font-family:var(--font-mono);font-size:9px;color:var(--green);letter-spacing:0.08em}
+.tt-eqf5{font-family:var(--font-mono);font-size:9px;color:var(--cyan);margin-top:4px;letter-spacing:0.06em}
+
+/* ── MID GRID ── */
+.mid-grid{display:grid;grid-template-columns:1fr 340px;gap:12px}
+@media(max-width:1100px){.mid-grid{grid-template-columns:1fr}}
+
+/* ── SLIDERS PANEL ── */
+.param-grid{display:flex;flex-direction:column;gap:10px}
+.param-row{display:flex;flex-direction:column;gap:4px}
+.param-hdr{display:flex;justify-content:space-between;align-items:center}
+.param-name{font-size:11px;color:var(--text2)}
+.param-val{font-family:var(--font-mono);font-size:12px;font-weight:700;color:var(--solar)}
+input[type=range]{
+  -webkit-appearance:none;width:100%;height:3px;
+  background:rgba(255,255,255,0.08);outline:none;cursor:pointer;border-radius:0;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:12px;height:12px;border-radius:2px;
+  background:var(--solar);box-shadow:0 0 8px var(--solar);cursor:pointer;
+}
+.formula-box{
+  font-family:var(--font-mono);font-size:10px;color:var(--text3);
+  background:rgba(0,0,0,0.3);padding:8px 10px;border-left:2px solid var(--solar);
+  line-height:1.6;margin-top:8px;
+}
+
+/* ── GRAPHS ── */
+.graphs-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.graph-cell{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.graph-cell-title{font-family:var(--font-mono);font-size:9px;font-weight:700;letter-spacing:0.12em;color:var(--text3);text-transform:uppercase;padding:7px 10px;border-bottom:1px solid var(--border)}
+.plotly-g{width:100%;height:140px}
+
+/* ── ANOMALY PANEL ── */
+.anomaly-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+@media(max-width:900px){.anomaly-grid{grid-template-columns:1fr}}
+.anomaly-card{
+  border:1px solid var(--border);border-radius:var(--r);padding:12px;
+  background:var(--bg2);cursor:pointer;transition:all .2s;
+}
+.anomaly-card:hover{border-color:var(--solar);background:rgba(245,166,35,0.04)}
+.anomaly-card.triggered{border-color:var(--red);background:var(--red-d)}
+.anomaly-title{font-family:var(--font-mono);font-size:10px;font-weight:700;color:var(--text2);letter-spacing:0.1em;margin-bottom:6px}
+.anomaly-desc{font-size:11px;color:var(--text3);line-height:1.5;margin-bottom:8px}
+.anomaly-btn{
+  font-family:var(--font-mono);font-size:9px;font-weight:700;letter-spacing:0.1em;
+  padding:5px 10px;border:1px solid var(--solar);color:var(--solar);
+  background:var(--solar-d);cursor:pointer;border-radius:3px;transition:all .2s;
+}
+.anomaly-btn:hover{background:var(--solar-g);color:#000}
+.anomaly-result{
+  font-family:var(--font-mono);font-size:10px;margin-top:8px;padding:8px;
+  background:rgba(0,0,0,0.3);border-radius:3px;display:none;line-height:1.6;
+}
+.anomaly-result.show{display:block}
+
+/* ── CHECKLIST ── */
+.checklist-grid{display:flex;flex-direction:column;gap:6px}
+.check-item{
+  display:grid;grid-template-columns:auto 1fr auto auto auto;
+  align-items:center;gap:10px;padding:10px 12px;
+  border:1px solid var(--border);border-radius:var(--r);
+  background:var(--bg2);transition:all .2s;
+}
+.check-item.ok{border-color:rgba(34,197,94,0.4);background:rgba(34,197,94,0.04)}
+.check-item.deviate{border-color:rgba(239,68,68,0.4);background:rgba(239,68,68,0.04)}
+.check-num{font-family:var(--font-mono);font-size:10px;font-weight:700;color:var(--text3);width:20px}
+.check-name{font-size:12px;color:var(--text2)}
+.check-input{
+  width:90px;background:var(--bg0);border:1px solid rgba(255,255,255,0.1);
+  color:var(--text1);font-family:var(--font-mono);font-size:12px;font-weight:600;
+  padding:4px 8px;border-radius:3px;outline:none;text-align:right;
+  transition:border-color .2s;
+}
+.check-input:focus{border-color:var(--solar);box-shadow:0 0 0 2px var(--solar-d)}
+.check-tolerance{font-family:var(--font-mono);font-size:9px;color:var(--text3);white-space:nowrap}
+.check-status{
+  font-family:var(--font-mono);font-size:9px;font-weight:700;letter-spacing:0.1em;
+  padding:3px 8px;border-radius:3px;border:1px solid;white-space:nowrap;
+}
+.status-ok{color:var(--green);border-color:rgba(34,197,94,0.3);background:var(--green-d)}
+.status-dev{color:var(--red);border-color:rgba(239,68,68,0.3);background:var(--red-d)}
+.status-empty{color:var(--text3);border-color:rgba(255,255,255,0.08);background:transparent}
+
+/* Deviation log */
+#deviation-log{margin-top:12px;display:none}
+#deviation-log.visible{display:block}
+.dev-log-item{
+  display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:start;
+  padding:10px 12px;border-left:3px solid var(--red);
+  background:var(--red-d);border-radius:0 var(--r) var(--r) 0;margin-bottom:6px;
+}
+.dev-item-num{font-family:var(--font-mono);font-size:10px;font-weight:700;color:var(--red)}
+.dev-item-body{display:flex;flex-direction:column;gap:3px}
+.dev-item-name{font-size:12px;color:var(--text1);font-weight:600}
+.dev-item-vals{font-family:var(--font-mono);font-size:10px;color:var(--text2)}
+.dev-item-note{font-size:11px;color:var(--text3);margin-top:2px}
+.dev-item-badge{font-family:var(--font-mono);font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;background:var(--red-d);color:var(--red);border:1px solid rgba(239,68,68,0.3);white-space:nowrap}
+
+/* Checklist summary */
+.check-summary{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:8px;
+  padding:12px;border-top:1px solid var(--border);margin-top:8px;
+}
+.sum-item{display:flex;flex-direction:column;gap:3px;align-items:center}
+.sum-val{font-family:var(--font-mono);font-size:18px;font-weight:700}
+.sum-label{font-family:var(--font-mono);font-size:8px;letter-spacing:0.12em;color:var(--text3);text-transform:uppercase}
+
+/* ════════ LEVEL 3 — DRAG & DROP ════════ */
+#labeling-canvas-wrap{position:relative}
+#labelCanvas{display:block;width:100%;border-radius:var(--r);cursor:default}
+
+.drag-pool{display:flex;flex-wrap:wrap;gap:8px;padding:12px}
+.drag-chip{
+  font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:0.08em;
+  padding:6px 12px;border:1px solid var(--solar);color:var(--solar);
+  background:var(--solar-d);border-radius:3px;cursor:grab;
+  transition:all .2s;user-select:none;
+}
+.drag-chip:hover{background:var(--solar-g);color:#000;transform:scale(1.04)}
+.drag-chip.used{opacity:0.3;cursor:not-allowed;pointer-events:none}
+.drag-chip.dragging{opacity:0.5;transform:scale(0.95)}
+
+.drop-zone{
+  position:absolute;border:2px dashed rgba(245,166,35,0.4);
+  border-radius:4px;display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-mono);font-size:9px;color:rgba(245,166,35,0.5);
+  transition:all .2s;cursor:pointer;
+}
+.drop-zone.over{border-color:var(--solar);background:var(--solar-d);color:var(--solar)}
+.drop-zone.correct{border-color:var(--green);background:var(--green-d);color:var(--green);border-style:solid}
+.drop-zone.wrong{border-color:var(--red);background:var(--red-d);color:var(--red);border-style:solid}
+.drop-zone.filled{border-style:solid;border-color:var(--solar);background:var(--solar-d);color:var(--solar)}
+
+/* Score panel */
+.score-panel{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 16px;background:var(--bg2);border-radius:var(--r);
+  border:1px solid var(--border);margin-bottom:8px;
+}
+.score-big{font-family:var(--font-mono);font-size:28px;font-weight:700;color:var(--solar);text-shadow:0 0 20px var(--solar)}
+.score-label{font-family:var(--font-mono);font-size:9px;color:var(--text3);letter-spacing:0.12em;text-transform:uppercase;margin-top:2px}
+.score-actions{display:flex;gap:8px}
+.act-btn{
+  font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:0.1em;
+  padding:8px 16px;border:1px solid;border-radius:var(--r);cursor:pointer;transition:all .2s;
+}
+.btn-reset{color:var(--text3);border-color:rgba(255,255,255,0.15);background:transparent}
+.btn-reset:hover{color:var(--text1);border-color:rgba(255,255,255,0.3)}
+.btn-check{color:var(--solar);border-color:var(--solar);background:var(--solar-d)}
+.btn-check:hover{background:var(--solar-g);color:#000}
+.btn-export{color:var(--green);border-color:var(--green);background:var(--green-d)}
+.btn-export:hover{background:rgba(34,197,94,0.3);color:#000}
+
+/* KPI mapping table (EQF5) */
+.kpi-map-table{width:100%;border-collapse:collapse}
+.kpi-map-table th{font-family:var(--font-mono);font-size:9px;letter-spacing:0.12em;color:var(--text3);text-transform:uppercase;padding:6px 10px;text-align:left;border-bottom:1px solid var(--border)}
+.kpi-map-table td{font-size:11px;color:var(--text2);padding:7px 10px;border-bottom:1px solid var(--border)}
+.kpi-map-table tr:last-child td{border-bottom:none}
+.kpi-map-table tr:hover td{background:rgba(255,255,255,0.02)}
+.kpi-chip{font-family:var(--font-mono);font-size:9px;padding:2px 7px;border-radius:3px;background:var(--cyan-d);color:var(--cyan);border:1px solid rgba(0,212,255,0.2)}
+
+/* ── UTILITIES ── */
+.tag{font-family:var(--font-mono);font-size:8px;letter-spacing:0.1em;padding:2px 7px;border-radius:3px;border:1px solid;text-transform:uppercase}
+.tag-ok{color:var(--green);border-color:rgba(34,197,94,0.3);background:var(--green-d)}
+.tag-warn{color:var(--amber);border-color:rgba(245,158,11,0.3);background:rgba(245,158,11,0.1)}
+.tag-info{color:var(--cyan);border-color:rgba(0,212,255,0.3);background:var(--cyan-d)}
+.tag-eqf5{color:var(--purple);border-color:rgba(168,85,247,0.3);background:rgba(168,85,247,0.1)}
+.divider{height:1px;background:var(--border);margin:12px 0}
+.hidden{display:none!important}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:900px){.row2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- ── TOPBAR ── -->
+<div id="topbar">
+  <div>
+    <div class="brand">☀ Solar Training Module</div>
+    <div class="brand-sub">SOL-U01 · REpower Erasmus+ KA220-VET · ZSK Solutions</div>
+  </div>
+  <nav class="nav-tabs">
+    <button class="nav-tab active" onclick="switchLevel(1)">① PV System &amp; KPIs</button>
+    <button class="nav-tab" onclick="switchLevel(2)">② Physics &amp; Anomaly</button>
+    <button class="nav-tab" onclick="switchLevel(3)">③ VR Labeling</button>
+  </nav>
+  <div class="eqf-switch">
+    <button class="eqf-btn active" id="eqf4btn" onclick="setEQF(4)">EQF 4</button>
+    <button class="eqf-btn" id="eqf5btn" onclick="setEQF(5)">EQF 5</button>
+  </div>
+  <div class="progress-ring">
+    <span class="ring-label">PROGRESS</span>
+    <span class="ring-val" id="topProgress">0%</span>
+  </div>
+</div>
+
+<!-- ── LEVEL TABS ── -->
+<div id="level-nav">
+  <button class="level-tab active" id="ltab1" onclick="switchLevel(1)">
+    <span>📋</span> Level 1 — PV System Overview
+    <span class="level-badge">SOL-U01 A1</span>
+  </button>
+  <button class="level-tab" id="ltab2" onclick="switchLevel(2)">
+    <span>⚡</span> Level 2 — Physics &amp; Anomaly Detection
+    <span class="level-badge">SOL-U01 A2–A3</span>
+  </button>
+  <button class="level-tab" id="ltab3" onclick="switchLevel(3)">
+    <span>🎮</span> Level 3 — VR Component Labeling
+    <span class="level-badge">SOL-U01 A1 VR</span>
+  </button>
+</div>
+
+<div id="main">
+
+<!-- ═══════════════════════════════════════════════════════
+     LEVEL 1 — PV System Overview + KPIs + Checklist
+═══════════════════════════════════════════════════════ -->
+<div class="section-panel active" id="panel1">
+
+  <!-- KPI STRIP -->
+  <div class="kpi-strip">
+    <div class="kpi c-solar">
+      <div class="kpi-label">Net Energy Output</div>
+      <div class="kpi-value" id="k-enet">—</div>
+      <div class="kpi-unit">kWh/day</div>
+      <div class="kpi-sub" id="k-enet-f">E=A·G·η·t</div>
+    </div>
+    <div class="kpi c-green">
+      <div class="kpi-label">Performance Ratio</div>
+      <div class="kpi-value" id="k-pr">—</div>
+      <div class="kpi-unit">PR (target ≥ 0.75)</div>
+      <div class="kpi-sub" id="k-pr-s">—</div>
+    </div>
+    <div class="kpi c-cyan">
+      <div class="kpi-label">Specific Yield</div>
+      <div class="kpi-value" id="k-sy">—</div>
+      <div class="kpi-unit">kWh/kWp·day</div>
+      <div class="kpi-sub">Yield = E_net / P_peak</div>
+    </div>
+    <div class="kpi c-solar">
+      <div class="kpi-label">Availability</div>
+      <div class="kpi-value" id="k-avail">—</div>
+      <div class="kpi-unit">% daylight hours</div>
+      <div class="kpi-sub" id="k-avail-s">—</div>
+    </div>
+    <div class="kpi c-red">
+      <div class="kpi-label">Total Loss</div>
+      <div class="kpi-value" id="k-loss">—</div>
+      <div class="kpi-unit">kWh/day</div>
+      <div class="kpi-sub" id="k-loss-s">—</div>
+    </div>
+    <div class="kpi c-purple">
+      <div class="kpi-label">Inverter Status</div>
+      <div class="kpi-value" id="k-inv">00</div>
+      <div class="kpi-unit">Code</div>
+      <div class="kpi-sub" id="k-inv-s">NORMAL</div>
+    </div>
+  </div>
+
+  <!-- PV DIAGRAM -->
+  <div class="card">
+    <div class="card-hdr">
+      <span class="card-title">☀ Interactive PV System Diagram — Click any component</span>
+      <div style="display:flex;gap:6px;align-items:center">
+        <span class="tag tag-info">46 kWp Rooftop System</span>
+        <span class="tag tag-ok" id="sys-status-tag">OPERATIONAL</span>
+      </div>
+    </div>
+    <div id="pv-canvas-wrap" class="card-body" style="padding:0;position:relative">
+      <canvas id="pvCanvas" height="320"></canvas>
+      <div id="component-tooltip"></div>
+    </div>
+    <div style="padding:8px 14px;border-top:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <span style="font-family:var(--font-mono);font-size:9px;color:var(--text3)">LEGEND:</span>
+      <span style="font-family:var(--font-mono);font-size:9px;color:var(--solar)">█ DC path</span>
+      <span style="font-family:var(--font-mono);font-size:9px;color:var(--cyan)">█ AC path</span>
+      <span style="font-family:var(--font-mono);font-size:9px;color:var(--green)">█ Grid</span>
+      <span style="font-family:var(--font-mono);font-size:9px;color:var(--text3);margin-left:auto">Click component for details · EQF 5: KPI linkage shown</span>
+    </div>
+  </div>
+
+  <!-- CHECKLIST -->
+  <div class="row2">
+    <div class="card">
+      <div class="card-hdr">
+        <span class="card-title">📋 Operational Checklist — DA-SOL-05</span>
+        <div style="display:flex;gap:6px">
+          <button class="act-btn btn-reset" style="padding:4px 10px;font-size:9px" onclick="resetChecklist()">Reset</button>
+          <button class="act-btn btn-check" style="padding:4px 10px;font-size:9px" onclick="runChecklist()">▶ Validate</button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="checklist-grid" id="checklist-grid"></div>
+        <div class="check-summary">
+          <div class="sum-item"><div class="sum-val" id="cs-total" style="color:var(--text2)">6</div><div class="sum-label">Items</div></div>
+          <div class="sum-item"><div class="sum-val" id="cs-ok" style="color:var(--green)">0</div><div class="sum-label">OK</div></div>
+          <div class="sum-item"><div class="sum-val" id="cs-dev" style="color:var(--red)">0</div><div class="sum-label">Deviations</div></div>
+          <div class="sum-item"><div class="sum-val" id="cs-pct" style="color:var(--solar)">—</div><div class="sum-label">Score</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <!-- Deviation Log -->
+      <div class="card" id="deviation-log">
+        <div class="card-hdr">
+          <span class="card-title" style="color:var(--red)">⚠ Deviation Log</span>
+          <span class="tag tag-eqf5 hidden" id="dev-eqf5-tag">EQF 5: Cause Analysis Required</span>
+        </div>
+        <div class="card-body" id="dev-log-body"></div>
+      </div>
+
+      <!-- Component Info (EQF5 KPI map) -->
+      <div class="card" id="eqf5-kpi-panel">
+        <div class="card-hdr">
+          <span class="card-title">🧠 Component → KPI Mapping</span>
+          <span class="tag tag-eqf5">EQF 5</span>
+        </div>
+        <div class="card-body" style="padding:0">
+          <table class="kpi-map-table">
+            <thead><tr><th>Component</th><th>Failure Mode</th><th>KPI Impact</th></tr></thead>
+            <tbody id="kpi-map-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div><!-- end panel1 -->
+
+<!-- ═══════════════════════════════════════════════════════
+     LEVEL 2 — Physics Engine + Anomaly Detection
+═══════════════════════════════════════════════════════ -->
+<div class="section-panel" id="panel2">
+
+  <div class="mid-grid">
+    <!-- PARAMS -->
+    <div class="card">
+      <div class="card-hdr">
+        <span class="card-title">⚙ System Parameters — Real-time Physics</span>
+        <span class="tag tag-info">Formula-driven</span>
+      </div>
+      <div class="card-body">
+        <div class="param-grid" id="param-grid"></div>
+        <div class="formula-box" id="formula-display">
+          E_net = A × (G/1000) × η × t × cos(|θ−30|°) × (1−dust) × (1−shade) × (1−β×ΔT)
+        </div>
+      </div>
+    </div>
+
+    <!-- LIVE RESULTS -->
+    <div>
+      <div class="kpi-strip" style="grid-template-columns:1fr 1fr;margin-bottom:12px">
+        <div class="kpi c-solar"><div class="kpi-label">E_solar_net</div><div class="kpi-value" id="p-enet">—</div><div class="kpi-unit">kWh/day</div></div>
+        <div class="kpi c-green"><div class="kpi-label">Performance Ratio</div><div class="kpi-value" id="p-pr">—</div><div class="kpi-unit">PR</div></div>
+        <div class="kpi c-red"><div class="kpi-label">Temp Loss</div><div class="kpi-value" id="p-lt">—</div><div class="kpi-unit">kWh</div></div>
+        <div class="kpi c-red"><div class="kpi-label">Dust Loss</div><div class="kpi-value" id="p-ld">—</div><div class="kpi-unit">kWh</div></div>
+        <div class="kpi c-red"><div class="kpi-label">Shade Loss</div><div class="kpi-value" id="p-ls">—</div><div class="kpi-unit">kWh</div></div>
+        <div class="kpi c-cyan"><div class="kpi-label">Cleaning Worth?</div><div class="kpi-value" id="p-clean" style="font-size:14px">—</div><div class="kpi-unit">Decision</div></div>
+      </div>
+      <div class="card">
+        <div class="card-hdr"><span class="card-title">📐 Calculation Trace</span></div>
+        <div class="card-body" id="calc-trace" style="font-family:var(--font-mono);font-size:10px;color:var(--text3);line-height:1.8"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GRAPHS -->
+  <div class="graphs-grid" style="margin-bottom:12px">
+    <div class="graph-cell">
+      <div class="graph-cell-title">Tilt Angle vs Solar Energy</div>
+      <div class="plotly-g" id="g2-tilt"></div>
+    </div>
+    <div class="graph-cell">
+      <div class="graph-cell-title">Azimuth vs Solar Energy</div>
+      <div class="plotly-g" id="g2-az"></div>
+    </div>
+    <div class="graph-cell">
+      <div class="graph-cell-title">Irradiance vs Net Energy</div>
+      <div class="plotly-g" id="g2-irr"></div>
+    </div>
+    <div class="graph-cell">
+      <div class="graph-cell-title">Daily Production Profile (Hourly)</div>
+      <div class="plotly-g" id="g2-hourly"></div>
+    </div>
+  </div>
+
+  <!-- ANOMALY DETECTION -->
+  <div class="card">
+    <div class="card-hdr">
+      <span class="card-title">🔍 Anomaly / Surprise Detection — SOL-U01 A3</span>
+      <span class="tag tag-eqf5">EQF 5: Cause Analysis</span>
+    </div>
+    <div class="card-body">
+      <div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);margin-bottom:10px;letter-spacing:0.06em">
+        Click a scenario to trigger anomaly → identify the affected KPIs and root cause
+      </div>
+      <div class="anomaly-grid" id="anomaly-grid"></div>
+    </div>
+  </div>
+</div><!-- end panel2 -->
+
+<!-- ═══════════════════════════════════════════════════════
+     LEVEL 3 — VR Component Labeling (SOL-U01 A1 VR)
+═══════════════════════════════════════════════════════ -->
+<div class="section-panel" id="panel3">
+
+  <!-- SCORE -->
+  <div class="score-panel">
+    <div>
+      <div class="score-big" id="l3-score">0 / 7</div>
+      <div class="score-label">Components Correctly Labeled</div>
+    </div>
+    <div style="text-align:center">
+      <div style="font-family:var(--font-mono);font-size:11px;color:var(--text3)" id="l3-timer">⏱ 15:00</div>
+      <div style="font-family:var(--font-mono);font-size:9px;color:var(--text3);margin-top:2px">Time Remaining</div>
+    </div>
+    <div class="score-actions">
+      <button class="act-btn btn-reset" onclick="resetLabeling()">↺ Reset</button>
+      <button class="act-btn btn-check" onclick="checkLabeling()">✓ Check Labels</button>
+      <button class="act-btn btn-export" onclick="exportReport()">↓ Export Report</button>
+    </div>
+  </div>
+
+  <!-- DRAG POOL -->
+  <div class="card" style="margin-bottom:8px">
+    <div class="card-hdr">
+      <span class="card-title">🏷 Component Name Pool — Drag to the schematic</span>
+      <span class="tag tag-info" id="l3-remaining">7 remaining</span>
+    </div>
+    <div class="drag-pool" id="drag-pool"></div>
+  </div>
+
+  <!-- LABELING CANVAS -->
+  <div class="card">
+    <div class="card-hdr">
+      <span class="card-title">📐 PV System Schematic — Drop zones highlighted</span>
+      <div style="display:flex;gap:6px">
+        <span class="tag tag-ok">✓ Correct = green</span>
+        <span class="tag" style="color:var(--red);border-color:rgba(239,68,68,0.3)">✗ Wrong = red</span>
+      </div>
+    </div>
+    <div id="labeling-canvas-wrap" class="card-body" style="padding:0;position:relative;min-height:360px">
+      <canvas id="labelCanvas" height="360"></canvas>
+    </div>
+  </div>
+
+  <!-- EQF5: KPI QUIZ -->
+  <div class="card" id="kpi-quiz-panel">
+    <div class="card-hdr">
+      <span class="card-title">🧠 EQF 5 — KPI Link Quiz</span>
+      <span class="tag tag-eqf5">Analyse / Optimise</span>
+    </div>
+    <div class="card-body">
+      <div style="font-size:12px;color:var(--text2);margin-bottom:12px">
+        For each component below, select the KPI it most directly affects:
+      </div>
+      <div id="kpi-quiz" style="display:flex;flex-direction:column;gap:8px"></div>
+      <div style="margin-top:12px;display:flex;gap:8px">
+        <button class="act-btn btn-check" onclick="checkKPIQuiz()">✓ Check KPI Answers</button>
+        <span id="kpi-quiz-result" style="font-family:var(--font-mono);font-size:11px;color:var(--green);align-self:center"></span>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end panel3 -->
+</div><!-- end main -->
+
+<script>
+'use strict';
+/* ════════════════════════════════════════════════════════════
+   SOLAR TRAINING MODULE — JavaScript
+   ZSK Solutions · REpower KA220-VET
+   ════════════════════════════════════════════════════════════ */
+
+/* ── STATE ── */
+let EQF = 4;
+let currentLevel = 1;
+let progress = { l1: false, l2: false, l3: false };
+let labelTimer = null, labelSeconds = 900;
+let l3Placed = {};
+
+/* ── COMPONENT DATA ── */
+const COMPONENTS = [
+  {
+    id:'pv_module', name:'PV Module (Array)',
+    func:'Converts solar irradiance into DC electricity via photovoltaic effect. Multiple modules form strings; strings form the array.',
+    kpi:'Module current (Isc), string voltage (Voc), DC power output',
+    eqf5:'Failure mode: hotspot / soiling → Isc drops → string power loss → PR decreases proportionally. Formula: P_module = Vmp × Imp',
+    failMode:'Hotspot / Soiling', kpiImpact:'DC yield loss, PR ↓',
+    color:'#f5a623', x:0.04, y:0.10, w:0.20, h:0.60,
+  },
+  {
+    id:'dc_string', name:'DC String Wiring',
+    func:'Connects PV modules in series to reach target DC voltage. String voltage = N × Vmp. Carries DC current to combiner box.',
+    kpi:'String voltage (±5% of nominal Voc), string current',
+    eqf5:'Open-circuit fault → string output = 0 W. Monitoring: compare string-level current across MPPT inputs.',
+    failMode:'Open circuit / connector fault', kpiImpact:'String power = 0, array PR ↓',
+    color:'#f5a623', x:0.26, y:0.25, w:0.06, h:0.30,
+  },
+  {
+    id:'dc_combiner', name:'DC Combiner Box',
+    func:'Aggregates multiple strings into a single DC feed. Contains string fuses and monitoring terminals.',
+    kpi:'Per-string current monitoring, fuse status',
+    eqf5:'Fuse failure → affected string output = 0. Combined DC power to inverter drops by 1/N strings.',
+    failMode:'Fuse failure', kpiImpact:'Array DC power ↓, yield gap',
+    color:'#f5a623', x:0.33, y:0.30, w:0.08, h:0.20,
+  },
+  {
+    id:'dc_disconnect', name:'DC Disconnect Switch',
+    func:'Safety switch to isolate PV array from inverter for maintenance (LOTO). Must be OFF before any inverter work.',
+    kpi:'Safety compliance — not a production KPI',
+    eqf5:'Maintenance procedure: always open DC disconnect before touching inverter. LOTO principle.',
+    failMode:'Inadvertent opening', kpiImpact:'Full system offline (safety action)',
+    color:'#e07010', x:0.43, y:0.30, w:0.06, h:0.20,
+  },
+  {
+    id:'inverter', name:'String Inverter',
+    func:'Converts DC from PV array to grid-compatible AC (230V/50Hz). Contains MPPT (Maximum Power Point Tracking) algorithm.',
+    kpi:'AC power output, DC/AC conversion efficiency, PR, availability, inverter status code',
+    eqf5:'Status codes: 00=NORMAL, 01=WARNING, ≥02=FAULT. Inverter offline → availability=0%, daily yield=0 kWh. MPPT tracking affects PR directly.',
+    failMode:'Inverter fault / offline', kpiImpact:'Availability=0%, PR=0, daily yield=0',
+    color:'#00d4ff', x:0.51, y:0.28, w:0.10, h:0.24,
+  },
+  {
+    id:'ac_breaker', name:'AC Circuit Breaker + RCD',
+    func:'Protects AC wiring from overcurrent. RCD (Residual Current Device) detects earth faults and trips to protect people.',
+    kpi:'AC output current (within ±10% of rated), system availability',
+    eqf5:'Nuisance trip → system offline, availability drops. AC current monitoring: check vs rated value ±10%.',
+    failMode:'Nuisance trip', kpiImpact:'Full system offline, availability=0%',
+    color:'#00d4ff', x:0.63, y:0.28, w:0.06, h:0.24,
+  },
+  {
+    id:'smart_meter', name:'Smart kWh Meter',
+    func:'Measures AC energy delivered to grid (kWh). Provides data for monitoring dashboard, billing, and performance analysis.',
+    kpi:'Daily energy yield (kWh), cumulative production, communication status',
+    eqf5:'Meter fault / comm loss → energy yield data unavailable. No production loss but KPI tracking fails. Monitoring blind spot.',
+    failMode:'Communication loss / meter fault', kpiImpact:'KPI data unavailable (no production loss)',
+    color:'#22c55e', x:0.71, y:0.28, w:0.08, h:0.24,
+  },
+];
+
+/* ── CHECKLIST DATA ── */
+const CHECKLIST_ITEMS = [
+  { id:1, name:'Inverter Status Code',         unit:'code',  nominal:'00 or 01', min:0, max:1,    defaultVal:0,   hint:'00=NORMAL, 01=WARNING, ≥02=FAULT' },
+  { id:2, name:'DC String Voltage (per MPPT)', unit:'V',     nominal:'±5% Voc',  min:572, max:632, defaultVal:598,  hint:'Nominal Voc=630V → tolerance 598.5–661.5V' },
+  { id:3, name:'AC Grid Voltage',              unit:'V',     nominal:'207–253V',  min:207, max:253, defaultVal:230,  hint:'EN 50160 requirement: 207–253V' },
+  { id:4, name:'AC Output Current',            unit:'A',     nominal:'±10% rated',min:72, max:88,  defaultVal:80,   hint:'Rated=80A → tolerance 72–88A' },
+  { id:5, name:'Daily Energy Yield vs Baseline',unit:'%',    nominal:'±10%',      min:90,  max:110, defaultVal:100,  hint:'Enter % of expected baseline. <90% = deviation' },
+  { id:6, name:'System Availability',          unit:'%',     nominal:'≥95%',      min:95,  max:100, defaultVal:100,  hint:'Inverter online for ≥95% of daylight hours' },
+];
+
+/* ── PHYSICS ENGINE (solar only) ── */
+const Solar = {
+  // E_solar = A × (G/1000) × eta × t
+  calcGross(A, G, eta, t) { return A * (G/1000) * eta * t; },
+  // L_temp = beta × (Tcell - Tref)
+  calcLtemp(beta, Tcell, Tref) { return Math.max(0, beta * (Tcell - Tref)); },
+  // F_angle = max(0, cos(|tilt-30|))
+  calcFangle(tilt) { return Math.max(0, Math.cos(Math.abs(tilt-30)*Math.PI/180)); },
+  // F_az = max(0.5, cos(|az-180|))
+  calcFaz(az) { return Math.max(0.5, Math.cos(Math.abs(az-180)*Math.PI/180)); },
+  // C_f = 1 - dustLoss
+  calcCf(dust) { return 1 - dust; },
+
+  calculate(p) {
+    const E_gross = this.calcGross(p.area, p.irr, p.eta, p.time);
+    const L_temp  = this.calcLtemp(p.beta, p.Tcell, 25);
+    const F_ang   = this.calcFangle(p.tilt);
+    const F_az    = this.calcFaz(p.azimuth);
+    const C_f     = this.calcCf(p.dust);
+    const E_net   = E_gross * F_ang * F_az * C_f * (1-p.shade) * Math.max(0, 1-L_temp);
+    const P_peak  = p.area * p.eta; // kWp
+    const E_ref   = p.area * (p.irr/1000) * p.time; // reference yield
+    const PR      = E_ref > 0 ? E_net / E_ref : 0;
+    const SY      = P_peak > 0 ? E_net / P_peak : 0;
+    const avail   = p.inverterOnline ? 100 : 0;
+    const loss_t  = E_gross * L_temp;
+    const loss_d  = E_gross * p.dust;
+    const loss_s  = E_gross * p.shade;
+    const loss_ang= E_gross * (1-F_ang);
+    // Cleaning decision: energy recovered value vs cost
+    const EPRICE = 0.12;
+    const energyRecoveredVal = p.dust * E_gross * EPRICE;
+    const cleanWorth = energyRecoveredVal > p.cleanCost;
+    return { E_gross, E_net:Math.max(0,E_net), L_temp, F_ang, F_az, C_f,
+             PR:Math.min(1,PR), SY, avail, loss_t, loss_d, loss_s, loss_ang,
+             P_peak, cleanWorth, energyRecoveredVal };
+  },
+
+  // Hourly profile (sunrise to sunset, Gaussian-like)
+  hourlyProfile(p) {
+    const hours=[], vals=[];
+    for(let h=6; h<=20; h+=0.5){
+      const t_norm = (h-13)/5; // peak at 13:00
+      const G_h = p.irr * Math.max(0, Math.exp(-t_norm*t_norm*0.8));
+      const e = this.calculate({...p, irr:G_h, time:0.5});
+      hours.push(h); vals.push(e.E_net);
+    }
+    return {hours, vals};
+  }
+};
+
+/* ── CURRENT PARAMS ── */
+let P = {
+  area:200, irr:850, eta:0.225, time:8,
+  tilt:32, azimuth:180, Tcell:35, beta:0.0045,
+  dust:0.15, shade:0.05, cleanCost:120,
+  inverterOnline:true,
+};
+
+/* ═══════════════════ LEVEL 1 ═══════════════════ */
+
+/* ── PV DIAGRAM ── */
+function initPVCanvas() {
+  const canvas = document.getElementById('pvCanvas');
+  const wrap   = document.getElementById('pv-canvas-wrap');
+  canvas.width  = wrap.offsetWidth || 900;
+  canvas.height = 320;
+  drawPVDiagram();
+}
+
+function drawPVDiagram() {
+  const canvas = document.getElementById('pvCanvas');
+  if (!canvas) return;
+  canvas.width = canvas.parentElement.offsetWidth || 900;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0,0,W,H);
+
+  // Background
+  const bg = ctx.createLinearGradient(0,0,0,H);
+  bg.addColorStop(0,'#0a1a0d'); bg.addColorStop(1,'#061209');
+  ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
+
+  // Grid
+  ctx.strokeStyle='rgba(34,197,94,0.05)'; ctx.lineWidth=1;
+  for(let x=0;x<W;x+=40){ ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke(); }
+  for(let y=0;y<H;y+=40){ ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke(); }
+
+  // Sun
+  ctx.shadowBlur=30; ctx.shadowColor='#f5a623';
+  ctx.fillStyle='#f5a623';
+  ctx.beginPath(); ctx.arc(40,40,18,0,Math.PI*2); ctx.fill();
+  ctx.shadowBlur=0;
+  // Sun rays
+  ctx.strokeStyle='rgba(245,166,35,0.3)'; ctx.lineWidth=1.5;
+  for(let a=0;a<8;a++){
+    const angle=a*Math.PI/4;
+    ctx.beginPath(); ctx.moveTo(40+Math.cos(angle)*22,40+Math.sin(angle)*22);
+    ctx.lineTo(40+Math.cos(angle)*32,40+Math.sin(angle)*32); ctx.stroke();
+  }
+
+  // Draw each component
+  COMPONENTS.forEach(comp => {
+    const x=comp.x*W, y=comp.y*H, w=comp.w*W, h=comp.h*H;
+    // Shadow glow
+    ctx.shadowBlur=8; ctx.shadowColor=comp.color+'88';
+    ctx.fillStyle=comp.color+'22'; ctx.strokeStyle=comp.color; ctx.lineWidth=1.5;
+    ctx.fillRect(x,y,w,h); ctx.strokeRect(x,y,w,h);
+    ctx.shadowBlur=0;
+
+    // Label
+    ctx.font=`bold ${Math.min(11,w/8)}px JetBrains Mono`;
+    ctx.fillStyle=comp.color; ctx.textAlign='center'; ctx.textBaseline='middle';
+    const label = comp.name.split(' ')[0];
+    ctx.fillText(label, x+w/2, y+h/2-6);
+    ctx.font=`${Math.min(9,w/10)}px JetBrains Mono`;
+    ctx.fillStyle='rgba(200,240,210,0.5)';
+    const sub = comp.name.split(' ').slice(1).join(' ');
+    if(sub) ctx.fillText(sub.substring(0,12), x+w/2, y+h/2+8);
+  });
+
+  // Draw connecting lines (DC path: amber, AC path: cyan, grid: green)
+  drawConnections(ctx, W, H);
+
+  // Labels for paths
+  ctx.font='bold 8px JetBrains Mono'; ctx.textAlign='left';
+  ctx.fillStyle='rgba(245,166,35,0.6)'; ctx.fillText('DC PATH', 0.27*W, H*0.15);
+  ctx.fillStyle='rgba(0,212,255,0.6)';  ctx.fillText('AC PATH', 0.52*W, H*0.15);
+  ctx.fillStyle='rgba(34,197,94,0.6)';  ctx.fillText('GRID',    0.80*W, H*0.15);
+
+  // Grid box
+  ctx.fillStyle='rgba(34,197,94,0.1)'; ctx.strokeStyle='rgba(34,197,94,0.5)'; ctx.lineWidth=1.5;
+  ctx.fillRect(0.82*W, 0.25*H, 0.15*W, 0.30*H); ctx.strokeRect(0.82*W, 0.25*H, 0.15*W, 0.30*H);
+  ctx.font='bold 10px JetBrains Mono'; ctx.fillStyle='#22c55e'; ctx.textAlign='center';
+  ctx.fillText('GRID', 0.895*W, 0.40*H);
+  ctx.font='8px JetBrains Mono'; ctx.fillStyle='rgba(34,197,94,0.6)';
+  ctx.fillText('230V/50Hz', 0.895*W, 0.415*H+8);
+}
+
+function drawConnections(ctx, W, H) {
+  // DC: PV → Combiner
+  ctx.strokeStyle='rgba(245,166,35,0.6)'; ctx.lineWidth=2.5; ctx.setLineDash([6,3]);
+  ctx.beginPath(); ctx.moveTo(0.26*W,0.40*H); ctx.lineTo(0.33*W,0.40*H); ctx.stroke();
+  // Combiner → disconnect
+  ctx.beginPath(); ctx.moveTo(0.41*W,0.40*H); ctx.lineTo(0.43*W,0.40*H); ctx.stroke();
+  // Disconnect → inverter
+  ctx.beginPath(); ctx.moveTo(0.49*W,0.40*H); ctx.lineTo(0.51*W,0.40*H); ctx.stroke();
+  // DC string (vertical)
+  ctx.strokeStyle='rgba(245,166,35,0.4)'; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.moveTo(0.32*W,0.30*H); ctx.lineTo(0.33*W,0.30*H); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // AC: Inverter → Breaker
+  ctx.strokeStyle='rgba(0,212,255,0.6)'; ctx.lineWidth=2.5; ctx.setLineDash([8,4]);
+  ctx.beginPath(); ctx.moveTo(0.61*W,0.40*H); ctx.lineTo(0.63*W,0.40*H); ctx.stroke();
+  // Breaker → Meter
+  ctx.beginPath(); ctx.moveTo(0.69*W,0.40*H); ctx.lineTo(0.71*W,0.40*H); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Grid: Meter → Grid
+  ctx.strokeStyle='rgba(34,197,94,0.6)'; ctx.lineWidth=2.5;
+  ctx.beginPath(); ctx.moveTo(0.79*W,0.40*H); ctx.lineTo(0.82*W,0.40*H); ctx.stroke();
+
+  // Solar irradiance arrows (onto PV modules)
+  ctx.strokeStyle='rgba(245,166,35,0.4)'; ctx.lineWidth=1; ctx.setLineDash([4,4]);
+  for(let i=0;i<3;i++){
+    const sx=0.06*W + i*0.05*W;
+    ctx.beginPath(); ctx.moveTo(sx,0.05*H); ctx.lineTo(sx+0.04*W,0.10*H); ctx.stroke();
+  }
+  ctx.setLineDash([]);
+}
+
+/* ── TOOLTIP ── */
+function initTooltip() {
+  const canvas = document.getElementById('pvCanvas');
+  const tip    = document.getElementById('component-tooltip');
+  canvas.addEventListener('mousemove', e => {
+    const rect = canvas.getBoundingClientRect();
+    const mx   = (e.clientX-rect.left)/rect.width;
+    const my   = (e.clientY-rect.top)/rect.height;
+    const comp = COMPONENTS.find(c => mx>=c.x && mx<=c.x+c.w && my>=c.y && my<=c.y+c.h);
+    if(comp) {
+      tip.style.display='block';
+      tip.style.left = Math.min(e.clientX-rect.left+12, rect.width-290)+'px';
+      tip.style.top  = Math.max(e.clientY-rect.top-20, 0)+'px';
+      tip.innerHTML  = `<div class="tt-name">${comp.name}</div>
+        <div class="tt-func">${comp.func}</div>
+        <div class="tt-kpi">📊 KPI: ${comp.kpi}</div>
+        ${EQF===5?`<div class="tt-eqf5">🧠 EQF5: ${comp.eqf5}</div>`:''}`;
+    } else {
+      tip.style.display='none';
+    }
+  });
+  canvas.addEventListener('mouseleave', () => tip.style.display='none');
+}
+
+/* ── KPI CALCULATIONS ── */
+function updateKPIs() {
+  const r = Solar.calculate(P);
+  const fmt = (v,d=0) => isFinite(v)?v.toFixed(d):'—';
+  document.getElementById('k-enet').textContent   = fmt(r.E_net,1);
+  document.getElementById('k-pr').textContent     = fmt(r.PR,3);
+  document.getElementById('k-pr-s').textContent   = r.PR>=0.75?'✓ Target met':'⚠ Below target';
+  document.getElementById('k-sy').textContent     = fmt(r.SY,2);
+  document.getElementById('k-avail').textContent  = fmt(r.avail,0);
+  document.getElementById('k-avail-s').textContent= P.inverterOnline?'Online':'⚠ Offline';
+  const totalLoss = r.loss_t+r.loss_d+r.loss_s+r.loss_ang;
+  document.getElementById('k-loss').textContent   = fmt(totalLoss,1);
+  document.getElementById('k-loss-s').textContent = `${((totalLoss/Math.max(r.E_gross,0.1))*100).toFixed(1)}% of gross`;
+}
+
+/* ── CHECKLIST ── */
+function buildChecklist() {
+  const grid = document.getElementById('checklist-grid');
+  grid.innerHTML = CHECKLIST_ITEMS.map(item => `
+    <div class="check-item" id="ci-${item.id}">
+      <div class="check-num">${item.id}</div>
+      <div>
+        <div class="check-name">${item.name}</div>
+        <div style="font-size:10px;color:var(--text3)">${item.hint}</div>
+      </div>
+      <input class="check-input" type="number" id="cinp-${item.id}" placeholder="${item.defaultVal}" value="${item.defaultVal}" step="any" oninput="liveCheck(${item.id})">
+      <div class="check-tolerance">${item.nominal} ${item.unit}</div>
+      <div class="check-status status-empty" id="cst-${item.id}">—</div>
+    </div>`).join('');
+}
+
+function liveCheck(id) {
+  const item  = CHECKLIST_ITEMS.find(i=>i.id===id);
+  const val   = parseFloat(document.getElementById(`cinp-${id}`).value);
+  const el    = document.getElementById(`ci-${id}`);
+  const stEl  = document.getElementById(`cst-${id}`);
+  if(isNaN(val)){ stEl.className='check-status status-empty'; stEl.textContent='—'; el.className='check-item'; return; }
+  const ok = val>=item.min && val<=item.max;
+  el.className  = 'check-item ' + (ok?'ok':'deviate');
+  stEl.className= 'check-status ' + (ok?'status-ok':'status-dev');
+  stEl.textContent = ok ? '✓ OK' : '⚠ DEVIATE';
+}
+
+function runChecklist() {
+  let okCount=0, devItems=[];
+  CHECKLIST_ITEMS.forEach(item => {
+    const val = parseFloat(document.getElementById(`cinp-${item.id}`).value);
+    if(isNaN(val)) return;
+    const ok  = val>=item.min && val<=item.max;
+    liveCheck(item.id);
+    if(ok) okCount++;
+    else devItems.push({...item, val});
+  });
+  const total = CHECKLIST_ITEMS.length;
+  document.getElementById('cs-ok').textContent  = okCount;
+  document.getElementById('cs-dev').textContent = devItems.length;
+  document.getElementById('cs-pct').textContent = Math.round(okCount/total*100)+'%';
+  renderDeviationLog(devItems);
+  progress.l1 = okCount >= 5;
+  updateProgress();
+}
+
+function renderDeviationLog(devItems) {
+  const logEl  = document.getElementById('deviation-log');
+  const bodyEl = document.getElementById('dev-log-body');
+  const eqf5t  = document.getElementById('dev-eqf5-tag');
+  if(devItems.length===0){ logEl.classList.remove('visible'); return; }
+  logEl.classList.add('visible');
+  if(EQF===5) eqf5t.classList.remove('hidden'); else eqf5t.classList.add('hidden');
+  bodyEl.innerHTML = devItems.map(item => {
+    const diff = ((item.val-((item.min+item.max)/2))/((item.min+item.max)/2)*100).toFixed(1);
+    return `<div class="dev-log-item">
+      <div class="dev-item-num">ITEM ${item.id}</div>
+      <div class="dev-item-body">
+        <div class="dev-item-name">${item.name}</div>
+        <div class="dev-item-vals">Recorded: <b>${item.val} ${item.unit}</b> · Range: ${item.nominal}</div>
+        <div class="dev-item-note">${EQF===5?getDeviationNote(item):'Flag deviation and report to O&M supervisor'}</div>
+      </div>
+      <div class="dev-item-badge">${Math.abs(diff)}% deviation</div>
+    </div>`;
+  }).join('');
+}
+
+function getDeviationNote(item) {
+  const notes={
+    2:'String voltage below nominal Voc → possible string connection fault, shading event, or module degradation. Check individual string currents on MPPT inputs.',
+    3:'AC grid voltage outside EN 50160 range → possible grid disturbance. Log event, monitor trend. If persistent, notify grid operator.',
+    4:'AC output current below rated → inverter may be derated. Check inverter status code and thermal conditions.',
+    5:'Daily yield below expected baseline → check irradiance data, soiling level, and inverter MPPT performance. Calculate PR for root-cause isolation.',
+    6:'Availability below 95% threshold → inverter downtime exceeds acceptable limit. Review alarm log for fault events.',
+  };
+  return notes[item.id] || 'Investigate root cause and document in maintenance log.';
+}
+
+function resetChecklist() {
+  CHECKLIST_ITEMS.forEach(item=>{
+    document.getElementById(`cinp-${item.id}`).value=item.defaultVal;
+    document.getElementById(`ci-${item.id}`).className='check-item';
+    document.getElementById(`cst-${item.id}`).className='check-status status-empty';
+    document.getElementById(`cst-${item.id}`).textContent='—';
+  });
+  document.getElementById('cs-ok').textContent='0';
+  document.getElementById('cs-dev').textContent='0';
+  document.getElementById('cs-pct').textContent='—';
+  document.getElementById('deviation-log').classList.remove('visible');
+}
+
+/* ── KPI MAP TABLE ── */
+function buildKPIMap() {
+  const tbody = document.getElementById('kpi-map-body');
+  if(!tbody) return;
+  tbody.innerHTML = COMPONENTS.map(c=>`
+    <tr>
+      <td><b style="color:${c.color}">${c.name}</b></td>
+      <td style="color:var(--red)">${c.failMode}</td>
+      <td><span class="kpi-chip">${c.kpiImpact}</span></td>
+    </tr>`).join('');
+  document.getElementById('eqf5-kpi-panel').style.display = EQF===5?'block':'none';
+}
+
+/* ═══════════════════ LEVEL 2 ═══════════════════ */
+
+/* ── PARAM SLIDERS ── */
+const PARAMS_DEF = [
+  {key:'area',    label:'Panel Area (m²)',       min:50,   max:5000,  step:50,   fmt:v=>v},
+  {key:'irr',     label:'Irradiance (W/m²)',     min:100,  max:1200,  step:10,   fmt:v=>v},
+  {key:'eta',     label:'Panel Efficiency',      min:0.10, max:0.50,  step:0.005,fmt:v=>v.toFixed(3)},
+  {key:'tilt',    label:'Tilt Angle (°)',         min:0,    max:90,    step:1,    fmt:v=>v+'°'},
+  {key:'azimuth', label:'Azimuth (°)',            min:90,   max:270,   step:5,    fmt:v=>v+'°'},
+  {key:'Tcell',   label:'Cell Temperature (°C)', min:10,   max:80,    step:1,    fmt:v=>v+'°C'},
+  {key:'dust',    label:'Dust Loss',             min:0,    max:0.6,   step:0.01, fmt:v=>(v*100).toFixed(0)+'%'},
+  {key:'shade',   label:'Shade Loss',            min:0,    max:0.5,   step:0.01, fmt:v=>(v*100).toFixed(0)+'%'},
+  {key:'cleanCost',label:'Cleaning Cost ($)',    min:0,    max:500,   step:10,   fmt:v=>'$'+v},
+];
+
+function buildParamSliders() {
+  const grid = document.getElementById('param-grid');
+  if(!grid) return;
+  grid.innerHTML = PARAMS_DEF.map(def=>`
+    <div class="param-row">
+      <div class="param-hdr">
+        <span class="param-name">${def.label}</span>
+        <span class="param-val" id="pv-${def.key}">${def.fmt(P[def.key])}</span>
+      </div>
+      <input type="range" min="${def.min}" max="${def.max}" step="${def.step}" value="${P[def.key]}"
+        oninput="updateParam('${def.key}',this.value)">
+    </div>`).join('');
+}
+
+function updateParam(key, val) {
+  P[key] = parseFloat(val);
+  const def = PARAMS_DEF.find(d=>d.key===key);
+  document.getElementById(`pv-${key}`).textContent = def.fmt(P[key]);
+  runPhysics();
+}
+
+function runPhysics() {
+  const r = Solar.calculate(P);
+  document.getElementById('p-enet').textContent  = r.E_net.toFixed(1);
+  document.getElementById('p-pr').textContent    = r.PR.toFixed(3);
+  document.getElementById('p-lt').textContent    = r.loss_t.toFixed(1);
+  document.getElementById('p-ld').textContent    = r.loss_d.toFixed(1);
+  document.getElementById('p-ls').textContent    = r.loss_s.toFixed(1);
+  document.getElementById('p-clean').textContent = r.cleanWorth ? '✓ CLEAN' : '↻ DEFER';
+  document.getElementById('p-clean').style.color = r.cleanWorth ? 'var(--green)' : 'var(--amber)';
+
+  document.getElementById('calc-trace').innerHTML = [
+    `E_gross = ${P.area}m² × ${(P.irr/1000).toFixed(3)}kW/m² × ${P.eta} × ${P.time}h = ${r.E_gross.toFixed(2)} kWh`,
+    `L_temp  = ${P.beta} × (${P.Tcell}−25) = ${r.L_temp.toFixed(4)}  →  loss: ${r.loss_t.toFixed(2)} kWh`,
+    `F_angle = cos(|${P.tilt}−30|°) = ${r.F_ang.toFixed(3)}`,
+    `F_az    = cos(|${P.azimuth}−180|°) = ${r.F_az.toFixed(3)}`,
+    `C_f     = 1 − ${P.dust.toFixed(2)} = ${r.C_f.toFixed(2)}`,
+    `E_net   = ${r.E_gross.toFixed(2)} × ${r.F_ang.toFixed(3)} × ${r.F_az.toFixed(3)} × ${r.C_f.toFixed(3)} × (1−${P.shade}) × (1−${r.L_temp.toFixed(4)}) = <b style="color:var(--solar)">${r.E_net.toFixed(2)} kWh</b>`,
+    `PR      = E_net / E_ref = ${r.PR.toFixed(3)}  ${r.PR>=0.75?'✓':'⚠ below 0.75'}`,
+    `Clean?  Energy recovered value = $${r.energyRecoveredVal.toFixed(2)} vs cost = $${P.cleanCost} → ${r.cleanWorth?'CLEAN':'DEFER'}`,
+  ].join('<br>');
+
+  renderSensitivityCharts();
+  updateKPIs();
+  progress.l2 = true;
+  updateProgress();
+}
+
+/* ── SENSITIVITY CHARTS ── */
+const PLOTLY_CFG = {displayModeBar:false,responsive:true};
+const PL = (xt='',yt='') => ({
+  paper_bgcolor:'rgba(0,0,0,0)', plot_bgcolor:'rgba(0,0,0,0)',
+  font:{family:'JetBrains Mono',color:'rgba(140,200,150,0.6)',size:9},
+  margin:{l:38,r:8,t:4,b:28},
+  xaxis:{title:{text:xt,font:{size:8}},gridcolor:'rgba(34,197,94,0.07)',tickfont:{size:8}},
+  yaxis:{title:{text:yt,font:{size:8}},gridcolor:'rgba(34,197,94,0.07)',tickfont:{size:8}},
+  showlegend:false, hovermode:'x unified',
+  hoverlabel:{bgcolor:'rgba(7,16,10,0.95)',bordercolor:'rgba(245,166,35,0.5)',font:{color:'#f0f9f0',size:10}},
+});
+
+function renderSensitivityCharts() {
+  // Tilt vs E_net
+  const tilts=[],tE=[];
+  for(let t=0;t<=90;t++){tilts.push(t);tE.push(Solar.calculate({...P,tilt:t}).E_net);}
+  Plotly.react('g2-tilt',[{x:tilts,y:tE,type:'scatter',mode:'lines',fill:'tozeroy',line:{color:'rgba(245,166,35,0.9)',width:1.5},fillcolor:'rgba(245,166,35,0.07)',hovertemplate:'%{x}°→%{y:.1f}kWh<extra></extra>'},
+    {x:[P.tilt],y:[Solar.calculate(P).E_net],type:'scatter',mode:'markers',marker:{color:'#f5a623',size:8,symbol:'diamond'}}
+  ],PL('Tilt°','kWh'),PLOTLY_CFG);
+
+  // Azimuth
+  const azs=[],aE=[];
+  for(let a=90;a<=270;a+=5){azs.push(a);aE.push(Solar.calculate({...P,azimuth:a}).E_net);}
+  Plotly.react('g2-az',[{x:azs,y:aE,type:'scatter',mode:'lines',fill:'tozeroy',line:{color:'rgba(0,212,255,0.9)',width:1.5},fillcolor:'rgba(0,212,255,0.07)',hovertemplate:'%{x}°→%{y:.1f}kWh<extra></extra>'},
+    {x:[P.azimuth],y:[Solar.calculate(P).E_net],type:'scatter',mode:'markers',marker:{color:'#00d4ff',size:8,symbol:'diamond'}}
+  ],PL('Azimuth°','kWh'),PLOTLY_CFG);
+
+  // Irradiance
+  const irrs=[],iE=[];
+  for(let g=100;g<=1200;g+=20){irrs.push(g);iE.push(Solar.calculate({...P,irr:g}).E_net);}
+  Plotly.react('g2-irr',[{x:irrs,y:iE,type:'scatter',mode:'lines',fill:'tozeroy',line:{color:'rgba(34,197,94,0.9)',width:1.5},fillcolor:'rgba(34,197,94,0.07)',hovertemplate:'%{x}W/m²→%{y:.1f}kWh<extra></extra>'},
+    {x:[P.irr],y:[Solar.calculate(P).E_net],type:'scatter',mode:'markers',marker:{color:'#22c55e',size:8,symbol:'diamond'}}
+  ],PL('Irradiance W/m²','kWh'),PLOTLY_CFG);
+
+  // Hourly profile
+  const hp=Solar.hourlyProfile(P);
+  Plotly.react('g2-hourly',[{x:hp.hours,y:hp.vals,type:'scatter',mode:'lines',fill:'tozeroy',line:{color:'rgba(245,166,35,0.9)',width:1.5},fillcolor:'rgba(245,166,35,0.07)',hovertemplate:'%{x}:00→%{y:.2f}kWh<extra></extra>'}],PL('Hour','kWh per 30min'),PLOTLY_CFG);
+}
+
+/* ── ANOMALY SCENARIOS ── */
+const ANOMALIES = [
+  {
+    title:'Inverter Code 03 — Grid Fault',
+    desc:'Inverter shows status 03 (grid frequency out of range) for 45 minutes.',
+    trigger:()=>({ invCode:3, duration_min:45 }),
+    eqf4:'Inverter is in fault state. Log the event and notify O&M supervisor. Do NOT attempt reset.',
+    eqf5:`KPI chain: (1) Availability drops: 45/480 min = 9.4% downtime → availability = 90.6% < 95% threshold. (2) Energy loss = P_rated × (45/60h) = ${(P.area*P.eta*(P.irr/1000)*0.75).toFixed(1)} kWh. (3) Daily yield gap appears in monitoring dashboard. Root cause: grid frequency deviation. Action: log event reference, call grid operator if recurring.`,
+  },
+  {
+    title:'String Voltage 10% Below Nominal',
+    desc:'DC string voltage reads 567V vs nominal 630V (−10%). Below the ±5% tolerance.',
+    trigger:()=>({ stringV:567, nominal:630 }),
+    eqf4:'Deviation detected on DC string voltage. Flag on checklist. Complete deviation log.',
+    eqf5:`Deviation = (567−630)/630 × 100 = −10% → exceeds ±5% tolerance. Probable causes: (1) module or connector fault in string, (2) partial shading event, (3) MPPT tracking error. Immediate action: compare with other MPPT inputs. If only one MPPT affected → isolated string fault. Request O&M inspection.`,
+  },
+  {
+    title:'Daily Yield −18% Below Baseline',
+    desc:'Monitoring shows 82% of expected daily energy production.',
+    trigger:()=>({ yieldPct:82 }),
+    eqf4:'Yield gap detected. Flag on checklist item 5. Complete deviation log and report.',
+    eqf5:`Loss factor analysis: (1) Soiling: check dust level on modules. (2) Shading: verify horizon/obstacles. (3) Irradiance: compare measured vs historical GHI. (4) Inverter MPPT: check DC/AC efficiency in dashboard. Structured hypothesis: if irradiance = normal AND other strings OK → probable soiling. Cleaning ROI: loss_value = 0.18 × E_expected × $0.12/kWh.`,
+  },
+  {
+    title:'High Dust Loss — Cleaning Decision',
+    desc:'Dust loss estimated at 22%. Should cleaning be scheduled?',
+    trigger:()=>({ dust:0.22 }),
+    eqf4:'Dust level exceeds normal. Report to maintenance team for cleaning schedule assessment.',
+    eqf5:`Cleaning ROI formula: Energy_recovered_value = dust × E_gross × energy_price = 0.22 × ${Solar.calculate(P).E_gross.toFixed(1)} × $0.12 = $${(0.22*Solar.calculate(P).E_gross*0.12).toFixed(2)}/day. Cleaning cost = $${P.cleanCost}. Break-even days = ${(P.cleanCost/(0.22*Solar.calculate(P).E_gross*0.12)).toFixed(1)} days. Decision: ${0.22*Solar.calculate(P).E_gross*0.12 > P.cleanCost ? 'CLEAN NOW' : 'DEFER — check again in 7 days'}.`,
+  },
+  {
+    title:'AC Current Drop — Safety Priority',
+    desc:'AC output current = 73A vs rated 80A (−9%) AND daily yield = 82% of baseline.',
+    trigger:()=>({ acCurrent:73, ratedCurrent:80, yieldPct:82 }),
+    eqf4:'Two simultaneous deviations. Log both. Prioritise AC current (safety). Notify supervisor immediately.',
+    eqf5:`Priority analysis (EQF 5 reasoning): ITEM 4 (AC current) → deviation = −9%, close to ±10% threshold → HIGH priority (safety + output concern). ITEM 5 (yield) → deviation = −18% → MEDIUM priority (production loss). Root cause hypothesis: inverter derated due to thermal issue or internal fault. AC current drop precedes yield gap temporally → investigate inverter first. Action: check inverter temperature, cooling system, and status log before addressing yield gap.`,
+  },
+  {
+    title:'Smart Meter Communication Loss',
+    desc:'Monitoring system shows no energy data for 3 hours. Inverter operational.',
+    trigger:()=>({ meterComm:false }),
+    eqf4:'No production data received. Check meter communication link and report.',
+    eqf5:`Key distinction: communication fault ≠ production loss. Inverter status = NORMAL → system IS producing. KPI impact: daily yield data unavailable → monitoring blind spot, NOT actual loss. Action: (1) Estimate expected yield from irradiance data × system capacity. (2) Report comm fault to SCADA team. (3) Log data gap in maintenance record. (4) Restore comms before end of shift.`,
+  },
+];
+
+function buildAnomalyGrid() {
+  const grid = document.getElementById('anomaly-grid');
+  if(!grid) return;
+  grid.innerHTML = ANOMALIES.map((a,i)=>`
+    <div class="anomaly-card" id="ancard-${i}">
+      <div class="anomaly-title">${a.title}</div>
+      <div class="anomaly-desc">${a.desc}</div>
+      <button class="anomaly-btn" onclick="triggerAnomaly(${i})">⚡ Trigger Scenario</button>
+      <div class="anomaly-result" id="anres-${i}"></div>
+    </div>`).join('');
+}
+
+function triggerAnomaly(idx) {
+  const a   = ANOMALIES[idx];
+  const res = document.getElementById(`anres-${idx}`);
+  const card= document.getElementById(`ancard-${idx}`);
+  res.style.display='block';
+  res.innerHTML = EQF===5
+    ? `<span style="color:var(--cyan);font-size:9px;font-weight:700;letter-spacing:0.1em">EQF 5 ANALYSIS:</span><br>${a.eqf5}`
+    : `<span style="color:var(--solar);font-size:9px;font-weight:700;letter-spacing:0.1em">EQF 4 RESPONSE:</span><br>${a.eqf4}`;
+  card.classList.add('triggered');
+  progress.l2=true; updateProgress();
+}
+
+/* ═══════════════════ LEVEL 3 ═══════════════════ */
+
+const LABEL_COMPONENTS = COMPONENTS.map((c,i)=>({...c, solved:false, droppedLabel:null}));
+
+const DROP_ZONES_PERCENT = [
+  {id:'pv_module',  label:'PV Module\n(Array)',      x:0.04, y:0.10, w:0.20, h:0.60},
+  {id:'dc_string',  label:'DC String\nWiring',        x:0.26, y:0.25, w:0.06, h:0.30},
+  {id:'dc_combiner',label:'DC Combiner\nBox',         x:0.33, y:0.30, w:0.08, h:0.20},
+  {id:'dc_disconnect',label:'DC Disconnect\nSwitch',  x:0.43, y:0.30, w:0.06, h:0.20},
+  {id:'inverter',   label:'String\nInverter',         x:0.51, y:0.28, w:0.10, h:0.24},
+  {id:'ac_breaker', label:'AC Circuit\nBreaker+RCD',  x:0.63, y:0.28, w:0.06, h:0.24},
+  {id:'smart_meter',label:'Smart\nkWh Meter',         x:0.71, y:0.28, w:0.08, h:0.24},
+];
+
+let dropStates = {}; // id → placed label
+let draggedChip = null;
+
+function initLabeling() {
+  dropStates = {};
+  // Draw blank schematic
+  const canvas = document.getElementById('labelCanvas');
+  canvas.width  = canvas.parentElement.offsetWidth || 900;
+  canvas.height = 360;
+  drawLabelCanvas();
+
+  // Build drag chips
+  const pool = document.getElementById('drag-pool');
+  const names = COMPONENTS.map(c=>c.name);
+  // Shuffle
+  for(let i=names.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [names[i],names[j]]=[names[j],names[i]]; }
+  pool.innerHTML = names.map(n=>`
+    <div class="drag-chip" id="chip-${n.replace(/\s+/g,'_')}" draggable="true"
+      ondragstart="onDragStart(event,'${n}')" ondragend="onDragEnd(event)">
+      ${n}
+    </div>`).join('');
+
+  // Drop zones (overlaid divs)
+  renderDropZones(canvas);
+
+  // EQF5 KPI quiz
+  if(EQF===5) buildKPIQuiz();
+  document.getElementById('kpi-quiz-panel').style.display = EQF===5?'block':'none';
+
+  // Start timer
+  labelSeconds=900;
+  clearInterval(labelTimer);
+  labelTimer = setInterval(()=>{
+    labelSeconds--;
+    const m=Math.floor(labelSeconds/60), s=labelSeconds%60;
+    document.getElementById('l3-timer').textContent=`⏱ ${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    if(labelSeconds<=0){ clearInterval(labelTimer); checkLabeling(); }
+  },1000);
+}
+
+function drawLabelCanvas() {
+  const canvas = document.getElementById('labelCanvas');
+  if(!canvas) return;
+  canvas.width = canvas.parentElement.offsetWidth || 900;
+  const ctx = canvas.getContext('2d');
+  const W=canvas.width, H=canvas.height;
+  ctx.clearRect(0,0,W,H);
+
+  // Background
+  const bg=ctx.createLinearGradient(0,0,0,H);
+  bg.addColorStop(0,'#0a1a0d'); bg.addColorStop(1,'#061209');
+  ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
+
+  // Grid
+  ctx.strokeStyle='rgba(34,197,94,0.04)'; ctx.lineWidth=1;
+  for(let x=0;x<W;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+  for(let y=0;y<H;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+
+  // Sun
+  ctx.shadowBlur=20; ctx.shadowColor='#f5a623'; ctx.fillStyle='#f5a623';
+  ctx.beginPath(); ctx.arc(40,36,14,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
+
+  // Component outlines (blank — labels dropped by user)
+  DROP_ZONES_PERCENT.forEach(dz => {
+    const x=dz.x*W, y=dz.y*H, w=dz.w*W, h=dz.h*H;
+    const st = dropStates[dz.id];
+    if(st && st.checked) {
+      ctx.fillStyle  = st.correct?'rgba(34,197,94,0.15)':'rgba(239,68,68,0.15)';
+      ctx.strokeStyle= st.correct?'#22c55e':'#ef4444';
+    } else if(st) {
+      ctx.fillStyle='rgba(245,166,35,0.1)'; ctx.strokeStyle='rgba(245,166,35,0.6)';
+    } else {
+      ctx.fillStyle='rgba(255,255,255,0.02)'; ctx.strokeStyle='rgba(255,255,255,0.15)';
+    }
+    ctx.lineWidth=1.5; ctx.setLineDash([5,3]);
+    ctx.fillRect(x,y,w,h); ctx.strokeRect(x,y,w,h);
+    ctx.setLineDash([]);
+
+    // Placed label
+    if(st) {
+      ctx.font='bold 10px JetBrains Mono';
+      ctx.fillStyle= st.checked?(st.correct?'#22c55e':'#ef4444'):'#f5a623';
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      const lines=st.label.split(' ');
+      lines.forEach((l,li)=>ctx.fillText(l.substring(0,14), x+w/2, y+h/2+(li-lines.length/2+0.5)*14));
+    }
+  });
+
+  // Connections
+  drawConnections(ctx, W, H);
+
+  // Grid box
+  ctx.fillStyle='rgba(34,197,94,0.08)'; ctx.strokeStyle='rgba(34,197,94,0.4)'; ctx.lineWidth=1.5; ctx.setLineDash([]);
+  ctx.fillRect(0.82*W,0.28*H,0.14*W,0.24*H); ctx.strokeRect(0.82*W,0.28*H,0.14*W,0.24*H);
+  ctx.font='bold 9px JetBrains Mono'; ctx.fillStyle='#22c55e'; ctx.textAlign='center';
+  ctx.fillText('GRID', 0.89*W, 0.40*H);
+  ctx.font='8px JetBrains Mono'; ctx.fillStyle='rgba(34,197,94,0.5)';
+  ctx.fillText('230V / 50Hz', 0.89*W, 0.41*H+11);
+}
+
+function renderDropZones(canvas) {
+  // Remove old
+  document.querySelectorAll('.drop-zone').forEach(e=>e.remove());
+  const wrap = document.getElementById('labeling-canvas-wrap');
+  const W=canvas.width||900, H=360;
+  DROP_ZONES_PERCENT.forEach(dz=>{
+    const el=document.createElement('div');
+    el.className='drop-zone';
+    el.id='dz-'+dz.id;
+    el.style.left=(dz.x*100)+'%';
+    el.style.top=(dz.y/H*canvas.height*100/canvas.height)+'%'; // use percent of canvas height
+    el.style.top=(dz.y*100)+'%';
+    el.style.width=(dz.w*100)+'%';
+    el.style.height=(dz.h*100)+'%';
+    el.textContent='Drop here';
+    el.addEventListener('dragover',e=>{e.preventDefault();el.classList.add('over')});
+    el.addEventListener('dragleave',()=>el.classList.remove('over'));
+    el.addEventListener('drop',e=>{e.preventDefault();onDrop(e,dz.id);el.classList.remove('over')});
+    wrap.appendChild(el);
+  });
+}
+
+function onDragStart(e, name) {
+  draggedChip=name;
+  e.dataTransfer.setData('text/plain',name);
+  e.target.classList.add('dragging');
+}
+function onDragEnd(e){ e.target.classList.remove('dragging'); draggedChip=null; }
+
+function onDrop(e, dzId) {
+  const name=e.dataTransfer.getData('text/plain')||draggedChip;
+  if(!name) return;
+  dropStates[dzId]={label:name, checked:false, correct:false};
+  // Mark chip as used
+  const chipId='chip-'+name.replace(/\s+/g,'_');
+  const chip=document.getElementById(chipId);
+  if(chip) chip.classList.add('used');
+  // Update drop zone display
+  const dzEl=document.getElementById('dz-'+dzId);
+  if(dzEl){ dzEl.textContent=name; dzEl.classList.add('filled'); }
+  drawLabelCanvas();
+  updateRemaining();
+}
+
+function updateRemaining() {
+  const placed=Object.keys(dropStates).length;
+  document.getElementById('l3-remaining').textContent=(7-placed)+' remaining';
+}
+
+function checkLabeling() {
+  let correct=0;
+  DROP_ZONES_PERCENT.forEach(dz=>{
+    const st=dropStates[dz.id];
+    if(!st) return;
+    const comp=COMPONENTS.find(c=>c.id===dz.id);
+    st.checked=true;
+    st.correct=(st.label===comp.name);
+    if(st.correct) correct++;
+    const dzEl=document.getElementById('dz-'+dz.id);
+    if(dzEl){
+      dzEl.classList.remove('filled');
+      dzEl.classList.add(st.correct?'correct':'wrong');
+      dzEl.textContent=st.correct?'✓ '+st.label:'✗ '+st.label;
+    }
+  });
+  document.getElementById('l3-score').textContent=correct+' / 7';
+  document.getElementById('l3-score').style.color=correct>=6?'var(--green)':correct>=4?'var(--amber)':'var(--red)';
+  drawLabelCanvas();
+  progress.l3=correct>=5; updateProgress();
+}
+
+function resetLabeling() {
+  dropStates={};
+  clearInterval(labelTimer); labelSeconds=900;
+  document.getElementById('l3-timer').textContent='⏱ 15:00';
+  document.getElementById('l3-score').textContent='0 / 7';
+  document.getElementById('l3-score').style.color='var(--solar)';
+  document.querySelectorAll('.drag-chip').forEach(c=>c.classList.remove('used'));
+  document.querySelectorAll('.drop-zone').forEach(el=>{
+    el.className='drop-zone'; el.textContent='Drop here';
+  });
+  document.getElementById('l3-remaining').textContent='7 remaining';
+  drawLabelCanvas();
+  initLabeling();
+}
+
+/* ── EQF5 KPI QUIZ ── */
+const KPI_OPTIONS = ['DC power output / PR','System availability / daily yield','DC voltage monitoring','Safety compliance','AC output / PR / availability','Energy yield (kWh)','KPI tracking / monitoring data'];
+function buildKPIQuiz() {
+  const quiz=document.getElementById('kpi-quiz');
+  if(!quiz) return;
+  quiz.innerHTML=COMPONENTS.map((c,i)=>`
+    <div style="display:grid;grid-template-columns:200px 1fr;gap:12px;align-items:center;padding:8px;border:1px solid var(--border);border-radius:var(--r)">
+      <span style="font-size:12px;color:var(--solar);font-weight:600">${c.name}</span>
+      <select id="kq-${i}" style="background:var(--bg0);border:1px solid var(--border);color:var(--text1);font-family:var(--font-mono);font-size:10px;padding:5px 8px;border-radius:3px;outline:none">
+        <option value="">Select KPI…</option>
+        ${KPI_OPTIONS.map(o=>`<option value="${o}">${o}</option>`).join('')}
+      </select>
+    </div>`).join('');
+}
+
+function checkKPIQuiz() {
+  const correctAnswers=['DC power output / PR','DC voltage monitoring','DC voltage monitoring','Safety compliance','AC output / PR / availability','AC output / PR / availability','Energy yield (kWh)'];
+  let score=0;
+  COMPONENTS.forEach((c,i)=>{
+    const sel=document.getElementById(`kq-${i}`);
+    if(!sel) return;
+    const val=sel.value;
+    const ok=val===correctAnswers[i];
+    if(ok){ score++; sel.style.borderColor='var(--green)'; }
+    else { sel.style.borderColor='var(--red)'; }
+  });
+  document.getElementById('kpi-quiz-result').textContent=`Score: ${score}/7 ${score>=5?'✓ Pass':'✗ Review component-KPI relationships'}`;
+  document.getElementById('kpi-quiz-result').style.color=score>=5?'var(--green)':'var(--red)';
+}
+
+function exportReport() {
+  const r   = Solar.calculate(P);
+  const correct = DROP_ZONES_PERCENT.filter(dz=>{
+    const st=dropStates[dz.id]; if(!st||!st.checked) return false;
+    return COMPONENTS.find(c=>c.id===dz.id).name===st.label;
+  }).length;
+  const report={
+    title:'PV Component Identification Report',
+    module:'SOL-U01 — Operation of PV Systems for Stable Energy Production',
+    eqfLevel:'EQF '+EQF,
+    date:new Date().toISOString(),
+    candidate:'[Candidate Name]',
+    labelingScore:`${correct}/7`,
+    labelingPass:correct>=6,
+    physicsResults:{ E_net:r.E_net.toFixed(2), PR:r.PR.toFixed(3), SY:r.SY.toFixed(2) },
+    parameters:P,
+    components:DROP_ZONES_PERCENT.map(dz=>({
+      zone:dz.id, placed:dropStates[dz.id]?.label||'—',
+      correct:dropStates[dz.id]?.correct||false,
+    })),
+  };
+  const blob=new Blob([JSON.stringify(report,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download='SOL-U01-report.json'; a.click();
+  URL.revokeObjectURL(url);
+}
+
+/* ── PROGRESS ── */
+function updateProgress() {
+  const done=[progress.l1,progress.l2,progress.l3].filter(Boolean).length;
+  document.getElementById('topProgress').textContent=Math.round(done/3*100)+'%';
+}
+
+/* ── EQF SWITCH ── */
+function setEQF(level) {
+  EQF=level;
+  document.getElementById('eqf4btn').classList.toggle('active',level===4);
+  document.getElementById('eqf5btn').classList.toggle('active',level===5);
+  document.getElementById('eqf5-kpi-panel').style.display=level===5?'block':'none';
+  document.getElementById('kpi-quiz-panel').style.display=level===5&&currentLevel===3?'block':'none';
+  if(level===5) buildKPIQuiz();
+}
+
+/* ── LEVEL SWITCH ── */
+function switchLevel(n) {
+  currentLevel=n;
+  [1,2,3].forEach(i=>{
+    document.getElementById('panel'+i).classList.toggle('active',i===n);
+    document.getElementById('ltab'+i).classList.toggle('active',i===n);
+    document.querySelectorAll('.nav-tab').forEach((t,ti)=>t.classList.toggle('active',ti===n-1));
+  });
+  if(n===2){ runPhysics(); buildAnomalyGrid(); }
+  if(n===3){ initLabeling(); document.getElementById('kpi-quiz-panel').style.display=EQF===5?'block':'none'; }
+}
+
+/* ── INIT ── */
+document.addEventListener('DOMContentLoaded',()=>{
+  initPVCanvas();
+  initTooltip();
+  updateKPIs();
+  buildChecklist();
+  buildKPIMap();
+  buildParamSliders();
+  window.addEventListener('resize',()=>{
+    setTimeout(()=>{ initPVCanvas(); if(currentLevel===3) drawLabelCanvas(); },100);
+  });
+});
+</script>
+</body>
+</html>
