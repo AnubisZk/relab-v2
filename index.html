@@ -3444,7 +3444,14 @@ const App = (() => {
     // Source badge
     const statusEl = document.getElementById('opt-status');
     if (statusEl) {
-      statusEl.innerHTML = `✓ Optimal Found &nbsp;<span style="font-family:var(--font-mono);font-size:8px;padding:1px 6px;border-radius:3px;background:${sourceLabel.includes('RAILWAY')?'rgba(34,197,94,0.15)':'rgba(245,166,35,0.15)'};color:${sourceLabel.includes('RAILWAY')?'var(--green)':'var(--amber)';};border:1px solid ${sourceLabel.includes('RAILWAY')?'rgba(34,197,94,0.3)':'rgba(245,166,35,0.3)'}">${sourceLabel}</span>`;
+      const isRailway  = sourceLabel.includes('RAILWAY');
+      const badgeColor = isRailway ? '#22c55e' : '#f5a623';
+      const badgeBg    = isRailway ? 'rgba(34,197,94,0.15)' : 'rgba(245,166,35,0.15)';
+      const badgeBdr   = isRailway ? 'rgba(34,197,94,0.3)'  : 'rgba(245,166,35,0.3)';
+      const badge = '<span style="font-family:monospace;font-size:8px;padding:1px 6px;border-radius:3px;'
+        + 'background:' + badgeBg + ';color:' + badgeColor + ';border:1px solid ' + badgeBdr + '">'
+        + sourceLabel + '</span>';
+      statusEl.innerHTML = '\u2713 Optimal Found &nbsp;' + badge;
     }
   }
 
@@ -3913,6 +3920,8 @@ const App = (() => {
     const a     = document.createElement('a'); a.href=url; a.download='relab-scenarios.json'; a.click();
     URL.revokeObjectURL(url);
   }
+
+  function setView(v) {
     document.querySelectorAll('.scene-ctrl').forEach(b => b.classList.remove('active'));
     event.target.classList.add('active');
     drawScene();
