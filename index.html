@@ -3307,69 +3307,145 @@ const App = (() => {
   }
 
   /* ── OPTIMIZER ──────────────────────────────────────────── */
-  function startOptimize() {
+  async function startOptimize() {
     if (Optimizer.isRunning()) return;
     _params = readParams();
 
-    const status = document.getElementById('opt-status');
-    if (status) status.textContent = 'Running…';
-    document.getElementById('apply-btn').disabled = true;
+    const statusEl = document.getElementById('opt-status');
+    const progText = document.getElementById('prog-text');
+    const progFill = document.getElementById('prog-fill');
+    const progPct  = document.getElementById('prog-pct');
+    const progDetail = document.getElementById('prog-detail');
+    const applyBtn = document.getElementById('apply-btn');
+
+    if (statusEl) statusEl.textContent = 'Connecting to Railway API…';
+    if (applyBtn) applyBtn.disabled = true;
+    if (progFill) progFill.style.width = '10%';
+    if (progPct)  progPct.textContent = '10%';
+    if (progText) progText.textContent = 'Calling Railway SLSQP optimizer…';
+    if (progDetail) progDetail.textContent = 'POST /api/optimize → gradient-based, ~1-2 seconds';
+
+    // Try Railway API first
+    try {
+      const apiResult = await Promise.race([
+        apiOptimize(_params, 'slsqp'),
+        new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 15000))
+      ]);
+
+      if (apiResult && apiResult.best_params && !apiResult.error) {
+        // ── Railway SLSQP result ──────────────────────────────
+        if (progFill)  progFill.style.width = '100%';
+        if (progPct)   progPct.textContent  = '100%';
+        if (progText)  progText.textContent  = `✓ Railway SLSQP complete (${apiResult._meta?.elapsed_ms || '—'} ms)`;
+        if (progDetail) progDetail.textContent = `Method: ${apiResult.method} · ${apiResult.restarts || 5} restarts · Gradient-based`;
+        if (statusEl) { statusEl.textContent = '✓ Optimal Configuration Found!'; statusEl.style.color = 'var(--green)'; }
+
+        const bp = apiResult.best_params;
+        const res = apiResult.results;
+        const Z   = apiResult.Z;
+
+        // Store as _optResult for applyOptimized
+        _optResult = {
+          combo: {
+            tilt:     bp.tilt,
+            azimuth:  bp.azimuth,
+            yaw:      bp.yaw,
+            spacing:  bp.spacing,
+            bcap:     bp.battery_capacity,
+            cleaning: bp.cleaning_interval,
+          },
+          result: {
+            sRes: res?.solar    || {},
+            wRes: res?.wind     || {},
+            oRes: res?.offshore || {},
+            bRes: res?.battery  || {},
+            zRes: res?.objective|| { Z, totalEnergy: 0, totalCost: 0, coverage: 0, co2saved: 0 },
+            violations: res?.violations || [],
+          },
+          source: 'railway-slsqp',
+        };
+
+        renderOptimizeResult(_optResult, Z, 'RAILWAY SLSQP');
+        if (applyBtn) applyBtn.disabled = false;
+        return;
+      }
+    } catch (err) {
+      console.warn('[Optimizer] Railway API failed, falling back to JS Grid Search:', err.message);
+      if (progText) progText.textContent = '⚠ Railway unavailable — running JS Grid Search…';
+    }
+
+    // ── JS Grid Search fallback ───────────────────────────────
+    if (progFill)  progFill.style.width = '5%';
+    if (statusEl)  statusEl.textContent = 'Running JS Grid Search…';
+    if (statusEl)  statusEl.style.color = 'var(--amber)';
+    if (progDetail) progDetail.textContent = '~312,000 combinations · chunked requestAnimationFrame';
 
     Optimizer.run(_params, {
       onProgress: ({ count, total, pct, currentBestZ }) => {
-        document.getElementById('prog-fill').style.width = pct + '%';
-        document.getElementById('prog-pct').textContent  = pct + '%';
-        document.getElementById('prog-text').textContent = `Searching combinations…  Best Z: ${isFinite(currentBestZ) ? Math.round(currentBestZ).toLocaleString() : '—'}`;
-        document.getElementById('prog-detail').textContent = `${count.toLocaleString()} / ${total.toLocaleString()} evaluated`;
+        if (progFill) progFill.style.width = pct + '%';
+        if (progPct)  progPct.textContent  = pct + '%';
+        if (progText) progText.textContent = `JS Grid Search… Best Z: ${isFinite(currentBestZ) ? Math.round(currentBestZ).toLocaleString() : '—'}`;
+        if (progDetail) progDetail.textContent = `${count.toLocaleString()} / ${total.toLocaleString()} evaluated`;
       },
       onComplete: ({ found, result, combo, Z, totalEvaluated }) => {
-        if (status) status.textContent = found ? '✓ Optimal Configuration Found!' : '⚠ No Feasible Solution';
-        if (status) status.style.color = found ? 'var(--green)' : 'var(--red)';
-        document.getElementById('prog-text').textContent = `Search complete — ${totalEvaluated.toLocaleString()} combinations evaluated`;
-        document.getElementById('prog-fill').style.width = '100%';
-
+        if (statusEl) { statusEl.textContent = found ? '✓ Optimal Found (JS)' : '⚠ No Feasible Solution'; statusEl.style.color = found ? 'var(--green)' : 'var(--red)'; }
+        if (progText) progText.textContent = `JS Grid Search complete — ${totalEvaluated.toLocaleString()} evaluated`;
+        if (progFill) progFill.style.width = '100%';
         if (!found || !result || !combo) return;
-        _optResult = { result, combo };
-
-        // Current values for delta
-        const cur = _result || PhysicsEngine.calculate(_params);
-
-        const dFmt = (newV, oldV, unit='', dec=0) => {
-          const d = newV - oldV;
-          if (Math.abs(d) < 0.01) return '<span style="color:var(--text-3)">no change</span>';
-          const sign = d > 0 ? '▲ +' : '▼ ';
-          const col  = d > 0 ? 'var(--green)' : 'var(--amber)';
-          return `<span style="color:${col}">${sign}${Math.abs(d).toFixed(dec)}${unit}</span>`;
-        };
-
-        document.getElementById('op-tilt').textContent = combo.tilt + '°';
-        document.getElementById('op-tilt-d').innerHTML = dFmt(combo.tilt, _params.solar.tilt, '°', 0) + ` (was ${_params.solar.tilt}°)`;
-        document.getElementById('op-az').textContent   = combo.azimuth + '°';
-        document.getElementById('op-az-d').innerHTML   = dFmt(combo.azimuth, _params.solar.azimuth, '°', 0) + ` (was ${_params.solar.azimuth}°)`;
-        document.getElementById('op-yaw').textContent  = combo.yaw + '°';
-        document.getElementById('op-yaw-d').innerHTML  = dFmt(-combo.yaw, -(_params.wind.yawAngle||0), '°', 0) + ` (was ${_params.wind.yawAngle||0}°)`;
-        document.getElementById('op-sp').textContent   = combo.spacing + 'D';
-        document.getElementById('op-sp-d').innerHTML   = dFmt(combo.spacing, _params.wind.turbineSpacing, 'D', 1) + ` (was ${_params.wind.turbineSpacing}D)`;
-        document.getElementById('op-bc').textContent   = combo.bcap.toLocaleString() + ' kWh';
-        document.getElementById('op-bc-d').innerHTML   = dFmt(combo.bcap, _params.battery.capacity, ' kWh', 0) + ` (was ${_params.battery.capacity})`;
-        document.getElementById('op-cl').textContent   = combo.cleaning + ' days';
-        document.getElementById('op-cl-d').innerHTML   = dFmt(-combo.cleaning, -_params.solar.cleaningInterval, ' d', 0) + ` (was ${_params.solar.cleaningInterval}d)`;
-
-        const optE = result.zRes.totalEnergy;
-        const curE = cur.zRes.totalEnergy;
-        const optC = result.zRes.totalCost;
-        const curC = cur.zRes.totalCost;
-
-        document.getElementById('os-energy').textContent   = Math.round(optE).toLocaleString() + ' kWh/day';
-        document.getElementById('os-energy-d').innerHTML   = dFmt(optE, curE, ' kWh', 0);
-        document.getElementById('os-cost').textContent     = '$' + Math.round(optC).toLocaleString();
-        document.getElementById('os-cost-d').innerHTML     = dFmt(-optC, -curC, '', 0);
-        document.getElementById('os-Z').textContent        = Math.round(Z).toLocaleString();
-        document.getElementById('os-Z-d').innerHTML        = dFmt(Z, cur.zRes.Z, '', 0);
-
-        document.getElementById('apply-btn').disabled = false;
+        _optResult = { combo, result, source: 'js-gridsearch' };
+        renderOptimizeResult(_optResult, Z, 'JS GRID SEARCH');
+        if (applyBtn) applyBtn.disabled = false;
       },
     });
+  }
+
+  /* ── RENDER OPTIMIZE RESULT ─────────────────────────────── */
+  function renderOptimizeResult(optRes, Z, sourceLabel) {
+    const { combo, result } = optRes;
+    const cur = _result || PhysicsEngine.calculate(_params);
+
+    const dFmt = (newV, oldV, unit='', dec=0) => {
+      if (!isFinite(newV) || !isFinite(oldV)) return '';
+      const d = newV - oldV;
+      if (Math.abs(d) < 0.01) return `<span style="color:var(--text-3)">no change</span>`;
+      const sign = d > 0 ? '▲ +' : '▼ ';
+      const col  = d > 0 ? 'var(--green)' : 'var(--amber)';
+      return `<span style="color:${col}">${sign}${Math.abs(d).toFixed(dec)}${unit}</span>`;
+    };
+
+    const setEl = (id, val) => { const el=document.getElementById(id); if(el) el.textContent=val; };
+    const setHtml = (id, html) => { const el=document.getElementById(id); if(el) el.innerHTML=html; };
+
+    setEl('op-tilt',  (combo.tilt||0).toFixed(1)+'°');
+    setHtml('op-tilt-d', dFmt(combo.tilt, _params.solar.tilt, '°', 1)+` (was ${_params.solar.tilt}°)`);
+    setEl('op-az',    (combo.azimuth||0).toFixed(1)+'°');
+    setHtml('op-az-d',   dFmt(combo.azimuth, _params.solar.azimuth, '°', 1)+` (was ${_params.solar.azimuth}°)`);
+    setEl('op-yaw',   (combo.yaw||0).toFixed(1)+'°');
+    setHtml('op-yaw-d',  dFmt(-(combo.yaw||0), -(_params.wind.yawAngle||0), '°', 1)+` (was ${_params.wind.yawAngle||0}°)`);
+    setEl('op-sp',    (combo.spacing||0).toFixed(1)+'D');
+    setHtml('op-sp-d',   dFmt(combo.spacing, _params.wind.turbineSpacing, 'D', 1)+` (was ${_params.wind.turbineSpacing}D)`);
+    setEl('op-bc',    Math.round(combo.bcap||0).toLocaleString()+' kWh');
+    setHtml('op-bc-d',   dFmt(combo.bcap, _params.battery.capacity, ' kWh', 0)+` (was ${_params.battery.capacity})`);
+    setEl('op-cl',    (combo.cleaning||0)+' days');
+    setHtml('op-cl-d',   dFmt(-(combo.cleaning||0), -_params.solar.cleaningInterval, 'd', 0)+` (was ${_params.solar.cleaningInterval}d)`);
+
+    const optE = result.zRes?.totalEnergy || 0;
+    const curE = cur.zRes?.totalEnergy    || 0;
+    const optC = result.zRes?.totalCost   || 0;
+    const curC = cur.zRes?.totalCost      || 0;
+
+    setEl('os-energy', Math.round(optE).toLocaleString()+' kWh/day');
+    setHtml('os-energy-d', dFmt(optE, curE, ' kWh', 0));
+    setEl('os-cost',   '$'+Math.round(optC).toLocaleString());
+    setHtml('os-cost-d',   dFmt(-optC, -curC, '', 0));
+    setEl('os-Z',      Math.round(Z).toLocaleString());
+    setHtml('os-Z-d',      dFmt(Z, cur.zRes?.Z||0, '', 0));
+
+    // Source badge
+    const statusEl = document.getElementById('opt-status');
+    if (statusEl) {
+      statusEl.innerHTML = `✓ Optimal Found &nbsp;<span style="font-family:var(--font-mono);font-size:8px;padding:1px 6px;border-radius:3px;background:${sourceLabel.includes('RAILWAY')?'rgba(34,197,94,0.15)':'rgba(245,166,35,0.15)'};color:${sourceLabel.includes('RAILWAY')?'var(--green)':'var(--amber)';};border:1px solid ${sourceLabel.includes('RAILWAY')?'rgba(34,197,94,0.3)':'rgba(245,166,35,0.3)'}">${sourceLabel}</span>`;
+    }
   }
 
   /* ── APPLY OPTIMIZED ────────────────────────────────────── */
