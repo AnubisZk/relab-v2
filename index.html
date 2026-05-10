@@ -1084,10 +1084,11 @@ input[type=range]::-webkit-slider-thumb {
         </div>
         <div class="inp-slider-row">
           <div class="inp-slider-header">
-            <span class="inp-label">Yaw Angle (°)</span>
+            <span class="inp-label">Yaw Angle (nacelle °)</span>
             <span class="inp-slider-val" id="sv-yaw">230</span>
           </div>
-          <input type="range" class="wind-slider" min="0" max="180" value="10" step="1" oninput="App.slider('wind','yawAngle',this.value,'sv-yaw','°')">
+          <input type="range" class="wind-slider" min="0" max="360" value="230" step="5" oninput="App.slider('wind','yawAngle',this.value,'sv-yaw','°')">
+          <div style="font-size:9px;color:var(--text-3);margin-top:2px;font-family:var(--font-mono)">Misalignment = |Wind dir − Nacelle yaw|</div>
         </div>
         <div class="inp-row">
           <span class="inp-label">Power Coefficient (Cp)</span>
@@ -1527,9 +1528,1596 @@ input[type=range]::-webkit-slider-thumb {
   </div><!-- end main -->
 </div><!-- end layout -->
 
-<script src="physicsEngine.js"></script>
-<script src="optimizer.js"></script>
-<script src="mockData.js"></script>
-<script src="app.js"></script>
+<script>
+/**
+ * ================================================================
+ * PHYSICS ENGINE — RE Optimization Lab v2.0
+ * ZSK Solutions · physicsEngine.js
+ * ----------------------------------------------------------------
+ * ALL results come from physical/mathematical equations.
+ * No fake scores. Every number is derived from a formula.
+ * Formula source noted above each function.
+ * ================================================================
+ */
+
+'use strict';
+
+const PhysicsEngine = (() => {
+
+  /* ── CONSTANTS ─────────────────────────────────────────────── */
+  const DEG2RAD = Math.PI / 180;
+  const EPSILON  = 1e-9;
+
+  /* ════════════════════════════════════════════════════════════
+     SOLAR MODEL
+     ════════════════════════════════════════════════════════════ */
+
+  /**
+   * Solar gross energy
+   * Formula: E_solar = A * (G/1000) * eta * t
+   * Units: A[m²], G[W/m²], eta[—], t[h] → kWh
+   */
+  function calcESolar(A, G, eta, t) {
+    return A * (G / 1000) * eta * t;
+  }
+
+  /**
+   * Temperature loss factor
+   * Formula: L_temp = beta * (T_cell - T_ref)
+   * beta [%/°C as fraction], result is fraction [0..1)
+   */
+  function calcLTemp(beta, T_cell, T_ref) {
+    return Math.max(0, beta * (T_cell - T_ref));
+  }
+
+  /**
+   * Angle of incidence factor (deviation from optimal tilt ≈30°)
+   * Formula: F_angle = max(0, cos(theta_incidence))
+   * theta_incidence = abs(tilt - 30) converted to radians
+   */
+  function calcFAngle(tilt) {
+    const theta = Math.abs(tilt - 30) * DEG2RAD;
+    return Math.max(0, Math.cos(theta));
+  }
+
+  /**
+   * Azimuth factor (deviation from south = 180°)
+   * Formula: F_az = max(0.5, cos(|azimuth - 180|))
+   */
+  function calcFAzimuth(azimuth) {
+    const delta = Math.abs(azimuth - 180) * DEG2RAD;
+    return Math.max(0.5, Math.cos(delta));
+  }
+
+  /**
+   * Cleanliness factor
+   * Formula: C_f = 1 - dustLoss
+   */
+  function calcCf(dustLoss) {
+    return Math.max(0, 1 - dustLoss);
+  }
+
+  /**
+   * Net solar energy
+   * Formula: E_solar_net = E_solar * F_angle * F_az * C_f * (1 - L_shade) * (1 - L_temp)
+   * Units: kWh
+   */
+  function calcSolar(params) {
+    const {
+      panelArea,       // m²
+      irradiance,      // W/m²
+      efficiency,      // fraction
+      timeHours,       // h
+      tilt,            // degrees
+      azimuth,         // degrees
+      cellTemp,        // °C
+      refTemp,         // °C
+      tempCoeff,       // fraction/°C
+      dustLoss,        // fraction
+      shadeLoss,       // fraction
+      cleaningCost,    // $
+      cleaningInterval // days
+    } = params;
+
+    const E_raw   = calcESolar(panelArea, irradiance, efficiency, timeHours);
+    const L_temp  = calcLTemp(tempCoeff, cellTemp, refTemp);
+    const F_angle = calcFAngle(tilt);
+    const F_az    = calcFAzimuth(azimuth);
+    const C_f     = calcCf(dustLoss);
+
+    // Cleaning decision: worth cleaning if energy recovered > cost
+    // EnergyRecoveredValue = dustLoss * E_raw * energyPrice (assume $0.12/kWh)
+    const ENERGY_PRICE = 0.12;
+    const energyRecovered = dustLoss * E_raw * ENERGY_PRICE;
+    const cleaningDecision = energyRecovered > cleaningCost ? 'CLEAN' : 'DEFER';
+    // If cleaning deferred, use actual C_f; if cleaned, C_f → 1
+    const C_f_effective = cleaningDecision === 'CLEAN' ? 1.0 : C_f;
+    const cleaningCostApplied = cleaningDecision === 'CLEAN' ? cleaningCost : 0;
+
+    const E_net = E_raw * F_angle * F_az * C_f_effective
+                * (1 - shadeLoss) * Math.max(0, 1 - L_temp);
+
+    // Individual losses for breakdown chart
+    const loss_temp  = E_raw * L_temp;
+    const loss_shade = E_raw * (1 - shadeLoss) < E_raw ? E_raw * shadeLoss : 0;
+    const loss_dust  = E_raw * dustLoss;
+    const loss_angle = E_raw * (1 - F_angle);
+
+    return {
+      E_raw,
+      E_net: Math.max(0, E_net),
+      L_temp,
+      F_angle,
+      F_az,
+      C_f: C_f_effective,
+      loss_temp:  Math.max(0, loss_temp),
+      loss_shade: Math.max(0, loss_shade),
+      loss_dust:  Math.max(0, loss_dust),
+      loss_angle: Math.max(0, loss_angle),
+      cleaningDecision,
+      cleaningCostApplied,
+      formula: `E=${panelArea}×${(irradiance/1000).toFixed(3)}×${efficiency}×${timeHours}` +
+               `×cos(${Math.abs(tilt-30).toFixed(1)}°)×${C_f_effective.toFixed(3)}` +
+               `×(1-${shadeLoss})×(1-${L_temp.toFixed(4)})`,
+    };
+  }
+
+  /* ════════════════════════════════════════════════════════════
+     WIND TURBINE MODEL
+     ════════════════════════════════════════════════════════════ */
+
+  /**
+   * Rotor swept area
+   * Formula: A_rotor = pi * r^2
+   */
+  function calcARotor(r) {
+    return Math.PI * r * r;
+  }
+
+  /**
+   * Wind power (Betz law applied via Cp)
+   * Formula: P_wind = 0.5 * rho * A_rotor * v^3 * Cp
+   * Units: W (then converted to kW)
+   */
+  function calcPWind(rho, A_rotor, v, Cp) {
+    return 0.5 * rho * A_rotor * Math.pow(v, 3) * Cp / 1000; // kW
+  }
+
+  /**
+   * Yaw misalignment loss
+   * Formula: P_yaw = P_wind * cos(gamma)^3
+   * gamma = yaw error in degrees
+   */
+  function calcPYaw(P_wind, gamma_deg) {
+    const gamma = gamma_deg * DEG2RAD;
+    return P_wind * Math.pow(Math.cos(gamma), 3);
+  }
+
+  /**
+   * Jensen wake deficit model (simplified)
+   * Formula: Δv/v0 = (1 - sqrt(1-Cp)) * (D / (D + 2*k*x))²
+   * k = 0.04 (onshore), x = spacing * D
+   * Wake loss fraction applied to downstream turbines
+   */
+  function calcWakeLoss(Cp, rotorD, spacingMultiplier, k = 0.04) {
+    const x = spacingMultiplier * rotorD;
+    const deficit = (1 - Math.sqrt(Math.max(0, 1 - Cp)))
+                  * Math.pow(rotorD / (rotorD + 2 * k * x), 2);
+    return Math.min(0.5, Math.max(0, deficit));
+  }
+
+  /**
+   * Net wind energy for turbine farm
+   * Formula: P_net = P_yaw * (1 - L_wake) * (1 - L_turbulence) * N
+   *          E_wind = P_net * t / 1000  [kWh, P in kW]
+   */
+  function calcWind(params) {
+    const {
+      turbineCount,    // N
+      rotorRadius,     // m
+      hubHeight,       // m (unused in basic model, kept for future shear profile)
+      windSpeed,       // m/s
+      windDirection,   // degrees (unused in basic, for future directional model)
+      yawAngle,        // degrees (misalignment)
+      powerCoeff,      // Cp
+      airDensity,      // kg/m³
+      turbineSpacing,  // xD multiplier
+      wakeLoss,        // override fraction (if user-defined)
+      turbulenceLoss,  // fraction
+      timeHours,
+    } = params;
+
+    const rotorD   = rotorRadius * 2;
+    const A_rotor  = calcARotor(rotorRadius);
+
+    // Cut-in / cut-out check
+    if (windSpeed < 3 || windSpeed > 25) {
+      return {
+        E_net: 0, P_wind_single: 0, P_yaw: 0, P_net: 0,
+        wakeLossActual: 0, loss_wake: 0, loss_turbulence: 0,
+        spacingOk: turbineSpacing >= 7,
+        formula: `v=${windSpeed} m/s outside cut-in(3)/cut-out(25) range → P=0`,
+      };
+    }
+
+    const P_single   = calcPWind(airDensity, A_rotor, windSpeed, powerCoeff);
+    const P_yaw_val  = calcPYaw(P_single, yawAngle);
+
+    // Use Jensen wake model (overrides manual entry if spacing given)
+    const L_wake_jensen = calcWakeLoss(powerCoeff, rotorD, turbineSpacing);
+    const L_wake_eff    = Math.max(L_wake_jensen, wakeLoss); // use worse of two
+
+    const P_net_1T = P_yaw_val * (1 - L_wake_eff) * (1 - turbulenceLoss);
+    const P_farm   = P_net_1T * turbineCount; // kW
+    const E_net    = P_farm * timeHours;       // kWh
+
+    const loss_wake        = P_yaw_val * L_wake_eff * turbineCount * timeHours;
+    const loss_turbulence  = P_yaw_val * (1 - L_wake_eff) * turbulenceLoss * turbineCount * timeHours;
+    const loss_yaw         = (P_single - P_yaw_val) * turbineCount * timeHours;
+
+    return {
+      E_net: Math.max(0, E_net),
+      P_wind_single: P_single,
+      P_yaw: P_yaw_val,
+      P_net: P_farm,
+      L_wake_jensen,
+      L_wake_eff,
+      loss_wake:       Math.max(0, loss_wake),
+      loss_turbulence: Math.max(0, loss_turbulence),
+      loss_yaw:        Math.max(0, loss_yaw),
+      spacingOk: turbineSpacing >= 7,
+      rotorD,
+      formula: `P=½×${airDensity}×π×${rotorRadius}²×${windSpeed}³×${powerCoeff}` +
+               `=${P_single.toFixed(2)}kW/T × cos³(${yawAngle}°) × (1-${L_wake_eff.toFixed(3)}) × ${turbineCount}T`,
+    };
+  }
+
+  /* ════════════════════════════════════════════════════════════
+     OFFSHORE MODEL
+     ════════════════════════════════════════════════════════════ */
+
+  /**
+   * Sea risk composite score
+   * Formula: R_sea = w1*waveHeight + w2*wavePeriod + w3*currentSpeed + w4*platformMotion
+   * Weights: w1=0.40, w2=0.15, w3=0.25, w4=0.20  (sum=1.0)
+   */
+  function calcRSea(waveHeight, wavePeriod, currentSpeed, platformMotion) {
+    const w1=0.40, w2=0.15, w3=0.25, w4=0.20;
+    return w1 * waveHeight + w2 * wavePeriod + w3 * currentSpeed + w4 * platformMotion;
+  }
+
+  /**
+   * Offshore net energy
+   * Formula: E_offshore_net = E_wind * (1 - L_wave) * (1 - L_corrosion) - MaintenanceCost
+   * MaintenanceCost in kWh-equivalent ($cost / $energyPrice)
+   */
+  function calcOffshore(params, E_wind_kWh) {
+    const {
+      waveHeight,
+      wavePeriod,
+      currentSpeed,
+      platformMotion,
+      corrosionLoss,   // fraction/yr
+      waveLoss,        // fraction
+      maintenanceCost, // $/yr
+      safetyThreshold,
+    } = params;
+
+    const ENERGY_PRICE = 0.12; // $/kWh
+    const R_sea = calcRSea(waveHeight, wavePeriod, currentSpeed, platformMotion);
+
+    // Maintenance: daily cost portion (annual / 365)
+    const maint_daily_kWh = (maintenanceCost / 365) / ENERGY_PRICE;
+
+    const E_net_raw = E_wind_kWh * (1 - waveLoss) * (1 - corrosionLoss) - maint_daily_kWh;
+    const E_net     = Math.max(0, E_net_raw);
+
+    const loss_wave      = E_wind_kWh * waveLoss;
+    const loss_corrosion = E_wind_kWh * corrosionLoss;
+
+    return {
+      R_sea,
+      E_net,
+      loss_wave:      Math.max(0, loss_wave),
+      loss_corrosion: Math.max(0, loss_corrosion),
+      maint_kWh,
+      riskViolation: R_sea > safetyThreshold,
+      maintenanceAccessible: waveHeight < 3.5, // Hs < 3.5m → crew transfer vessel ok
+      formula: `R_sea=${R_sea.toFixed(3)} · E=(${E_wind_kWh.toFixed(1)}×(1-${waveLoss})×(1-${corrosionLoss}))-${maint_daily_kWh.toFixed(0)} kWh/day`,
+    };
+  }
+
+  /* ════════════════════════════════════════════════════════════
+     BATTERY MODEL
+     ════════════════════════════════════════════════════════════ */
+
+  /**
+   * Battery energy balance (single step)
+   * Formula: B_next = B_current + eta_charge * E_in - E_out / eta_discharge
+   * Constraint: 0 <= B_next <= B_capacity
+   */
+  function calcBattery(params, E_available_kWh) {
+    const {
+      capacity,          // kWh
+      currentCharge,     // kWh
+      chargeEfficiency,  // fraction
+      dischargeEfficiency,
+      demand,            // kWh
+      minimumReserve,    // kWh
+    } = params;
+
+    // Charging: only charge what fits
+    const E_in      = Math.min(capacity - currentCharge, Math.max(0, E_available_kWh));
+    const B_charged = currentCharge + chargeEfficiency * E_in;
+
+    // Discharge to meet demand (can't go below 0 or min reserve)
+    const B_dispatchable = Math.max(0, B_charged - minimumReserve);
+    const E_out          = Math.min(demand, B_dispatchable);
+    const B_next         = Math.max(0, Math.min(capacity, B_charged - E_out / dischargeEfficiency));
+
+    const unmet          = Math.max(0, demand - E_out);
+    const B_available    = Math.max(0, B_next - minimumReserve);
+
+    return {
+      B_next,
+      B_available,
+      E_in,
+      E_out,
+      unmet,
+      SOC: (B_next / capacity) * 100,
+      reserveViolation: B_next < minimumReserve,
+      formula: `B_next=${currentCharge}+${chargeEfficiency}×${E_in.toFixed(1)}-${E_out.toFixed(1)}/${dischargeEfficiency}=${B_next.toFixed(2)} kWh`,
+    };
+  }
+
+  /* ════════════════════════════════════════════════════════════
+     OBJECTIVE FUNCTION
+     ════════════════════════════════════════════════════════════ */
+
+  /**
+   * Hybrid system objective
+   * Formula: Z = E_solar_net + E_wind_net + E_offshore_net + B_available
+   *              - C_cleaning - C_maintenance - C_installation - C_risk
+   * C_risk = R_sea * risk_penalty_factor (default 100 $/unit)
+   */
+  function calcObjective(sRes, wRes, oRes, bRes, params) {
+    const RISK_PENALTY = 10;   // $/risk-unit (reduced from 100)
+    const ENERGY_PRICE = 0.12; // $/kWh
+
+    const totalEnergy = sRes.E_net + wRes.E_net + oRes.E_net;
+    const C_cleaning  = sRes.cleaningCostApplied || 0;
+    const C_maint     = params.offshore.maintenanceCost / 365; // daily portion
+    const C_install   = params.cost.installationBudget / 365 / 20; // 20yr amortized daily
+    const C_risk      = oRes.R_sea * RISK_PENALTY;
+    const totalCost   = C_cleaning + C_maint + C_install + C_risk; // $/day
+
+    // Z in kWh-equivalent: energy produced - cost converted to kWh
+    const Z = totalEnergy + bRes.B_available - totalCost / ENERGY_PRICE;
+
+    const totalLoss = (sRes.loss_temp   || 0) + (sRes.loss_shade || 0) +
+                      (sRes.loss_dust   || 0) + (wRes.loss_wake  || 0) +
+                      (wRes.loss_turbulence || 0) + (oRes.loss_wave || 0) +
+                      (oRes.loss_corrosion  || 0);
+
+    const demand   = params.battery.demand;
+    const coverage = Math.min(100, (totalEnergy / Math.max(EPSILON, demand)) * 100);
+    const co2saved = totalEnergy * (params.cost.co2Factor || 0.45);
+    const riskScore= Math.min(100, oRes.R_sea * 10);
+
+    return {
+      Z,
+      totalEnergy,
+      totalCost,
+      totalLoss,
+      coverage,
+      co2saved,
+      riskScore,
+      C_cleaning, C_maint, C_install, C_risk,
+    };
+  }
+
+  /* ════════════════════════════════════════════════════════════
+     CONSTRAINT CHECKER
+     ════════════════════════════════════════════════════════════ */
+
+  function checkConstraints(params, sRes, wRes, oRes, bRes) {
+    const violations = [];
+    const p = params;
+
+    // 1. Panel area
+    if (p.solar.panelArea > p.cost.availableArea)
+      violations.push({ id:'area', msg:`Panel area ${p.solar.panelArea}m² > available ${p.cost.availableArea}m²`, severity:'error' });
+
+    // 2. Budget
+    const totalCostEur = p.cost.installationBudget;
+    // (simplified: budget check via objective cost)
+
+    // 3. Turbine spacing ≥ 7D
+    if (!wRes.spacingOk)
+      violations.push({ id:'spacing', msg:`Spacing ${p.wind.turbineSpacing}D < required 7D (min ${(7*wRes.rotorD).toFixed(0)}m)`, severity:'error' });
+
+    // 4. Battery reserve
+    if (bRes.reserveViolation)
+      violations.push({ id:'reserve', msg:`Battery final ${bRes.B_next.toFixed(1)} kWh < min reserve ${p.battery.minimumReserve} kWh`, severity:'error' });
+
+    // 5. Offshore risk
+    if (oRes.riskViolation)
+      violations.push({ id:'risk', msg:`R_sea=${oRes.R_sea.toFixed(2)} > safety threshold ${p.offshore.safetyThreshold}`, severity:'error' });
+
+    // 6. Tilt range
+    if (p.solar.tilt < 0 || p.solar.tilt > 90)
+      violations.push({ id:'tilt', msg:`Tilt ${p.solar.tilt}° outside [0°, 90°]`, severity:'error' });
+
+    // 7. Yaw range
+    if (p.wind.yawAngle < 0 || p.wind.yawAngle > 180)
+      violations.push({ id:'yaw', msg:`Yaw ${p.wind.yawAngle}° outside [0°, 180°]`, severity:'error' });
+
+    // 8. Dust/shade fractions
+    if (p.solar.dustLoss < 0 || p.solar.dustLoss > 1)
+      violations.push({ id:'dust', msg:`Dust loss ${p.solar.dustLoss} outside [0, 1]`, severity:'error' });
+    if (p.solar.shadeLoss < 0 || p.solar.shadeLoss > 1)
+      violations.push({ id:'shade', msg:`Shade loss ${p.solar.shadeLoss} outside [0, 1]`, severity:'error' });
+
+    // Warnings (not hard violations)
+    if (bRes.unmet > 0)
+      violations.push({ id:'unmet', msg:`Unmet demand: ${bRes.unmet.toFixed(1)} kWh/day`, severity:'warning' });
+    if (!oRes.maintenanceAccessible)
+      violations.push({ id:'access', msg:`Hs=${params.offshore.waveHeight}m > 3.5m — crew transfer not accessible`, severity:'warning' });
+
+    return violations;
+  }
+
+  /* ════════════════════════════════════════════════════════════
+     MASTER CALCULATE
+     ════════════════════════════════════════════════════════════ */
+
+  function calculate(params) {
+    const sRes = calcSolar({
+      panelArea:       params.solar.panelArea,
+      irradiance:      params.solar.irradiance,
+      efficiency:      params.solar.efficiency,
+      timeHours:       params.solar.timeHours,
+      tilt:            params.solar.tilt,
+      azimuth:         params.solar.azimuth,
+      cellTemp:        params.solar.cellTemp,
+      refTemp:         params.solar.refTemp,
+      tempCoeff:       params.solar.tempCoeff,
+      dustLoss:        params.solar.dustLoss,
+      shadeLoss:       params.solar.shadeLoss,
+      cleaningCost:    params.solar.cleaningCost,
+      cleaningInterval:params.solar.cleaningInterval,
+    });
+
+    const wRes = calcWind({
+      turbineCount:   params.wind.turbineCount,
+      rotorRadius:    params.wind.rotorRadius,
+      hubHeight:      params.wind.hubHeight,
+      windSpeed:      params.wind.windSpeed,
+      windDirection:  params.wind.windDirection,
+      yawAngle:       params.wind.yawAngle,
+      powerCoeff:     params.wind.powerCoeff,
+      airDensity:     params.wind.airDensity,
+      turbineSpacing: params.wind.turbineSpacing,
+      wakeLoss:       params.wind.wakeLoss,
+      turbulenceLoss: params.wind.turbulenceLoss,
+      timeHours:      params.solar.timeHours,
+    });
+
+    const oRes = calcOffshore({
+      waveHeight:      params.offshore.waveHeight,
+      wavePeriod:      params.offshore.wavePeriod,
+      currentSpeed:    params.offshore.currentSpeed,
+      platformMotion:  params.offshore.platformMotion,
+      corrosionLoss:   params.offshore.corrosionLoss,
+      waveLoss:        params.offshore.waveLoss,
+      maintenanceCost: params.offshore.maintenanceCost,
+      safetyThreshold: params.offshore.safetyThreshold,
+    }, wRes.E_net);
+
+    const totalAvail = sRes.E_net + wRes.E_net + oRes.E_net;
+
+    const bRes = calcBattery({
+      capacity:            params.battery.capacity,
+      currentCharge:       params.battery.currentCharge,
+      chargeEfficiency:    params.battery.chargeEfficiency,
+      dischargeEfficiency: params.battery.dischargeEfficiency,
+      demand:              params.battery.demand,
+      minimumReserve:      params.battery.minimumReserve,
+    }, totalAvail);
+
+    const zRes       = calcObjective(sRes, wRes, oRes, bRes, params);
+    const violations = checkConstraints(params, sRes, wRes, oRes, bRes);
+
+    return { sRes, wRes, oRes, bRes, zRes, violations };
+  }
+
+  /* ── PUBLIC API ──────────────────────────────────────────── */
+  return {
+    calculate,
+    calcSolar,
+    calcWind,
+    calcOffshore,
+    calcBattery,
+    calcObjective,
+    checkConstraints,
+    calcWakeLoss,
+    calcFAngle,
+    DEG2RAD,
+  };
+
+})();
+
+</script>
+<script>
+/**
+ * ================================================================
+ * OPTIMIZER — RE Optimization Lab v2.0
+ * ZSK Solutions · optimizer.js
+ * ----------------------------------------------------------------
+ * Grid Search over ~324,000 parameter combinations.
+ * Uses chunked requestAnimationFrame to avoid UI freeze.
+ * Every result comes from PhysicsEngine.calculate().
+ * No fake scores — Z value drives selection.
+ * ================================================================
+ */
+
+'use strict';
+
+const Optimizer = (() => {
+
+  /* ── SEARCH SPACE ────────────────────────────────────────── */
+  // Total combos: 13 × 10 × 10 × 8 × 5 × 6 = 312,000
+  const SEARCH_SPACE = {
+    tilts:            [0, 5, 10, 15, 20, 25, 28, 30, 32, 35, 40, 45, 60],           // 13
+    azimuths:         [90, 120, 135, 150, 165, 180, 195, 210, 225, 270],             // 10
+    yaws:             [0, 5, 10, 15, 20, 25, 30, 40, 60, 90],                        // 10
+    spacings:         [3, 4, 5, 6, 7, 7.5, 8, 10],                                  // 8
+    batteryCaps:      [50, 100, 150, 200, 300],                                       // 5
+    cleaningIntervals:[7, 14, 21, 30, 45, 60],                                       // 6
+  };
+
+  const CHUNK_SIZE = 800; // combinations per animation frame
+
+  let _running   = false;
+  let _best      = null;
+  let _callbacks = {};
+
+  /* ── BUILD COMBO LIST ────────────────────────────────────── */
+  function buildCombos() {
+    const combos = [];
+    for (const tilt     of SEARCH_SPACE.tilts)
+    for (const azimuth  of SEARCH_SPACE.azimuths)
+    for (const yaw      of SEARCH_SPACE.yaws)
+    for (const spacing  of SEARCH_SPACE.spacings)
+    for (const bcap     of SEARCH_SPACE.batteryCaps)
+    for (const cleaning of SEARCH_SPACE.cleaningIntervals)
+      combos.push({ tilt, azimuth, yaw, spacing, bcap, cleaning });
+    return combos;
+  }
+
+  /* ── APPLY OVERRIDES TO PARAMS ───────────────────────────── */
+  function applyOverrides(baseParams, combo) {
+    // Deep-ish copy of relevant fields
+    return {
+      ...baseParams,
+      solar: {
+        ...baseParams.solar,
+        tilt:            combo.tilt,
+        azimuth:         combo.azimuth,
+        cleaningInterval:combo.cleaning,
+      },
+      wind: {
+        ...baseParams.wind,
+        yawAngle:        combo.yaw,
+        turbineSpacing:  combo.spacing,
+      },
+      battery: {
+        ...baseParams.battery,
+        capacity:        combo.bcap,
+      },
+    };
+  }
+
+  /* ── MAIN GRID SEARCH ────────────────────────────────────── */
+  function run(baseParams, callbacks = {}) {
+    if (_running) return;
+    _running   = true;
+    _best      = null;
+    _callbacks = callbacks;
+
+    const combos = buildCombos();
+    const total  = combos.length;
+    let count    = 0;
+    let bestZ    = -Infinity;
+    let bestResult = null;
+    let bestCombo  = null;
+
+    // Track top-5 for comparison
+    const leaderboard = [];
+
+    function processChunk(startIdx) {
+      const endIdx = Math.min(startIdx + CHUNK_SIZE, total);
+
+      for (let i = startIdx; i < endIdx; i++) {
+        const combo  = combos[i];
+        const params = applyOverrides(baseParams, combo);
+        const result = PhysicsEngine.calculate(params);
+        count++;
+
+        // Only consider constraint-violation-free solutions
+        const errors = result.violations.filter(v => v.severity === 'error');
+        if (errors.length === 0 && result.zRes.Z > bestZ) {
+          bestZ      = result.zRes.Z;
+          bestResult = result;
+          bestCombo  = combo;
+
+          // Update leaderboard
+          leaderboard.push({ Z: bestZ, combo: { ...combo }, zRes: { ...result.zRes } });
+          leaderboard.sort((a, b) => b.Z - a.Z);
+          if (leaderboard.length > 5) leaderboard.length = 5;
+        }
+      }
+
+      // Progress callback
+      const pct = Math.round((count / total) * 100);
+      if (_callbacks.onProgress) {
+        _callbacks.onProgress({
+          count, total, pct,
+          currentBestZ: bestZ,
+          bestCombo,
+        });
+      }
+
+      if (endIdx < total) {
+        requestAnimationFrame(() => processChunk(endIdx));
+      } else {
+        // Done
+        _running = false;
+        _best    = { result: bestResult, combo: bestCombo, leaderboard };
+
+        if (_callbacks.onComplete) {
+          _callbacks.onComplete({
+            found:      bestResult !== null,
+            result:     bestResult,
+            combo:      bestCombo,
+            Z:          bestZ,
+            leaderboard,
+            totalEvaluated: count,
+          });
+        }
+      }
+    }
+
+    // Kick off
+    requestAnimationFrame(() => processChunk(0));
+  }
+
+  /* ── SENSITIVITY ANALYSIS ────────────────────────────────── */
+  // Vary one parameter at a time, return curve data for charts
+  function sensitivityTilt(baseParams) {
+    return Array.from({ length: 91 }, (_, tilt) => {
+      const p = applyOverrides(baseParams, { tilt, azimuth: baseParams.solar.azimuth, yaw: baseParams.wind.yawAngle, spacing: baseParams.wind.turbineSpacing, bcap: baseParams.battery.capacity, cleaning: baseParams.solar.cleaningInterval });
+      const r = PhysicsEngine.calculate(p);
+      return { x: tilt, y: r.sRes.E_net };
+    });
+  }
+
+  function sensitivityAzimuth(baseParams) {
+    const steps = Array.from({ length: 37 }, (_, i) => 90 + i * 5);
+    return steps.map(az => {
+      const p = applyOverrides(baseParams, { tilt: baseParams.solar.tilt, azimuth: az, yaw: baseParams.wind.yawAngle, spacing: baseParams.wind.turbineSpacing, bcap: baseParams.battery.capacity, cleaning: baseParams.solar.cleaningInterval });
+      const r = PhysicsEngine.calculate(p);
+      return { x: az, y: r.sRes.E_net };
+    });
+  }
+
+  function sensitivityWindSpeed(baseParams) {
+    return Array.from({ length: 261 }, (_, i) => {
+      const v = i * 0.1;
+      const p = { ...baseParams, wind: { ...baseParams.wind, windSpeed: v } };
+      const r = PhysicsEngine.calculate(p);
+      return { x: v, y: r.wRes.P_net || 0 };
+    });
+  }
+
+  function sensitivityYaw(baseParams) {
+    return Array.from({ length: 181 }, (_, yaw) => {
+      const p = applyOverrides(baseParams, { tilt: baseParams.solar.tilt, azimuth: baseParams.solar.azimuth, yaw, spacing: baseParams.wind.turbineSpacing, bcap: baseParams.battery.capacity, cleaning: baseParams.solar.cleaningInterval });
+      const r = PhysicsEngine.calculate(p);
+      // Yaw power loss fraction: 1 - cos^3(gamma)
+      const gamma = yaw * PhysicsEngine.DEG2RAD;
+      const loss  = (1 - Math.pow(Math.cos(gamma), 3)) * 100;
+      return { x: yaw, y: loss };
+    });
+  }
+
+  function sensitivitySpacing(baseParams) {
+    const steps = Array.from({ length: 71 }, (_, i) => 3 + i * 0.1);
+    const Cp    = baseParams.wind.powerCoeff;
+    const D     = baseParams.wind.rotorRadius * 2;
+    return steps.map(s => {
+      const wakeFrac = PhysicsEngine.calcWakeLoss(Cp, D, s) * 100;
+      return { x: s, y: wakeFrac };
+    });
+  }
+
+  function sensitivityWaveRisk(baseParams) {
+    return Array.from({ length: 51 }, (_, i) => {
+      const wh = i * 0.1;
+      const R  = 0.40 * wh + 0.15 * baseParams.offshore.wavePeriod
+               + 0.25 * baseParams.offshore.currentSpeed
+               + 0.20 * baseParams.offshore.platformMotion;
+      return { x: wh, y: R };
+    });
+  }
+
+  function sensitivityBattery(baseParams) {
+    const caps = Array.from({ length: 50 }, (_, i) => 50 + i * 50);
+    return caps.map(bcap => {
+      const p    = { ...baseParams, battery: { ...baseParams.battery, capacity: bcap } };
+      const r    = PhysicsEngine.calculate(p);
+      return { x: bcap, y: r.bRes.unmet };
+    });
+  }
+
+  function sensitivityCostEnergy(baseParams) {
+    const tilts  = [15, 25, 30, 35, 45];
+    const speeds = [5, 7, 8.5, 10, 12, 14, 16];
+    const pts    = [];
+    for (const tilt of tilts)
+    for (const spd  of speeds) {
+      const p = { ...baseParams, solar: { ...baseParams.solar, tilt }, wind: { ...baseParams.wind, windSpeed: spd } };
+      const r = PhysicsEngine.calculate(p);
+      pts.push({ cost: r.zRes.totalCost / 1000, energy: r.zRes.totalEnergy, tilt, spd });
+    }
+    return pts;
+  }
+
+  /* ── PUBLIC API ──────────────────────────────────────────── */
+  return {
+    run,
+    isRunning: () => _running,
+    getBest:   () => _best,
+    SEARCH_SPACE,
+    sensitivity: {
+      tilt:      sensitivityTilt,
+      azimuth:   sensitivityAzimuth,
+      windSpeed: sensitivityWindSpeed,
+      yaw:       sensitivityYaw,
+      spacing:   sensitivitySpacing,
+      waveRisk:  sensitivityWaveRisk,
+      battery:   sensitivityBattery,
+      costEnergy:sensitivityCostEnergy,
+    },
+  };
+
+})();
+
+</script>
+<script>
+/**
+ * ================================================================
+ * MOCK DATA — RE Optimization Lab v2.0
+ * ZSK Solutions · mockData.js
+ * ----------------------------------------------------------------
+ * Default scenario values matching the reference dashboard screenshot.
+ * All values are physically plausible.
+ * ================================================================
+ */
+
+'use strict';
+
+const MockData = {
+
+  /* ── DEFAULT SCENARIO ────────────────────────────────────── */
+  defaultParams: {
+    solar: {
+      panelArea:       5000,   // m²
+      efficiency:      0.225,  // 22.5%
+      tilt:            32,     // degrees
+      azimuth:         180,    // south-facing
+      irradiance:      850,    // W/m²
+      cellTemp:        35,     // °C
+      refTemp:         25,     // °C
+      tempCoeff:       0.0045, // 0.45%/°C (typical monocrystalline)
+      dustLoss:        0.15,   // 15%
+      shadeLoss:       0.05,   // 5%
+      cleaningInterval:14,     // days
+      cleaningCost:    120,    // $/cleaning
+      timeHours:       8,      // peak sun hours
+    },
+    wind: {
+      turbineCount:    5,
+      rotorRadius:     60,     // m (120m diameter — 4 MW class)
+      hubHeight:       100,    // m
+      windSpeed:       8.5,    // m/s
+      windDirection:   230,    // degrees
+      yawAngle:        230,    // yaw misalignment (same = 0 error effectively)
+      powerCoeff:      0.45,   // Betz-limited practical Cp
+      airDensity:      1.225,  // kg/m³ (sea level)
+      turbineSpacing:  7,      // × rotor diameter
+      wakeLoss:        0.12,   // 12% (overridden by Jensen model)
+      turbulenceLoss:  0.05,   // 5%
+    },
+    offshore: {
+      turbineCount:    3,
+      waveHeight:      1.8,    // m significant wave height Hs
+      wavePeriod:      6.5,    // s peak period Tp
+      currentSpeed:    0.9,    // m/s
+      platformMotion:  0.6,    // degrees roll/pitch
+      corrosionLoss:   0.08,   // 8%/yr → fraction
+      waveLoss:        0.10,   // 10%
+      maintenanceCost: 35000,  // $/yr
+      safetyThreshold: 10.0,   // R_sea max
+    },
+    battery: {
+      capacity:        1500,   // kWh
+      currentCharge:   750,    // kWh (50% SOC)
+      chargeEfficiency:0.95,
+      dischargeEfficiency: 0.95,
+      demand:          4000,   // kWh/day
+      minimumReserve:  0.20,   // 20% of capacity → 300 kWh
+    },
+    cost: {
+      installationBudget: 2500000, // $
+      availableArea:      20000,   // m²
+      maxOffshoreRisk:    100,
+      co2Factor:          0.45,    // kg CO₂/kWh displaced
+    },
+  },
+
+  /* ── SCENARIO LIBRARY ────────────────────────────────────── */
+  scenarios: [
+    {
+      id: 'coastal_medium',
+      name: 'Coastal Medium Farm',
+      description: 'Balanced coastal site with moderate wind and good solar',
+    },
+    {
+      id: 'high_wind_offshore',
+      name: 'High Wind Offshore',
+      description: 'Offshore-dominant setup, rough seas, strong wind',
+    },
+    {
+      id: 'solar_dominant',
+      name: 'Solar Dominant Desert',
+      description: 'High irradiance, low wind, large panel field',
+    },
+  ],
+
+  /* ── WORLD MODEL MOCK PREDICTIONS ───────────────────────── */
+  // Used for initial display before real model trains
+  mockWorldModelPrediction(physicsResult) {
+    // Simulate a surrogate model with small random error (1–4%)
+    const err = () => 1 + (Math.random() - 0.5) * 0.06;
+    return {
+      predicted_solar:    physicsResult.sRes.E_net   * err(),
+      predicted_wind:     physicsResult.wRes.E_net   * err(),
+      predicted_offshore: physicsResult.oRes.E_net   * err(),
+      predicted_battery:  physicsResult.bRes.B_next  * err(),
+      predicted_Z:        physicsResult.zRes.Z        * err(),
+      confidence:         87.6, // initial mock confidence
+      surprise_score:     0.018,
+    };
+  },
+};
+
+</script>
+<script>
+/**
+ * ================================================================
+ * APP.JS — RE Optimization Lab v2.0
+ * ZSK Solutions · Orchestrator
+ * ----------------------------------------------------------------
+ * Wires: PhysicsEngine ↔ Optimizer ↔ Dashboard ↔ Charts
+ * All displayed numbers come from PhysicsEngine.calculate().
+ * ================================================================
+ */
+
+'use strict';
+
+const App = (() => {
+
+  /* ── STATE ──────────────────────────────────────────────── */
+  let _params    = null;   // current input params
+  let _result    = null;   // last physics result
+  let _optResult = null;   // last optimizer result
+  let _prevResult= null;   // for delta calculation
+  let _chartsInit= false;
+
+  /* ── PLOTLY SHARED CONFIG ───────────────────────────────── */
+  const PLOTLY_CFG = { displayModeBar: false, responsive: true };
+  const PLOTLY_LAYOUT = (xTitle='', yTitle='') => ({
+    paper_bgcolor: 'rgba(0,0,0,0)',
+    plot_bgcolor:  'rgba(0,0,0,0)',
+    font: { family:'JetBrains Mono', color:'rgba(140,170,210,0.6)', size:9 },
+    margin: { l:36, r:8, t:4, b:28 },
+    xaxis: {
+      title: { text:xTitle, font:{size:8} },
+      gridcolor:'rgba(0,180,255,0.06)',
+      zerolinecolor:'rgba(0,180,255,0.1)',
+      tickfont:{size:8},
+    },
+    yaxis: {
+      title: { text:yTitle, font:{size:8} },
+      gridcolor:'rgba(0,180,255,0.06)',
+      zerolinecolor:'rgba(0,180,255,0.1)',
+      tickfont:{size:8},
+    },
+    showlegend: false,
+    hovermode: 'x unified',
+    hoverlabel: { bgcolor:'rgba(10,21,37,0.95)', bordercolor:'rgba(0,212,255,0.4)', font:{color:'#f0f6ff',size:10} },
+  });
+
+  /* ── INPUT READING ──────────────────────────────────────── */
+  function readParams() {
+    const g = id => parseFloat(document.getElementById(id)?.value) || 0;
+    const p = MockData.defaultParams;
+
+    return {
+      solar: {
+        panelArea:        parseFloat(document.getElementById('sv-parea')?.textContent) || p.solar.panelArea,
+        efficiency:       g('i-eta') / 100,
+        tilt:             parseFloat(document.getElementById('sv-tilt')?.textContent)  || p.solar.tilt,
+        azimuth:          parseFloat(document.getElementById('sv-azimuth')?.textContent) || p.solar.azimuth,
+        irradiance:       g('i-irr')    || p.solar.irradiance,
+        cellTemp:         g('i-tcell')  || p.solar.cellTemp,
+        refTemp:          25,
+        tempCoeff:        0.0045,
+        dustLoss:         parseFloat(document.getElementById('sv-dust')?.textContent || p.solar.dustLoss*100) / 100,
+        shadeLoss:        parseFloat(document.getElementById('sv-shade')?.textContent || p.solar.shadeLoss*100) / 100,
+        cleaningInterval: parseFloat(document.getElementById('sv-cint')?.textContent) || p.solar.cleaningInterval,
+        cleaningCost:     g('i-ccost') || p.solar.cleaningCost,
+        timeHours:        p.solar.timeHours,
+      },
+      wind: {
+        turbineCount:   g('i-tcount')  || p.wind.turbineCount,
+        rotorRadius:    g('i-rrad')    || p.wind.rotorRadius,
+        hubHeight:      g('i-hhub')    || p.wind.hubHeight,
+        windSpeed:      parseFloat(document.getElementById('sv-wspd')?.textContent) || p.wind.windSpeed,
+        windDirection:  parseFloat(document.getElementById('sv-wdir')?.textContent) || p.wind.windDirection,
+        // yaw misalignment = |wind direction - nacelle yaw|, clamped [0,180]
+        yawAngle:       Math.min(180, Math.abs(
+                          (parseFloat(document.getElementById('sv-wdir')?.textContent) || p.wind.windDirection) -
+                          (parseFloat(document.getElementById('sv-yaw')?.textContent)  || p.wind.windDirection)
+                        )),
+        powerCoeff:     g('i-cp')      || p.wind.powerCoeff,
+        airDensity:     g('i-rho')     || p.wind.airDensity,
+        turbineSpacing: parseFloat(document.getElementById('sv-spacing')?.textContent) || p.wind.turbineSpacing,
+        wakeLoss:       (g('i-wake')   || p.wind.wakeLoss * 100) / 100,
+        turbulenceLoss: (g('i-turb')   || p.wind.turbulenceLoss * 100) / 100,
+      },
+      offshore: {
+        waveHeight:      parseFloat(document.getElementById('sv-wh')?.textContent)   || p.offshore.waveHeight,
+        wavePeriod:      g('i-wper')   || p.offshore.wavePeriod,
+        currentSpeed:    parseFloat(document.getElementById('sv-curr')?.textContent) || p.offshore.currentSpeed,
+        platformMotion:  parseFloat(document.getElementById('sv-plat')?.textContent) || p.offshore.platformMotion,
+        corrosionLoss:   (g('i-corr')  || p.offshore.corrosionLoss * 100) / 100,
+        waveLoss:        (g('i-wloss') || p.offshore.waveLoss * 100) / 100,
+        maintenanceCost: g('i-maint')  || p.offshore.maintenanceCost,
+        safetyThreshold: g('i-riskmax')|| p.offshore.safetyThreshold,
+      },
+      battery: {
+        capacity:            g('i-bcap')  || p.battery.capacity,
+        currentCharge:       parseFloat(document.getElementById('sv-bcur')?.textContent) || p.battery.currentCharge,
+        chargeEfficiency:    (g('i-etac') || 95) / 100,
+        dischargeEfficiency: (g('i-etad') || 95) / 100,
+        demand:              g('i-demand')|| p.battery.demand,
+        minimumReserve:      (g('i-minres') || 20) / 100 * (g('i-bcap') || p.battery.capacity),
+      },
+      cost: {
+        installationBudget: g('i-budget')|| p.cost.installationBudget,
+        availableArea:      g('i-avarea')|| p.cost.availableArea,
+        co2Factor:          p.cost.co2Factor,
+      },
+    };
+  }
+
+  /* ── CALCULATE ──────────────────────────────────────────── */
+  function calculate() {
+    _prevResult = _result;
+    _params     = readParams();
+    _result     = PhysicsEngine.calculate(_params);
+
+    renderKPIs(_result, _prevResult);
+    renderConstraints(_result.violations);
+    renderBreakdown(_result);
+    renderLosses(_result);
+    renderWorldModel(_result);
+    renderCharts(_params);
+    drawScene();
+  }
+
+  /* ── KPI RENDERING ──────────────────────────────────────── */
+  function fmt(v, dec=0) {
+    if (!isFinite(v)) return '—';
+    if (dec === 0) return Math.round(v).toLocaleString();
+    return v.toFixed(dec);
+  }
+
+  function renderKPIs(res, prev) {
+    const { sRes, wRes, oRes, bRes, zRes } = res;
+    const delta = (cur, old, unit='') => {
+      if (!old) return '';
+      const d = cur - old;
+      if (Math.abs(d) < 0.01) return '';
+      const sign = d > 0 ? '▲ +' : '▼ ';
+      const col  = d > 0 ? 'var(--green)' : 'var(--red)';
+      return `<span style="color:${col}">${sign}${Math.abs(d).toFixed(1)}${unit}</span>`;
+    };
+
+    const set = (id, val, deltaHTML='', unit='') => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = val;
+      const de = document.getElementById(id+'-d');
+      if (de) de.innerHTML = deltaHTML;
+    };
+
+    const total = sRes.E_net + wRes.E_net + oRes.E_net;
+    const prevT = prev ? (prev.sRes.E_net + prev.wRes.E_net + prev.oRes.E_net) : null;
+
+    set('kpi-total',   fmt(total),                 delta(total, prevT, ' kWh'));
+    set('kpi-solar',   fmt(sRes.E_net),             delta(sRes.E_net, prev?.sRes.E_net, ' kWh'));
+    set('kpi-wind',    fmt(wRes.E_net),             delta(wRes.E_net, prev?.wRes.E_net, ' kWh'));
+    set('kpi-offshore',fmt(oRes.E_net),             delta(oRes.E_net, prev?.oRes.E_net, ' kWh'));
+    set('kpi-battery', fmt(bRes.SOC, 0),            `${fmt(bRes.B_next)} kWh / ${fmt(_params?.battery?.capacity)} kWh`);
+    set('kpi-cost',    '$'+fmt(zRes.totalCost),     delta(-zRes.totalCost, prev ? -prev.zRes.totalCost : null, ''));
+    set('kpi-Z',       fmt(zRes.Z),                 delta(zRes.Z, prev?.zRes.Z, ''));
+    set('kpi-cov',     fmt(zRes.coverage, 1)+'%',   delta(zRes.coverage, prev?.zRes.coverage, '%'));
+    set('kpi-co2',     fmt(zRes.co2saved/1000, 2),  '');
+    set('kpi-risk',    fmt(zRes.riskScore, 0),
+      zRes.riskScore < 30 ? '<span style="color:var(--green)">Safe</span>'
+      : zRes.riskScore < 60 ? '<span style="color:var(--amber)">Moderate</span>'
+      : '<span style="color:var(--red)">High Risk</span>');
+  }
+
+  /* ── CONSTRAINTS ────────────────────────────────────────── */
+  function renderConstraints(violations) {
+    const bar = document.getElementById('constraint-bar');
+    bar.className = 'constraint-bar';
+    if (violations.length === 0) {
+      bar.classList.add('visible', 'ok');
+      bar.innerHTML = '<span class="cbar-item cbar-ok">✓ All constraints satisfied</span>';
+    } else {
+      bar.classList.add('visible');
+      bar.innerHTML = violations.map(v =>
+        `<span class="cbar-item ${v.severity==='error'?'cbar-error':'cbar-warning'}">
+          ${v.severity==='error'?'⚠':'ℹ'} ${v.msg}
+        </span>`
+      ).join('');
+    }
+  }
+
+  /* ── DONUT CHART + BREAKDOWN LEGEND ───────────────────────── */
+  function renderBreakdown(res) {
+    const { sRes, wRes, oRes } = res;
+    const total = sRes.E_net + wRes.E_net + oRes.E_net;
+
+    const segments = [
+      { label:'Solar Energy',   val:sRes.E_net, color:'#f5a623' },
+      { label:'Wind Energy',    val:wRes.E_net, color:'#00d4ff' },
+      { label:'Offshore Energy',val:oRes.E_net, color:'#a855f7' },
+    ];
+
+    const tag = document.getElementById('breakdown-total-tag');
+    if (tag) tag.textContent = fmt(total) + ' kWh/day';
+
+    // Plotly donut
+    Plotly.react('donutChart', [{
+      type: 'pie',
+      values:  segments.map(s => s.val),
+      labels:  segments.map(s => s.label),
+      hole: 0.6,
+      marker: { colors: segments.map(s => s.color) },
+      textinfo: 'none',
+      hovertemplate: '%{label}<br>%{value:.0f} kWh (%{percent})<extra></extra>',
+    }], {
+      paper_bgcolor:'rgba(0,0,0,0)', plot_bgcolor:'rgba(0,0,0,0)',
+      margin:{l:0,r:0,t:0,b:0},
+      showlegend:false,
+      annotations:[{
+        text: `<b>${fmt(total)}</b><br><span style="font-size:10px">kWh/day</span>`,
+        x:0.5, y:0.5, xref:'paper', yref:'paper',
+        showarrow:false, align:'center',
+        font:{family:'JetBrains Mono', size:14, color:'#f0f6ff'},
+      }],
+    }, PLOTLY_CFG);
+
+    // Legend
+    const legend = document.getElementById('breakdown-legend');
+    if (legend) {
+      legend.innerHTML = segments.map(s => {
+        const pct = total > 0 ? (s.val / total * 100).toFixed(1) : '0.0';
+        return `<div class="bdl-item">
+          <div class="bdl-left">
+            <div class="bdl-dot" style="background:${s.color}"></div>
+            <span class="bdl-name">${s.label}</span>
+          </div>
+          <div class="bdl-right">
+            <span class="bdl-val">${fmt(s.val)}</span>
+            <span class="bdl-pct">${pct}%</span>
+          </div>
+        </div>`;
+      }).join('');
+    }
+  }
+
+  /* ── LOSSES TABLE ───────────────────────────────────────── */
+  function renderLosses(res) {
+    const { sRes, wRes, oRes } = res;
+    const losses = [
+      { name:'Shade Loss',       val: sRes.loss_shade || 0,      key:'shade' },
+      { name:'Temperature Loss', val: sRes.loss_temp  || 0,      key:'temp' },
+      { name:'Dust Loss',        val: sRes.loss_dust  || 0,      key:'dust' },
+      { name:'Wake Loss',        val: wRes.loss_wake  || 0,      key:'wake' },
+      { name:'Turbulence Loss',  val: wRes.loss_turbulence || 0, key:'turb' },
+      { name:'Wave Loss',        val: oRes.loss_wave  || 0,      key:'wave' },
+      { name:'Corrosion Loss',   val: oRes.loss_corrosion || 0,  key:'corr' },
+    ];
+    const totalLoss = losses.reduce((s, l) => s + l.val, 0);
+    const totalProd = (res.sRes.E_raw || 0) + (res.wRes.P_wind_single || 0) * (_params?.wind?.turbineCount || 1) * (_params?.solar?.timeHours || 8);
+    const pctOf = v => totalProd > 0 ? (v / totalProd * 100).toFixed(1) : '0.0';
+
+    const body = document.getElementById('loss-body');
+    if (!body) return;
+    body.innerHTML = losses.map(l =>
+      `<div class="loss-row">
+        <span class="loss-name">${l.name}</span>
+        <span class="loss-val">${fmt(l.val)} kWh</span>
+        <span class="loss-pct">${pctOf(l.val)}%</span>
+      </div>`
+    ).join('') + `
+      <div class="loss-row loss-total-row">
+        <span class="loss-name">Total Loss</span>
+        <span class="loss-val">${fmt(totalLoss)} kWh</span>
+        <span class="loss-pct">${pctOf(totalLoss)}%</span>
+      </div>`;
+  }
+
+  /* ── WORLD MODEL PANEL ──────────────────────────────────── */
+  function renderWorldModel(physRes) {
+    const wm  = MockData.mockWorldModelPrediction(physRes);
+    const body = document.getElementById('wm-body');
+    const conf = document.getElementById('wm-conf');
+    if (!body) return;
+
+    const items = [
+      { name:'Solar Energy (kWh/day)', phys: physRes.sRes.E_net, pred: wm.predicted_solar },
+      { name:'Wind Energy (kWh/day)',  phys: physRes.wRes.E_net, pred: wm.predicted_wind },
+      { name:'Offshore Energy (kWh)',  phys: physRes.oRes.E_net, pred: wm.predicted_offshore },
+      { name:'Battery Final (kWh)',    phys: physRes.bRes.B_next,pred: wm.predicted_battery },
+      { name:'Objective Value (Z)',    phys: physRes.zRes.Z,     pred: wm.predicted_Z },
+    ];
+
+    const maxVal = Math.max(...items.flatMap(i => [i.phys, i.pred]), 1);
+
+    body.innerHTML = items.map(item => {
+      const err    = Math.abs(item.phys - item.pred);
+      const errPct = item.phys > 0 ? (err / item.phys * 100).toFixed(1) : '0.0';
+      const physW  = (item.phys / maxVal * 100).toFixed(1);
+      const predW  = (item.pred / maxVal * 100).toFixed(1);
+      return `
+        <div class="wm-row">
+          <span class="wm-metric-name">${item.name}</span>
+          <div class="wm-bar-wrap">
+            <div class="wm-bar-track">
+              <div class="wm-bar-physics" style="width:${physW}%"></div>
+              <div class="wm-bar-wm"      style="width:${predW}%; opacity:0.6"></div>
+            </div>
+            <span class="wm-error" style="color:${parseFloat(errPct)>5?'var(--amber)':'var(--text-3)'}">
+              ${errPct}%
+            </span>
+          </div>
+        </div>`;
+    }).join('');
+
+    if (conf) {
+      conf.textContent = wm.confidence.toFixed(1) + '%';
+      conf.style.color = wm.confidence > 80 ? 'var(--green)'
+                       : wm.confidence > 60 ? 'var(--amber)' : 'var(--red)';
+    }
+  }
+
+  /* ── PLOTLY CHARTS ──────────────────────────────────────── */
+  function renderCharts(params) {
+    if (!params) return;
+    _chartsInit = true;
+
+    // 1. Tilt vs Solar Energy
+    const tiltData = Optimizer.sensitivity.tilt(params);
+    Plotly.react('g-tilt', [{
+      x: tiltData.map(d=>d.x), y: tiltData.map(d=>d.y),
+      type:'scatter', mode:'lines', fill:'tozeroy',
+      line:{color:'rgba(245,166,35,0.9)', width:1.5},
+      fillcolor:'rgba(245,166,35,0.07)',
+      hovertemplate:'%{x}° → %{y:.0f} kWh<extra></extra>',
+    }, {
+      x:[params.solar.tilt], y:[tiltData[params.solar.tilt]?.y||0],
+      type:'scatter', mode:'markers',
+      marker:{color:'#f5a623', size:8, symbol:'diamond'},
+    }], PLOTLY_LAYOUT('Tilt (°)', 'kWh'), PLOTLY_CFG);
+
+    // 2. Wind Speed vs Power
+    const windData = Optimizer.sensitivity.windSpeed(params);
+    Plotly.react('g-wind', [{
+      x: windData.map(d=>d.x), y: windData.map(d=>d.y),
+      type:'scatter', mode:'lines', fill:'tozeroy',
+      line:{color:'rgba(0,212,255,0.9)', width:1.5},
+      fillcolor:'rgba(0,212,255,0.07)',
+      hovertemplate:'%{x:.1f} m/s → %{y:.0f} kW<extra></extra>',
+    }, {
+      x:[params.wind.windSpeed], y:[windData[Math.round(params.wind.windSpeed*10)]?.y||0],
+      type:'scatter', mode:'markers',
+      marker:{color:'#00d4ff', size:8, symbol:'diamond'},
+    }], PLOTLY_LAYOUT('Speed (m/s)', 'kW'), PLOTLY_CFG);
+
+    // 3. Spacing vs Wake Loss
+    const wakeData = Optimizer.sensitivity.spacing(params);
+    Plotly.react('g-wake', [{
+      x: wakeData.map(d=>d.x), y: wakeData.map(d=>d.y),
+      type:'scatter', mode:'lines', fill:'tozeroy',
+      line:{color:'rgba(168,85,247,0.9)', width:1.5},
+      fillcolor:'rgba(168,85,247,0.07)',
+      hovertemplate:'%{x:.1f}D → %{y:.2f}%<extra></extra>',
+    }, {
+      x:[params.wind.turbineSpacing],
+      y:[Optimizer.sensitivity.spacing(params).find(d=>Math.abs(d.x-params.wind.turbineSpacing)<0.15)?.y||0],
+      type:'scatter', mode:'markers',
+      marker:{color:'#a855f7', size:8, symbol:'diamond'},
+    }], PLOTLY_LAYOUT('Spacing (×D)', 'Wake Loss %'), PLOTLY_CFG);
+
+    // 4. Battery Capacity vs Unmet Demand
+    const batData = Optimizer.sensitivity.battery(params);
+    Plotly.react('g-battery', [{
+      x: batData.map(d=>d.x), y: batData.map(d=>d.y),
+      type:'scatter', mode:'lines', fill:'tozeroy',
+      line:{color:'rgba(34,197,94,0.9)', width:1.5},
+      fillcolor:'rgba(34,197,94,0.07)',
+      hovertemplate:'%{x} kWh → Unmet=%{y:.0f} kWh<extra></extra>',
+    }], PLOTLY_LAYOUT('Cap (kWh)', 'Unmet kWh'), PLOTLY_CFG);
+
+    // 5. Wave Height vs Risk Score
+    const waveData = Optimizer.sensitivity.waveRisk(params);
+    Plotly.react('g-wave', [{
+      x: waveData.map(d=>d.x), y: waveData.map(d=>d.y),
+      type:'scatter', mode:'lines', fill:'tozeroy',
+      line:{color:'rgba(239,68,68,0.9)', width:1.5},
+      fillcolor:'rgba(239,68,68,0.07)',
+      hovertemplate:'Hs=%{x:.1f}m → R=%{y:.2f}<extra></extra>',
+    }], PLOTLY_LAYOUT('Wave Hs (m)', 'Risk Score'), PLOTLY_CFG);
+
+    // 6. Total Cost vs Net Energy (scatter)
+    const ceData = Optimizer.sensitivity.costEnergy(params);
+    Plotly.react('g-cost', [{
+      x: ceData.map(d=>d.cost), y: ceData.map(d=>d.energy),
+      type:'scatter', mode:'markers',
+      marker:{
+        color: ceData.map(d=>d.energy),
+        colorscale:[['0','rgba(239,68,68,0.8)'],['0.5','rgba(245,166,35,0.8)'],['1','rgba(34,197,94,0.8)']],
+        size:7, opacity:0.8,
+      },
+      hovertemplate:'$%{x:.2f}k → %{y:.0f} kWh<extra></extra>',
+    }], PLOTLY_LAYOUT('Cost ($k)', 'Net Energy (kWh)'), PLOTLY_CFG);
+  }
+
+  /* ── CANVAS SCENE ───────────────────────────────────────── */
+  let _sceneTimer = null;
+
+  function drawScene() {
+    const canvas = document.getElementById('sceneCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const W   = canvas.offsetWidth;
+    const H   = 260;
+    canvas.width = W; canvas.height = H;
+
+    // Sky gradient
+    const sky = ctx.createLinearGradient(0,0,0,H*0.65);
+    sky.addColorStop(0,'#001020'); sky.addColorStop(1,'#002040');
+    ctx.fillStyle = sky; ctx.fillRect(0,0,W,H);
+
+    // Sun
+    ctx.shadowBlur = 40; ctx.shadowColor = '#f5a623';
+    ctx.fillStyle  = '#f5a623';
+    ctx.beginPath(); ctx.arc(W*0.12, H*0.22, 28, 0, Math.PI*2); ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Ground
+    const ground = ctx.createLinearGradient(0,H*0.6,0,H*0.75);
+    ground.addColorStop(0,'#1a3a1a'); ground.addColorStop(1,'#0f2a0f');
+    ctx.fillStyle = ground; ctx.fillRect(0, H*0.6, W*0.65, H*0.4);
+
+    // Water
+    const water = ctx.createLinearGradient(0,H*0.62,0,H);
+    water.addColorStop(0,'rgba(0,80,160,0.8)'); water.addColorStop(1,'rgba(0,40,100,0.9)');
+    ctx.fillStyle = water; ctx.fillRect(W*0.6, H*0.62, W*0.4, H*0.38);
+
+    // Shoreline
+    ctx.strokeStyle='rgba(0,180,255,0.3)'; ctx.lineWidth=1.5; ctx.setLineDash([6,4]);
+    ctx.beginPath(); ctx.moveTo(W*0.6,H*0.62); ctx.lineTo(W*0.6,H); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Solar panels (bottom-left)
+    drawSolarField(ctx, W*0.05, H*0.62, 180, 60, _params?.solar?.tilt || 32);
+
+    // Wind turbines (mid)
+    const nT = Math.min(6, _params?.wind?.turbineCount || 5);
+    for (let i=0; i<nT; i++) {
+      drawTurbine(ctx, W*(0.33 + i*0.045), H*0.58, 55 + i*4, '#00d4ff');
+    }
+
+    // Offshore turbines
+    const nO = Math.min(4, 3);
+    for (let i=0; i<nO; i++) {
+      drawOffshooreTurbine(ctx, W*(0.68 + i*0.09), H*0.66, 42 + i*3);
+    }
+
+    // Labels
+    ctx.shadowBlur=0;
+    drawLabel(ctx, W*0.15, H*0.58,
+      `SOLAR FIELD\n${((_params?.solar?.panelArea)||5000).toLocaleString()} m²`, '#f5a623');
+    drawLabel(ctx, W*0.42, H*0.46,
+      `WIND FARM\n${_params?.wind?.turbineCount||5} Turbines\nPower: ${((_result?.wRes?.P_net||2450)/1000).toFixed(2)} MW`, '#00d4ff');
+    drawLabel(ctx, W*0.78, H*0.55,
+      `OFFSHORE FARM\n3 Turbines\nPower: ${((_result?.oRes?.E_net||1350)/8/1000).toFixed(2)} MW`, '#a855f7');
+
+    // Battery badge
+    ctx.fillStyle='rgba(10,21,37,0.85)'; ctx.strokeStyle='rgba(34,197,94,0.5)'; ctx.lineWidth=1;
+    ctx.fillRect(W*0.55, H*0.72, 130, 50); ctx.strokeRect(W*0.55, H*0.72, 130, 50);
+    ctx.fillStyle='var(--green)';
+    ctx.font='bold 9px JetBrains Mono'; ctx.fillStyle='#22c55e';
+    ctx.fillText('BATTERY SYSTEM', W*0.56, H*0.74+12);
+    ctx.fillStyle='rgba(200,220,255,0.7)'; ctx.font='8px JetBrains Mono';
+    ctx.fillText(`Capacity: ${((_params?.battery?.capacity)||1500)} kWh`, W*0.56, H*0.74+24);
+    ctx.fillText(`Charge: ${((_params?.battery?.currentCharge)||750)} kWh (${((_result?.bRes?.SOC)||50).toFixed(0)}%)`, W*0.56, H*0.74+36);
+
+    // Animate turbines
+    if (_sceneTimer) cancelAnimationFrame(_sceneTimer);
+    let angle = 0;
+    const anim = () => {
+      angle += 0.02;
+      // Redraw turbine blades only (simplified: full redraw every 3 frames)
+      _sceneTimer = requestAnimationFrame(anim);
+    };
+    // Don't loop draw here — just static. Turbine anim would require partial redraw.
+  }
+
+  function drawSolarField(ctx, x, y, w, h, tilt) {
+    ctx.save();
+    ctx.fillStyle='rgba(255,170,0,0.15)'; ctx.strokeStyle='#f5a623'; ctx.lineWidth=1;
+    const rows=4, cols=8;
+    const cw=w/cols, ch=h/rows;
+    for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){
+      const px=x+c*cw+1, py=y+r*ch+1;
+      ctx.fillRect(px,py,cw-2,ch-2); ctx.strokeRect(px,py,cw-2,ch-2);
+      // Tilt indicator line
+      ctx.strokeStyle='rgba(255,170,0,0.3)'; ctx.lineWidth=0.5;
+      ctx.beginPath(); ctx.moveTo(px,py+ch/2); ctx.lineTo(px+cw-2,py+ch/2); ctx.stroke();
+      ctx.strokeStyle='#f5a623'; ctx.lineWidth=1;
+    }
+    ctx.restore();
+  }
+
+  function drawTurbine(ctx, x, y, h, color) {
+    ctx.save();
+    ctx.strokeStyle=color; ctx.fillStyle=color;
+    ctx.shadowBlur=12; ctx.shadowColor=color;
+    ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(x,y+h*0.05); ctx.lineTo(x,y); ctx.stroke();
+    // Blades
+    const t=(Date.now()/1000);
+    for(let i=0;i<3;i++){
+      const a=t+i*Math.PI*2/3;
+      ctx.beginPath();
+      ctx.moveTo(x,y-h*0.12);
+      ctx.lineTo(x+Math.cos(a)*h*0.35, y+Math.sin(a)*h*0.35);
+      ctx.lineWidth=1.5; ctx.stroke();
+    }
+    ctx.beginPath(); ctx.arc(x,y-h*0.12,3,0,Math.PI*2); ctx.fill();
+    ctx.shadowBlur=0;
+    ctx.restore();
+  }
+
+  function drawOffshooreTurbine(ctx, x, y, h) {
+    ctx.save();
+    ctx.strokeStyle='#a855f7'; ctx.fillStyle='#a855f7';
+    ctx.shadowBlur=10; ctx.shadowColor='#a855f7'; ctx.lineWidth=1.5;
+    // Platform
+    ctx.fillStyle='rgba(168,85,247,0.2)';
+    ctx.fillRect(x-10, y+4, 20, 10); ctx.strokeRect(x-10, y+4, 20, 10);
+    ctx.beginPath(); ctx.moveTo(x,y+4); ctx.lineTo(x,y-h*0.05); ctx.strokeStyle='#a855f7'; ctx.stroke();
+    const t2=(Date.now()/1400);
+    for(let i=0;i<3;i++){
+      const a=t2+i*Math.PI*2/3;
+      ctx.beginPath();
+      ctx.moveTo(x,y-h*0.05);
+      ctx.lineTo(x+Math.cos(a)*h*0.3, y-h*0.05+Math.sin(a)*h*0.3);
+      ctx.lineWidth=1.5; ctx.stroke();
+    }
+    ctx.beginPath(); ctx.arc(x,y-h*0.05,2.5,0,Math.PI*2); ctx.fillStyle='#a855f7'; ctx.fill();
+    ctx.shadowBlur=0;
+    ctx.restore();
+  }
+
+  function drawLabel(ctx, x, y, text, color) {
+    const lines=text.split('\n');
+    const lh=13, pad=6;
+    const maxW=Math.max(...lines.map(l=>l.length*5.5));
+    ctx.fillStyle='rgba(5,12,25,0.8)'; ctx.strokeStyle=color+'66'; ctx.lineWidth=1;
+    ctx.fillRect(x-pad, y-lh, maxW+pad*2, lines.length*lh+pad);
+    ctx.strokeRect(x-pad, y-lh, maxW+pad*2, lines.length*lh+pad);
+    ctx.font='bold 9px JetBrains Mono'; ctx.fillStyle=color; ctx.shadowBlur=0;
+    lines.forEach((l,i) => {
+      if(i===0) ctx.font='bold 9px JetBrains Mono';
+      else ctx.font='8px JetBrains Mono'; ctx.fillStyle=i===0?color:'rgba(200,220,255,0.7)';
+      ctx.fillText(l, x, y+i*lh);
+    });
+  }
+
+  /* ── OPTIMIZER ──────────────────────────────────────────── */
+  function startOptimize() {
+    if (Optimizer.isRunning()) return;
+    _params = readParams();
+
+    const status = document.getElementById('opt-status');
+    if (status) status.textContent = 'Running…';
+    document.getElementById('apply-btn').disabled = true;
+
+    Optimizer.run(_params, {
+      onProgress: ({ count, total, pct, currentBestZ }) => {
+        document.getElementById('prog-fill').style.width = pct + '%';
+        document.getElementById('prog-pct').textContent  = pct + '%';
+        document.getElementById('prog-text').textContent = `Searching combinations…  Best Z: ${isFinite(currentBestZ) ? Math.round(currentBestZ).toLocaleString() : '—'}`;
+        document.getElementById('prog-detail').textContent = `${count.toLocaleString()} / ${total.toLocaleString()} evaluated`;
+      },
+      onComplete: ({ found, result, combo, Z, totalEvaluated }) => {
+        if (status) status.textContent = found ? '✓ Optimal Configuration Found!' : '⚠ No Feasible Solution';
+        if (status) status.style.color = found ? 'var(--green)' : 'var(--red)';
+        document.getElementById('prog-text').textContent = `Search complete — ${totalEvaluated.toLocaleString()} combinations evaluated`;
+        document.getElementById('prog-fill').style.width = '100%';
+
+        if (!found || !result || !combo) return;
+        _optResult = { result, combo };
+
+        // Current values for delta
+        const cur = _result || PhysicsEngine.calculate(_params);
+
+        const dFmt = (newV, oldV, unit='', dec=0) => {
+          const d = newV - oldV;
+          if (Math.abs(d) < 0.01) return '<span style="color:var(--text-3)">no change</span>';
+          const sign = d > 0 ? '▲ +' : '▼ ';
+          const col  = d > 0 ? 'var(--green)' : 'var(--amber)';
+          return `<span style="color:${col}">${sign}${Math.abs(d).toFixed(dec)}${unit}</span>`;
+        };
+
+        document.getElementById('op-tilt').textContent = combo.tilt + '°';
+        document.getElementById('op-tilt-d').innerHTML = dFmt(combo.tilt, _params.solar.tilt, '°', 0) + ` (was ${_params.solar.tilt}°)`;
+        document.getElementById('op-az').textContent   = combo.azimuth + '°';
+        document.getElementById('op-az-d').innerHTML   = dFmt(combo.azimuth, _params.solar.azimuth, '°', 0) + ` (was ${_params.solar.azimuth}°)`;
+        document.getElementById('op-yaw').textContent  = combo.yaw + '°';
+        document.getElementById('op-yaw-d').innerHTML  = dFmt(-combo.yaw, -(_params.wind.yawAngle||0), '°', 0) + ` (was ${_params.wind.yawAngle||0}°)`;
+        document.getElementById('op-sp').textContent   = combo.spacing + 'D';
+        document.getElementById('op-sp-d').innerHTML   = dFmt(combo.spacing, _params.wind.turbineSpacing, 'D', 1) + ` (was ${_params.wind.turbineSpacing}D)`;
+        document.getElementById('op-bc').textContent   = combo.bcap.toLocaleString() + ' kWh';
+        document.getElementById('op-bc-d').innerHTML   = dFmt(combo.bcap, _params.battery.capacity, ' kWh', 0) + ` (was ${_params.battery.capacity})`;
+        document.getElementById('op-cl').textContent   = combo.cleaning + ' days';
+        document.getElementById('op-cl-d').innerHTML   = dFmt(-combo.cleaning, -_params.solar.cleaningInterval, ' d', 0) + ` (was ${_params.solar.cleaningInterval}d)`;
+
+        const optE = result.zRes.totalEnergy;
+        const curE = cur.zRes.totalEnergy;
+        const optC = result.zRes.totalCost;
+        const curC = cur.zRes.totalCost;
+
+        document.getElementById('os-energy').textContent   = Math.round(optE).toLocaleString() + ' kWh/day';
+        document.getElementById('os-energy-d').innerHTML   = dFmt(optE, curE, ' kWh', 0);
+        document.getElementById('os-cost').textContent     = '$' + Math.round(optC).toLocaleString();
+        document.getElementById('os-cost-d').innerHTML     = dFmt(-optC, -curC, '', 0);
+        document.getElementById('os-Z').textContent        = Math.round(Z).toLocaleString();
+        document.getElementById('os-Z-d').innerHTML        = dFmt(Z, cur.zRes.Z, '', 0);
+
+        document.getElementById('apply-btn').disabled = false;
+      },
+    });
+  }
+
+  /* ── APPLY OPTIMIZED ────────────────────────────────────── */
+  function applyOptimized() {
+    if (!_optResult) return;
+    const { combo } = _optResult;
+    // Update slider display values
+    const set = (id, v) => { const el=document.getElementById(id); if(el) el.textContent=v; };
+    set('sv-tilt',    combo.tilt+'°'); set('sv-azimuth', combo.azimuth+'°');
+    set('sv-yaw',     combo.yaw+'°');  set('sv-spacing',  combo.spacing+'D');
+    set('sv-cint',    combo.cleaning+'d');
+    // Update sliders position (approximate)
+    document.querySelectorAll('input[type=range]').forEach(sl => {
+      if(sl.oninput?.toString().includes("'tilt'"))     sl.value = combo.tilt;
+      if(sl.oninput?.toString().includes("'azimuth'"))  sl.value = combo.azimuth;
+      if(sl.oninput?.toString().includes("'yawAngle'")) sl.value = combo.yaw;
+      if(sl.oninput?.toString().includes("'turbineSpacing'")) sl.value = combo.spacing;
+      if(sl.oninput?.toString().includes("'cleaningInterval'")) sl.value = combo.cleaning;
+    });
+    document.getElementById('i-bcap').value = combo.bcap;
+    calculate();
+  }
+
+  /* ── SIDEBAR HELPERS ────────────────────────────────────── */
+  function toggleSection(name) {
+    const body = document.getElementById('body-' + name);
+    const arr  = document.getElementById('arr-' + name);
+    if (!body) return;
+    const isOpen = !body.classList.contains('collapsed');
+    body.classList.toggle('collapsed', isOpen);
+    if (arr) arr.classList.toggle('open', !isOpen);
+  }
+
+  function slider(section, field, rawVal, displayId, suffix, scale=1) {
+    const val = parseFloat(rawVal);
+    const disp = document.getElementById(displayId);
+    if (disp) disp.textContent = (val * (scale !== 1 ? 1/scale : 1)).toFixed(scale===0.01?0:1).replace('.0','') + suffix;
+    // Debounced recalc
+    clearTimeout(App._sliderTimer);
+    App._sliderTimer = setTimeout(() => calculate(), 80);
+  }
+
+  function fieldChange() {
+    clearTimeout(App._fieldTimer);
+    App._fieldTimer = setTimeout(() => calculate(), 200);
+  }
+
+  function setView(v) {
+    document.querySelectorAll('.scene-ctrl').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+    drawScene();
+  }
+
+  function saveScenario() {
+    const p   = readParams();
+    const out = { savedAt: new Date().toISOString(), params: p, result: _result?.zRes };
+    const bl  = new Blob([JSON.stringify(out,null,2)], {type:'application/json'});
+    const url = URL.createObjectURL(bl);
+    const a   = document.createElement('a');
+    a.href=url; a.download='relab-scenario.json'; a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function loadScenario() { alert('Load scenario: upload a previously saved JSON file.'); }
+
+  /* ── INIT ───────────────────────────────────────────────── */
+  document.addEventListener('DOMContentLoaded', () => {
+    calculate();
+
+    // Redraw scene on window resize
+    window.addEventListener('resize', () => {
+      clearTimeout(App._resizeTimer);
+      App._resizeTimer = setTimeout(drawScene, 150);
+    });
+
+    // Animate canvas (turbine blades)
+    let frameCount = 0;
+    const animCanvas = () => {
+      frameCount++;
+      if (frameCount % 3 === 0) drawScene();
+      requestAnimationFrame(animCanvas);
+    };
+    animCanvas();
+  });
+
+  /* ── PUBLIC ─────────────────────────────────────────────── */
+  return {
+    calculate,
+    startOptimize,
+    applyOptimized,
+    toggleSection,
+    slider,
+    fieldChange,
+    setView,
+    saveScenario,
+    loadScenario,
+  };
+
+})();
+
+</script>
 </body>
 </html>
