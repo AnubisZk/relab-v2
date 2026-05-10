@@ -1,0 +1,1231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wind Turbine Training — WIN-U01 · REpower · ZSK Solutions</title>
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@700;800&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg0:#070f17;--bg1:#0c1a25;--bg2:#111f2e;--bg3:#162438;--card:#0f1c2e;
+  --wind:#00d4ff;--wind-d:rgba(0,212,255,0.12);--wind-g:rgba(0,212,255,0.35);
+  --green:#22c55e;--green-d:rgba(34,197,94,0.12);
+  --amber:#f5a623;--amber-d:rgba(245,166,35,0.12);
+  --red:#ef4444;--red-d:rgba(239,68,68,0.12);
+  --purple:#a855f7;--purple-d:rgba(168,85,247,0.12);
+  --text1:#f0f6ff;--text2:rgba(200,220,255,0.65);--text3:rgba(140,170,210,0.4);
+  --border:rgba(0,212,255,0.10);--borderb:rgba(0,212,255,0.25);
+  --font-ui:'Space Grotesk',sans-serif;--font-mono:'JetBrains Mono',monospace;--font-head:'Syne',sans-serif;
+  --r:6px;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{font-size:14px}
+body{background:var(--bg0);color:var(--text1);font-family:var(--font-ui);min-height:100vh;overflow-x:hidden}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:var(--bg1)}
+::-webkit-scrollbar-thumb{background:rgba(0,212,255,0.25);border-radius:2px}
+
+/* TOPBAR */
+#topbar{height:52px;background:var(--bg1);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:16px;position:sticky;top:0;z-index:200}
+.brand{font-family:var(--font-head);font-size:14px;font-weight:800;color:var(--wind);letter-spacing:0.06em}
+.brand-sub{font-family:var(--font-mono);font-size:9px;color:var(--text3);letter-spacing:0.1em;margin-top:1px}
+.nav-tabs{display:flex;gap:2px;flex:1;margin-left:16px}
+.nav-tab{font-family:var(--font-mono);font-size:10px;letter-spacing:0.1em;color:var(--text3);padding:6px 14px;border-bottom:2px solid transparent;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px;text-transform:uppercase;white-space:nowrap;background:none;border-top:none;border-left:none;border-right:none}
+.nav-tab:hover{color:var(--text2);border-bottom-color:rgba(0,212,255,0.3)}
+.nav-tab.active{color:var(--wind);border-bottom-color:var(--wind)}
+.eqf-switch{display:flex;gap:0;margin-left:auto}
+.eqf-btn{font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:0.1em;padding:6px 14px;border:1px solid var(--borderb);cursor:pointer;transition:all .2s;background:transparent;color:var(--text3)}
+.eqf-btn:first-child{border-radius:var(--r) 0 0 var(--r)}
+.eqf-btn:last-child{border-radius:0 var(--r) var(--r) 0;border-left:none}
+.eqf-btn.active{background:var(--wind);color:#000;border-color:var(--wind)}
+.progress-ring{display:flex;align-items:center;gap:8px;margin-left:12px}
+.ring-label{font-family:var(--font-mono);font-size:9px;color:var(--text3);letter-spacing:0.1em}
+.ring-val{font-family:var(--font-mono);font-size:12px;font-weight:700;color:var(--wind)}
+
+/* LEVEL NAV */
+#level-nav{display:flex;gap:0;padding:0 20px;background:var(--bg1);border-bottom:1px solid var(--border)}
+.level-tab{font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:0.12em;color:var(--text3);padding:10px 20px;cursor:pointer;transition:all .2s;border-bottom:3px solid transparent;text-transform:uppercase;display:flex;align-items:center;gap:8px;background:none;border-top:none;border-left:none;border-right:none}
+.level-tab:hover{color:var(--text2)}
+.level-tab.active{color:var(--wind);border-bottom-color:var(--wind)}
+.level-badge{font-size:8px;padding:2px 6px;border-radius:10px;background:var(--wind-d);color:var(--wind);border:1px solid rgba(0,212,255,0.3)}
+
+/* MAIN */
+#main{max-width:1600px;margin:0 auto;padding:16px 20px 40px}
+.section-panel{display:none}
+.section-panel.active{display:block}
+
+/* CARDS */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:12px}
+.card-hdr{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border);background:rgba(0,0,0,0.2)}
+.card-title{font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:0.14em;color:var(--text2);text-transform:uppercase}
+.card-body{padding:14px}
+
+/* KPI STRIP */
+.kpi-strip{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:12px}
+@media(max-width:1100px){.kpi-strip{grid-template-columns:repeat(3,1fr)}}
+.kpi{background:var(--card);border:1px solid var(--border);border-top:2px solid var(--kpi-c,var(--wind));border-radius:var(--r);padding:10px 12px;position:relative;overflow:hidden}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:36px;background:linear-gradient(to bottom,var(--kpi-d,var(--wind-d)),transparent);pointer-events:none}
+.kpi-label{font-family:var(--font-mono);font-size:8px;letter-spacing:0.14em;color:var(--text3);text-transform:uppercase;margin-bottom:4px}
+.kpi-value{font-family:var(--font-mono);font-size:clamp(16px,1.8vw,22px);font-weight:700;color:var(--kpi-c,var(--wind));text-shadow:0 0 16px var(--kpi-c,var(--wind));line-height:1}
+.kpi-unit{font-family:var(--font-mono);font-size:9px;color:var(--text3);margin-top:2px}
+.kpi-sub{font-family:var(--font-mono);font-size:9px;color:var(--text2);margin-top:4px}
+.c-wind{--kpi-c:var(--wind);--kpi-d:var(--wind-d)}
+.c-green{--kpi-c:var(--green);--kpi-d:var(--green-d)}
+.c-amber{--kpi-c:var(--amber);--kpi-d:var(--amber-d)}
+.c-red{--kpi-c:var(--red);--kpi-d:var(--red-d)}
+.c-purple{--kpi-c:var(--purple);--kpi-d:var(--purple-d)}
+
+/* TURBINE DIAGRAM */
+#turbine-canvas-wrap{position:relative;background:var(--bg2);border-radius:var(--r)}
+#turbineCanvas{display:block;width:100%;cursor:pointer}
+#component-tooltip{position:absolute;display:none;background:rgba(7,12,20,0.97);border:1px solid var(--wind);border-radius:var(--r);padding:12px 16px;max-width:300px;z-index:100;pointer-events:none}
+.tt-name{font-family:var(--font-mono);font-size:11px;font-weight:700;color:var(--wind);margin-bottom:6px;letter-spacing:0.1em}
+.tt-func{font-size:12px;color:var(--text2);line-height:1.5;margin-bottom:6px}
+.tt-kpi{font-family:var(--font-mono);font-size:9px;color:var(--green);letter-spacing:0.08em}
+.tt-eqf5{font-family:var(--font-mono);font-size:9px;color:var(--amber);margin-top:4px;letter-spacing:0.06em}
+
+/* MID GRID */
+.mid-grid{display:grid;grid-template-columns:1fr 340px;gap:12px}
+@media(max-width:1100px){.mid-grid{grid-template-columns:1fr}}
+
+/* PARAMS */
+.param-grid{display:flex;flex-direction:column;gap:10px}
+.param-row{display:flex;flex-direction:column;gap:4px}
+.param-hdr{display:flex;justify-content:space-between;align-items:center}
+.param-name{font-size:11px;color:var(--text2)}
+.param-val{font-family:var(--font-mono);font-size:12px;font-weight:700;color:var(--wind)}
+input[type=range]{-webkit-appearance:none;width:100%;height:3px;background:rgba(255,255,255,0.08);outline:none;cursor:pointer;border-radius:0}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:2px;background:var(--wind);box-shadow:0 0 8px var(--wind);cursor:pointer}
+.formula-box{font-family:var(--font-mono);font-size:10px;color:var(--text3);background:rgba(0,0,0,0.3);padding:8px 10px;border-left:2px solid var(--wind);line-height:1.6;margin-top:8px}
+
+/* GRAPHS */
+.graphs-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.graph-cell{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.graph-cell-title{font-family:var(--font-mono);font-size:9px;font-weight:700;letter-spacing:0.12em;color:var(--text3);text-transform:uppercase;padding:7px 10px;border-bottom:1px solid var(--border)}
+.plotly-g{width:100%;height:140px}
+
+/* ANOMALY */
+.anomaly-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+@media(max-width:900px){.anomaly-grid{grid-template-columns:1fr}}
+.anomaly-card{border:1px solid var(--border);border-radius:var(--r);padding:12px;background:var(--bg2);cursor:pointer;transition:all .2s}
+.anomaly-card:hover{border-color:var(--wind);background:rgba(0,212,255,0.04)}
+.anomaly-card.triggered{border-color:var(--red);background:var(--red-d)}
+.anomaly-title{font-family:var(--font-mono);font-size:10px;font-weight:700;color:var(--text2);letter-spacing:0.1em;margin-bottom:6px}
+.anomaly-desc{font-size:11px;color:var(--text3);line-height:1.5;margin-bottom:8px}
+.anomaly-btn{font-family:var(--font-mono);font-size:9px;font-weight:700;letter-spacing:0.1em;padding:5px 10px;border:1px solid var(--wind);color:var(--wind);background:var(--wind-d);cursor:pointer;border-radius:3px;transition:all .2s}
+.anomaly-btn:hover{background:var(--wind-g);color:#000}
+.anomaly-result{font-family:var(--font-mono);font-size:10px;margin-top:8px;padding:8px;background:rgba(0,0,0,0.3);border-radius:3px;display:none;line-height:1.6}
+.anomaly-result.show{display:block}
+
+/* CHECKLIST */
+.checklist-grid{display:flex;flex-direction:column;gap:6px}
+.check-item{display:grid;grid-template-columns:auto 1fr auto auto auto;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--r);background:var(--bg2);transition:all .2s}
+.check-item.ok{border-color:rgba(34,197,94,0.4);background:rgba(34,197,94,0.04)}
+.check-item.deviate{border-color:rgba(239,68,68,0.4);background:rgba(239,68,68,0.04)}
+.check-num{font-family:var(--font-mono);font-size:10px;font-weight:700;color:var(--text3);width:20px}
+.check-name{font-size:12px;color:var(--text2)}
+.check-hint{font-size:10px;color:var(--text3);margin-top:2px}
+.check-input{width:90px;background:var(--bg0);border:1px solid rgba(255,255,255,0.1);color:var(--text1);font-family:var(--font-mono);font-size:12px;font-weight:600;padding:4px 8px;border-radius:3px;outline:none;text-align:right;transition:border-color .2s;-moz-appearance:textfield}
+.check-input::-webkit-inner-spin-button{-webkit-appearance:none}
+.check-input:focus{border-color:var(--wind)}
+.check-tolerance{font-family:var(--font-mono);font-size:9px;color:var(--text3);white-space:nowrap}
+.check-status{font-family:var(--font-mono);font-size:9px;font-weight:700;letter-spacing:0.1em;padding:3px 8px;border-radius:3px;border:1px solid;white-space:nowrap}
+.status-ok{color:var(--green);border-color:rgba(34,197,94,0.3);background:var(--green-d)}
+.status-dev{color:var(--red);border-color:rgba(239,68,68,0.3);background:var(--red-d)}
+.status-empty{color:var(--text3);border-color:rgba(255,255,255,0.08);background:transparent}
+#deviation-log{margin-top:12px;display:none}
+#deviation-log.visible{display:block}
+.dev-log-item{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:start;padding:10px 12px;border-left:3px solid var(--red);background:var(--red-d);border-radius:0 var(--r) var(--r) 0;margin-bottom:6px}
+.dev-item-num{font-family:var(--font-mono);font-size:10px;font-weight:700;color:var(--red)}
+.dev-item-body{display:flex;flex-direction:column;gap:3px}
+.dev-item-name{font-size:12px;color:var(--text1);font-weight:600}
+.dev-item-vals{font-family:var(--font-mono);font-size:10px;color:var(--text2)}
+.dev-item-note{font-size:11px;color:var(--text3);margin-top:2px}
+.dev-item-badge{font-family:var(--font-mono);font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;background:var(--red-d);color:var(--red);border:1px solid rgba(239,68,68,0.3);white-space:nowrap}
+.check-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:12px;border-top:1px solid var(--border);margin-top:8px}
+.sum-item{display:flex;flex-direction:column;gap:3px;align-items:center}
+.sum-val{font-family:var(--font-mono);font-size:18px;font-weight:700}
+.sum-label{font-family:var(--font-mono);font-size:8px;letter-spacing:0.12em;color:var(--text3);text-transform:uppercase}
+
+/* LEVEL 3 */
+.drag-pool{display:flex;flex-wrap:wrap;gap:8px;padding:12px}
+.drag-chip{font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:0.08em;padding:6px 12px;border:1px solid var(--wind);color:var(--wind);background:var(--wind-d);border-radius:3px;cursor:grab;transition:all .2s;user-select:none}
+.drag-chip:hover{background:var(--wind-g);color:#000;transform:scale(1.04)}
+.drag-chip.used{opacity:0.3;cursor:not-allowed;pointer-events:none}
+.drop-zone{position:absolute;border:2px dashed rgba(0,212,255,0.4);border-radius:4px;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:9px;color:rgba(0,212,255,0.5);transition:all .2s;cursor:pointer}
+.drop-zone.over{border-color:var(--wind);background:var(--wind-d);color:var(--wind)}
+.drop-zone.correct{border-color:var(--green);background:var(--green-d);color:var(--green);border-style:solid}
+.drop-zone.wrong{border-color:var(--red);background:var(--red-d);color:var(--red);border-style:solid}
+.drop-zone.filled{border-style:solid;border-color:var(--wind);background:var(--wind-d);color:var(--wind)}
+.score-panel{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--bg2);border-radius:var(--r);border:1px solid var(--border);margin-bottom:8px}
+.score-big{font-family:var(--font-mono);font-size:28px;font-weight:700;color:var(--wind);text-shadow:0 0 20px var(--wind)}
+.score-label{font-family:var(--font-mono);font-size:9px;color:var(--text3);letter-spacing:0.12em;text-transform:uppercase;margin-top:2px}
+.score-actions{display:flex;gap:8px}
+.act-btn{font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:0.1em;padding:8px 16px;border:1px solid;border-radius:var(--r);cursor:pointer;transition:all .2s}
+.btn-reset{color:var(--text3);border-color:rgba(255,255,255,0.15);background:transparent}
+.btn-check{color:var(--wind);border-color:var(--wind);background:var(--wind-d)}
+.btn-check:hover{background:var(--wind-g);color:#000}
+.btn-export{color:var(--green);border-color:var(--green);background:var(--green-d)}
+.btn-export:hover{background:rgba(34,197,94,0.3);color:#000}
+.kpi-map-table{width:100%;border-collapse:collapse}
+.kpi-map-table th{font-family:var(--font-mono);font-size:9px;letter-spacing:0.12em;color:var(--text3);text-transform:uppercase;padding:6px 10px;text-align:left;border-bottom:1px solid var(--border)}
+.kpi-map-table td{font-size:11px;color:var(--text2);padding:7px 10px;border-bottom:1px solid var(--border)}
+.kpi-map-table tr:last-child td{border-bottom:none}
+.kpi-chip{font-family:var(--font-mono);font-size:9px;padding:2px 7px;border-radius:3px;background:var(--wind-d);color:var(--wind);border:1px solid rgba(0,212,255,0.2)}
+
+/* UTILS */
+.tag{font-family:var(--font-mono);font-size:8px;letter-spacing:0.1em;padding:2px 7px;border-radius:3px;border:1px solid;text-transform:uppercase}
+.tag-ok{color:var(--green);border-color:rgba(34,197,94,0.3);background:var(--green-d)}
+.tag-warn{color:var(--amber);border-color:rgba(245,166,35,0.3);background:var(--amber-d)}
+.tag-info{color:var(--wind);border-color:rgba(0,212,255,0.3);background:var(--wind-d)}
+.tag-eqf5{color:var(--purple);border-color:rgba(168,85,247,0.3);background:var(--purple-d)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:900px){.row2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div id="topbar">
+  <div>
+    <div class="brand">⟳ Wind Turbine Training</div>
+    <div class="brand-sub">WIN-U01 · REpower Erasmus+ KA220-VET · ZSK Solutions</div>
+  </div>
+  <nav class="nav-tabs">
+    <button class="nav-tab active" onclick="switchLevel(1)">① Wind System &amp; KPIs</button>
+    <button class="nav-tab" onclick="switchLevel(2)">② Physics &amp; Anomaly</button>
+    <button class="nav-tab" onclick="switchLevel(3)">③ VR Labeling</button>
+  </nav>
+  <div class="eqf-switch">
+    <button class="eqf-btn active" id="eqf4btn" onclick="setEQF(4)">EQF 4</button>
+    <button class="eqf-btn" id="eqf5btn" onclick="setEQF(5)">EQF 5</button>
+  </div>
+  <div class="progress-ring">
+    <span class="ring-label">PROGRESS</span>
+    <span class="ring-val" id="topProgress">0%</span>
+  </div>
+</div>
+
+<!-- LEVEL TABS -->
+<div id="level-nav">
+  <button class="level-tab active" id="ltab1" onclick="switchLevel(1)">
+    <span>📋</span> Level 1 — Wind System Overview
+    <span class="level-badge">WIN-U01 A1</span>
+  </button>
+  <button class="level-tab" id="ltab2" onclick="switchLevel(2)">
+    <span>⚡</span> Level 2 — Physics &amp; Anomaly Detection
+    <span class="level-badge">WIN-U01 A2–A3</span>
+  </button>
+  <button class="level-tab" id="ltab3" onclick="switchLevel(3)">
+    <span>🎮</span> Level 3 — VR Component Labeling
+    <span class="level-badge">WIN-U01 A1 VR</span>
+  </button>
+</div>
+
+<div id="main">
+
+<!-- ═══ LEVEL 1 ═══ -->
+<div class="section-panel active" id="panel1">
+
+  <div class="kpi-strip">
+    <div class="kpi c-wind"><div class="kpi-label">Wind Power Output</div><div class="kpi-value" id="k-pout">—</div><div class="kpi-unit">kW (farm)</div><div class="kpi-sub" id="k-pout-f">P=½ρAv³Cp</div></div>
+    <div class="kpi c-green"><div class="kpi-label">Power Coefficient Cp</div><div class="kpi-value" id="k-cp">—</div><div class="kpi-unit">Betz limit: 0.593</div><div class="kpi-sub" id="k-cp-s">—</div></div>
+    <div class="kpi c-amber"><div class="kpi-label">Capacity Factor</div><div class="kpi-value" id="k-cf">—</div><div class="kpi-unit">% of rated</div><div class="kpi-sub">CF = E_actual/E_rated</div></div>
+    <div class="kpi c-red"><div class="kpi-label">Wake Loss</div><div class="kpi-value" id="k-wake">—</div><div class="kpi-unit">%</div><div class="kpi-sub" id="k-wake-s">Jensen model</div></div>
+    <div class="kpi c-wind"><div class="kpi-label">Daily Energy</div><div class="kpi-value" id="k-enet">—</div><div class="kpi-unit">kWh/day</div><div class="kpi-sub">P_net × 24h</div></div>
+    <div class="kpi c-purple"><div class="kpi-label">Turbine Availability</div><div class="kpi-value" id="k-avail">—</div><div class="kpi-unit">%</div><div class="kpi-sub" id="k-avail-s">—</div></div>
+  </div>
+
+  <!-- TURBINE DIAGRAM -->
+  <div class="card">
+    <div class="card-hdr">
+      <span class="card-title">⟳ Interactive Wind Turbine System — Click any component</span>
+      <div style="display:flex;gap:6px;align-items:center">
+        <span class="tag tag-info" id="turbine-type-tag">ONSHORE · 4 MW CLASS</span>
+        <span class="tag tag-ok" id="sys-status-tag">OPERATIONAL</span>
+      </div>
+    </div>
+    <div id="turbine-canvas-wrap" class="card-body" style="padding:0;position:relative">
+      <canvas id="turbineCanvas" height="340"></canvas>
+      <div id="component-tooltip"></div>
+    </div>
+    <div style="padding:8px 14px;border-top:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <span style="font-family:var(--font-mono);font-size:9px;color:var(--text3)">LEGEND:</span>
+      <span style="font-family:var(--font-mono);font-size:9px;color:var(--wind)">█ Mechanical</span>
+      <span style="font-family:var(--font-mono);font-size:9px;color:var(--amber)">█ Electrical</span>
+      <span style="font-family:var(--font-mono);font-size:9px;color:var(--green)">█ Grid</span>
+      <span style="font-family:var(--font-mono);font-size:9px;color:var(--text3);margin-left:auto">Click component for details · EQF 5: KPI linkage shown</span>
+    </div>
+  </div>
+
+  <!-- CHECKLIST + DEVIATION -->
+  <div class="row2">
+    <div class="card">
+      <div class="card-hdr">
+        <span class="card-title">📋 Operational Checklist — WIN-CHK-01</span>
+        <div style="display:flex;gap:6px">
+          <button class="act-btn btn-reset" style="padding:4px 10px;font-size:9px" onclick="resetChecklist()">Reset</button>
+          <button class="act-btn btn-check" style="padding:4px 10px;font-size:9px" onclick="runChecklist()">▶ Validate</button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="checklist-grid" id="checklist-grid"></div>
+        <div class="check-summary">
+          <div class="sum-item"><div class="sum-val" id="cs-total" style="color:var(--text2)">6</div><div class="sum-label">Items</div></div>
+          <div class="sum-item"><div class="sum-val" id="cs-ok" style="color:var(--green)">0</div><div class="sum-label">OK</div></div>
+          <div class="sum-item"><div class="sum-val" id="cs-dev" style="color:var(--red)">0</div><div class="sum-label">Deviations</div></div>
+          <div class="sum-item"><div class="sum-val" id="cs-pct" style="color:var(--wind)">—</div><div class="sum-label">Score</div></div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card" id="deviation-log">
+        <div class="card-hdr"><span class="card-title" style="color:var(--red)">⚠ Deviation Log</span><span class="tag tag-eqf5 hidden" id="dev-eqf5-tag">EQF 5: Root Cause Required</span></div>
+        <div class="card-body" id="dev-log-body"></div>
+      </div>
+      <div class="card" id="eqf5-kpi-panel">
+        <div class="card-hdr"><span class="card-title">🧠 Component → KPI Mapping</span><span class="tag tag-eqf5">EQF 5</span></div>
+        <div class="card-body" style="padding:0"><table class="kpi-map-table"><thead><tr><th>Component</th><th>Failure Mode</th><th>KPI Impact</th></tr></thead><tbody id="kpi-map-body"></tbody></table></div>
+      </div>
+    </div>
+  </div>
+</div><!-- end panel1 -->
+
+<!-- ═══ LEVEL 2 ═══ -->
+<div class="section-panel" id="panel2">
+  <div class="mid-grid">
+    <div class="card">
+      <div class="card-hdr">
+        <span class="card-title">⚙ Wind Physics Parameters</span>
+        <span class="tag tag-info">Jensen Wake Model Active</span>
+      </div>
+      <div class="card-body">
+        <div class="param-grid" id="param-grid"></div>
+        <div class="formula-box" id="formula-display">
+          P = ½ · ρ · π·r² · v³ · Cp · cos³(γ) · (1 − L_wake) · N
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="kpi-strip" style="grid-template-columns:1fr 1fr;margin-bottom:12px">
+        <div class="kpi c-wind"><div class="kpi-label">P_wind (single)</div><div class="kpi-value" id="p-psingle">—</div><div class="kpi-unit">kW</div></div>
+        <div class="kpi c-amber"><div class="kpi-label">P_yaw</div><div class="kpi-value" id="p-pyaw">—</div><div class="kpi-unit">kW</div></div>
+        <div class="kpi c-red"><div class="kpi-label">Wake Loss</div><div class="kpi-value" id="p-wake">—</div><div class="kpi-unit">kWh/day</div></div>
+        <div class="kpi c-red"><div class="kpi-label">Turbulence Loss</div><div class="kpi-value" id="p-turb">—</div><div class="kpi-unit">kWh/day</div></div>
+        <div class="kpi c-wind"><div class="kpi-label">Farm Output</div><div class="kpi-value" id="p-farm">—</div><div class="kpi-unit">kW</div></div>
+        <div class="kpi c-green"><div class="kpi-label">Daily Energy</div><div class="kpi-value" id="p-enet">—</div><div class="kpi-unit">kWh</div></div>
+      </div>
+      <div class="card">
+        <div class="card-hdr"><span class="card-title">📐 Calculation Trace</span></div>
+        <div class="card-body" id="calc-trace" style="font-family:var(--font-mono);font-size:10px;color:var(--text3);line-height:1.8"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="graphs-grid" style="margin-bottom:12px">
+    <div class="graph-cell"><div class="graph-cell-title">Wind Speed vs Power (Betz)</div><div class="plotly-g" id="g2-speed"></div></div>
+    <div class="graph-cell"><div class="graph-cell-title">Yaw Angle vs Power Loss %</div><div class="plotly-g" id="g2-yaw"></div></div>
+    <div class="graph-cell"><div class="graph-cell-title">Turbine Spacing vs Wake Loss (Jensen)</div><div class="plotly-g" id="g2-wake"></div></div>
+    <div class="graph-cell"><div class="graph-cell-title">Daily Wind Power Profile (Weibull)</div><div class="plotly-g" id="g2-weibull"></div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-hdr">
+      <span class="card-title">🔍 Anomaly Detection — WIN-U01 A3</span>
+      <span class="tag tag-eqf5">EQF 5: Root Cause Analysis</span>
+    </div>
+    <div class="card-body">
+      <div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);margin-bottom:10px">Click scenario → identify affected KPIs and root cause</div>
+      <div class="anomaly-grid" id="anomaly-grid"></div>
+    </div>
+  </div>
+</div><!-- end panel2 -->
+
+<!-- ═══ LEVEL 3 ═══ -->
+<div class="section-panel" id="panel3">
+  <div class="score-panel">
+    <div><div class="score-big" id="l3-score">0 / 8</div><div class="score-label">Components Correctly Labeled</div></div>
+    <div style="text-align:center"><div style="font-family:var(--font-mono);font-size:11px;color:var(--text3)" id="l3-timer">⏱ 15:00</div><div style="font-family:var(--font-mono);font-size:9px;color:var(--text3);margin-top:2px">Time Remaining</div></div>
+    <div class="score-actions">
+      <button class="act-btn btn-reset" onclick="resetLabeling()">↺ Reset</button>
+      <button class="act-btn btn-check" onclick="checkLabeling()">✓ Check Labels</button>
+      <button class="act-btn btn-export" onclick="exportReport()">↓ Export Report</button>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:8px">
+    <div class="card-hdr">
+      <span class="card-title">🏷 Component Name Pool — Drag to schematic</span>
+      <span class="tag tag-info" id="l3-remaining">8 remaining</span>
+    </div>
+    <div class="drag-pool" id="drag-pool"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-hdr">
+      <span class="card-title">📐 Wind Turbine Schematic — Drop zones highlighted</span>
+      <div style="display:flex;gap:6px">
+        <span class="tag tag-ok">✓ Correct = green</span>
+        <span class="tag" style="color:var(--red);border-color:rgba(239,68,68,0.3)">✗ Wrong = red</span>
+      </div>
+    </div>
+    <div id="labeling-canvas-wrap" class="card-body" style="padding:0;position:relative;min-height:380px">
+      <canvas id="labelCanvas" height="380"></canvas>
+    </div>
+  </div>
+
+  <div class="card" id="kpi-quiz-panel">
+    <div class="card-hdr">
+      <span class="card-title">🧠 EQF 5 — KPI Link Quiz</span>
+      <span class="tag tag-eqf5">Analyse / Optimise</span>
+    </div>
+    <div class="card-body">
+      <div style="font-size:12px;color:var(--text2);margin-bottom:12px">For each component, select the KPI it most directly affects:</div>
+      <div id="kpi-quiz" style="display:flex;flex-direction:column;gap:8px"></div>
+      <div style="margin-top:12px;display:flex;gap:8px">
+        <button class="act-btn btn-check" onclick="checkKPIQuiz()">✓ Check KPI Answers</button>
+        <span id="kpi-quiz-result" style="font-family:var(--font-mono);font-size:11px;color:var(--green);align-self:center"></span>
+      </div>
+    </div>
+  </div>
+</div><!-- end panel3 -->
+</div><!-- end main -->
+
+<script>
+'use strict';
+/* ════════════════════════════════════════════════════════
+   WIND TURBINE TRAINING MODULE
+   ZSK Solutions · REpower KA220-VET
+   ════════════════════════════════════════════════════════ */
+
+let EQF = 4, currentLevel = 1;
+let progress = { l1:false, l2:false, l3:false };
+let labelTimer = null, labelSeconds = 900;
+let dropStates = {}, draggedChip = null;
+
+const DEG2RAD = Math.PI / 180;
+
+/* ── COMPONENT DATA ── */
+const COMPONENTS = [
+  { id:'rotor_blades', name:'Rotor Blades',
+    func:'Aerodynamic surfaces that capture kinetic energy from wind. Blade pitch angle is adjusted by the pitch control system to optimize power extraction and limit loads.',
+    kpi:'Rotor speed (rpm), blade pitch angle (°), power output (kW)',
+    eqf5:'Cp is directly determined by blade pitch and tip speed ratio λ=ωr/v. Blade icing reduces Cp → power loss detectable as AEP gap. P=½ρπr²v³Cp',
+    failMode:'Ice / erosion / pitch fault', kpiImpact:'Cp drops, power loss, AEP gap',
+    color:'#00d4ff', x:0.05, y:0.08, w:0.14, h:0.55 },
+  { id:'hub', name:'Hub',
+    func:'Central rotating assembly connecting blades to the main shaft. Houses pitch actuators and bearings. Transfers aerodynamic torque to the drivetrain.',
+    kpi:'Rotor speed (rpm), vibration level',
+    eqf5:'Hub imbalance → 1P vibration frequency at rotor speed. Detectable via SCADA vibration signal. Formula: centrifugal force = mω²r',
+    failMode:'Bearing wear / imbalance', kpiImpact:'Vibration alarm, downtime',
+    color:'#00d4ff', x:0.20, y:0.28, w:0.07, h:0.15 },
+  { id:'main_shaft', name:'Main Shaft',
+    func:'Transmits mechanical torque from rotor to gearbox (or directly to generator in direct-drive). Supported by main bearing.',
+    kpi:'Torque (kNm), main bearing temperature (°C), vibration',
+    eqf5:'Main bearing temperature > alarm threshold → predicted failure. SCADA: bearing_temp_alarm. Torque = Power / ω',
+    failMode:'Main bearing failure', kpiImpact:'Emergency stop, full downtime',
+    color:'#00d4ff', x:0.28, y:0.33, w:0.10, h:0.07 },
+  { id:'gearbox', name:'Gearbox',
+    func:'Steps up rotor speed (15–20 rpm) to generator speed (1500 rpm). Multi-stage planetary + helical gears. Oil temperature and vibration are key monitoring signals.',
+    kpi:'Gearbox oil temperature (°C), vibration spectrum, gear mesh frequency',
+    eqf5:'Oil temp > 70°C → cooling issue or pre-failure. Vibration sidebands in FFT spectrum = gear wear. Gear ratio: n_gen/n_rotor = ~100',
+    failMode:'Gear wear / oil contamination', kpiImpact:'Derated output, unplanned maintenance',
+    color:'#f5a623', x:0.39, y:0.30, w:0.08, h:0.13 },
+  { id:'generator', name:'Generator',
+    func:'Converts mechanical energy to electrical energy. DFIG (Doubly-Fed Induction Generator) allows variable speed operation. Stator output goes directly to transformer.',
+    kpi:'AC power output (kW), power factor, generator temperature, speed (rpm)',
+    eqf5:'Generator winding temperature > 130°C → insulation degradation risk. Power factor monitoring: PF = P/(S). DFIG: partial power through converter',
+    failMode:'Winding fault / overheating', kpiImpact:'Derated output / trip',
+    color:'#f5a623', x:0.48, y:0.30, w:0.08, h:0.13 },
+  { id:'converter', name:'Power Converter',
+    func:'Back-to-back AC/DC/AC converter enables variable speed operation. Rotor-side converter controls torque; grid-side converter maintains DC bus and reactive power.',
+    kpi:'DC bus voltage (V), converter efficiency (%), reactive power (kVAr)',
+    eqf5:'DC bus overvoltage → converter trip. Grid fault ride-through (FRT): converter must stay connected during voltage dips ≥ 0.85pu for ≥500ms per grid code.',
+    failMode:'IGBT fault / overcurrent', kpiImpact:'Full output loss until repair',
+    color:'#f5a623', x:0.38, y:0.48, w:0.08, h:0.10 },
+  { id:'transformer', name:'Nacelle Transformer',
+    func:'Steps up generator voltage (690V) to medium voltage (33kV) for cable transmission to substation. Located at base or in nacelle.',
+    kpi:'Transformer temperature (°C), oil level, turn ratio, losses',
+    eqf5:'Transformer losses = I²R (copper) + core losses. Temperature rise ΔT ∝ load². Overloading causes accelerated insulation aging (Arrhenius equation).',
+    failMode:'Overheating / insulation fault', kpiImpact:'Full system offline',
+    color:'#22c55e', x:0.58, y:0.35, w:0.08, h:0.10 },
+  { id:'yaw_system', name:'Yaw System',
+    func:'Rotates nacelle to align with wind direction. Electric yaw motors with brake system. Misalignment causes cos³(γ) power loss.',
+    kpi:'Yaw error (°), yaw motor current, nacelle direction vs wind direction',
+    eqf5:'P_yaw = P_wind × cos³(γ). At γ=10°: loss = 1−cos³(10°) = 4.5%. At γ=20°: loss = 17%. SCADA: yaw_error_alarm threshold typically ±8°',
+    failMode:'Yaw motor fault / brake stuck', kpiImpact:'Sustained yaw error → cos³ power loss',
+    color:'#00d4ff', x:0.28, y:0.48, w:0.08, h:0.10 },
+];
+
+/* ── CHECKLIST DATA ── */
+const CHECKLIST_ITEMS = [
+  { id:1, name:'Gearbox Oil Temperature', unit:'°C', nominal:'< 70°C', min:0, max:70, defaultVal:58, hint:'Alarm at 70°C, trip at 80°C' },
+  { id:2, name:'Generator Winding Temperature', unit:'°C', nominal:'< 130°C', min:0, max:130, defaultVal:95, hint:'Class F insulation limit: 155°C, alarm at 130°C' },
+  { id:3, name:'Vibration RMS (main bearing)', unit:'mm/s', nominal:'< 4.5 mm/s', min:0, max:4.5, defaultVal:2.1, hint:'ISO 10816-3: < 2.3=good, 2.3–4.5=satisfactory, >4.5=alarm' },
+  { id:4, name:'Yaw Error', unit:'°', nominal:'< 8°', min:0, max:8, defaultVal:3.2, hint:'Power loss = 1-cos³(yaw_error). >8° triggers yaw correction' },
+  { id:5, name:'Rotor Speed', unit:'rpm', nominal:'10–20 rpm', min:10, max:20, defaultVal:15, hint:'Cut-in ~10 rpm, rated ~18 rpm, overspeed trip at 22 rpm' },
+  { id:6, name:'Power Factor', unit:'PF', nominal:'0.95–1.00', min:0.95, max:1.00, defaultVal:0.98, hint:'Grid code typically requires PF > 0.95 lagging/leading' },
+];
+
+/* ── PHYSICS ENGINE ── */
+const Wind = {
+  DEG2RAD: Math.PI / 180,
+
+  // P = ½ρAv³Cp
+  calcPower(rho, r, v, Cp) {
+    if (v < 3 || v > 25) return 0;
+    return 0.5 * rho * Math.PI * r * r * Math.pow(v, 3) * Cp / 1000; // kW
+  },
+
+  // Yaw loss: P_yaw = P × cos³(γ)
+  calcYawLoss(P, gamma_deg) {
+    return P * Math.pow(Math.cos(gamma_deg * this.DEG2RAD), 3);
+  },
+
+  // Jensen wake model
+  calcWake(Cp, D, spacingMult, k=0.04) {
+    const x = spacingMult * D;
+    return Math.min(0.5, Math.max(0, (1-Math.sqrt(Math.max(0,1-Cp))) * Math.pow(D/(D+2*k*x),2)));
+  },
+
+  calculate(p) {
+    const D = p.rotorRadius * 2;
+    const P_single  = this.calcPower(p.rho, p.rotorRadius, p.windSpeed, p.Cp);
+    const P_yaw     = this.calcYawLoss(P_single, p.yawAngle);
+    const L_wake    = this.calcWake(p.Cp, D, p.spacing);
+    const P_net_1T  = P_yaw * (1 - L_wake) * (1 - p.turbLoss);
+    const P_farm    = P_net_1T * p.nTurbines;
+    const E_net     = P_farm * 24; // kWh/day (24h)
+    const P_rated   = this.calcPower(p.rho, p.rotorRadius, 12, p.Cp) * p.nTurbines;
+    const CF        = P_rated > 0 ? (P_farm / P_rated * 100) : 0;
+
+    const loss_yaw  = (P_single - P_yaw) * p.nTurbines * 24;
+    const loss_wake = P_yaw * L_wake * p.nTurbines * 24;
+    const loss_turb = P_yaw * (1-L_wake) * p.turbLoss * p.nTurbines * 24;
+
+    return {
+      P_single, P_yaw, P_farm, E_net, L_wake, CF,
+      loss_yaw: Math.max(0,loss_yaw),
+      loss_wake: Math.max(0,loss_wake),
+      loss_turb: Math.max(0,loss_turb),
+      D,
+    };
+  },
+};
+
+let P = { rho:1.225, rotorRadius:60, windSpeed:8.5, Cp:0.45, yawAngle:5, spacing:7, turbLoss:0.05, nTurbines:5 };
+
+/* ── KPI UPDATE ── */
+function updateKPIs() {
+  const r = Wind.calculate(P);
+  const fmt = (v,d=0) => isFinite(v)?v.toFixed(d):'—';
+  document.getElementById('k-pout').textContent  = fmt(r.P_farm,0);
+  document.getElementById('k-cp').textContent    = fmt(P.Cp,3);
+  document.getElementById('k-cp-s').textContent  = P.Cp >= 0.45 ? '✓ Good' : '⚠ Below optimal';
+  document.getElementById('k-cf').textContent    = fmt(r.CF,1);
+  document.getElementById('k-wake').textContent  = fmt(r.L_wake*100,1);
+  document.getElementById('k-wake-s').textContent= `Spacing: ${P.spacing}D`;
+  document.getElementById('k-enet').textContent  = fmt(r.E_net,0);
+  document.getElementById('k-avail').textContent = '97.2';
+  document.getElementById('k-avail-s').textContent = 'Online · No faults';
+}
+
+/* ── TURBINE CANVAS ── */
+function initTurbineCanvas() {
+  const canvas = document.getElementById('turbineCanvas');
+  canvas.width = canvas.parentElement.offsetWidth || 900;
+  canvas.height = 340;
+  drawTurbineDiagram();
+}
+
+let bladeAngle = 0;
+function drawTurbineDiagram() {
+  const canvas = document.getElementById('turbineCanvas');
+  if (!canvas) return;
+  canvas.width = canvas.parentElement.offsetWidth || 900;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0,0,W,H);
+
+  // Sky
+  const sky = ctx.createLinearGradient(0,0,0,H*0.7);
+  sky.addColorStop(0,'#000d1a'); sky.addColorStop(1,'#001830');
+  ctx.fillStyle=sky; ctx.fillRect(0,0,W,H);
+
+  // Ground
+  const gnd = ctx.createLinearGradient(0,H*0.7,0,H);
+  gnd.addColorStop(0,'#0a1a0a'); gnd.addColorStop(1,'#050f05');
+  ctx.fillStyle=gnd; ctx.fillRect(0,H*0.7,W,H*0.3);
+
+  // Stars
+  ctx.fillStyle='rgba(255,255,255,0.4)';
+  [[0.1,0.05],[0.3,0.08],[0.5,0.03],[0.7,0.06],[0.9,0.04],[0.15,0.15],[0.6,0.12],[0.85,0.08]].forEach(([x,y])=>{
+    ctx.beginPath(); ctx.arc(x*W,y*H,1,0,Math.PI*2); ctx.fill();
+  });
+
+  // Wind arrows
+  ctx.strokeStyle='rgba(0,212,255,0.15)'; ctx.lineWidth=1.5; ctx.setLineDash([8,5]);
+  [[0.02,0.20],[0.02,0.35],[0.02,0.50]].forEach(([x,y])=>{
+    ctx.beginPath(); ctx.moveTo(x*W,y*H); ctx.lineTo(x*W+0.12*W,y*H); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x*W+0.12*W,y*H); ctx.lineTo(x*W+0.10*W,y*H-6); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x*W+0.12*W,y*H); ctx.lineTo(x*W+0.10*W,y*H+6); ctx.stroke();
+  });
+  ctx.setLineDash([]);
+  ctx.font='8px JetBrains Mono'; ctx.fillStyle='rgba(0,212,255,0.3)'; ctx.textAlign='left';
+  ctx.fillText(`v = ${P.windSpeed} m/s`, 8, H*0.65);
+
+  // Tower
+  const tx = W*0.35, ty_top = H*0.42, ty_bot = H*0.70;
+  ctx.shadowBlur=10; ctx.shadowColor='rgba(0,212,255,0.3)';
+  const towerGrad = ctx.createLinearGradient(tx-12,0,tx+12,0);
+  towerGrad.addColorStop(0,'rgba(0,120,180,0.4)'); towerGrad.addColorStop(0.5,'rgba(0,180,255,0.6)'); towerGrad.addColorStop(1,'rgba(0,120,180,0.4)');
+  ctx.fillStyle=towerGrad;
+  ctx.beginPath();
+  ctx.moveTo(tx-12, ty_bot); ctx.lineTo(tx-6, ty_top);
+  ctx.lineTo(tx+6, ty_top);  ctx.lineTo(tx+12, ty_bot);
+  ctx.closePath(); ctx.fill();
+  ctx.strokeStyle='rgba(0,212,255,0.5)'; ctx.lineWidth=1;
+  ctx.stroke(); ctx.shadowBlur=0;
+
+  // Nacelle
+  ctx.fillStyle='rgba(0,80,130,0.6)'; ctx.strokeStyle='rgba(0,212,255,0.6)'; ctx.lineWidth=1.5;
+  ctx.fillRect(tx-8, ty_top-22, 80, 22); ctx.strokeRect(tx-8, ty_top-22, 80, 22);
+
+  // Hub
+  ctx.shadowBlur=15; ctx.shadowColor='#00d4ff';
+  ctx.fillStyle='#00d4ff'; ctx.beginPath(); ctx.arc(tx+6, ty_top-11, 8, 0, Math.PI*2); ctx.fill();
+  ctx.shadowBlur=0;
+
+  // Blades (rotating)
+  const hubX = tx+6, hubY = ty_top-11;
+  ctx.strokeStyle='rgba(0,212,255,0.85)'; ctx.lineWidth=4; ctx.lineCap='round';
+  ctx.shadowBlur=8; ctx.shadowColor='#00d4ff';
+  for(let i=0;i<3;i++){
+    const a = bladeAngle + i*Math.PI*2/3;
+    const bx = hubX + Math.cos(a)*65, by = hubY + Math.sin(a)*65;
+    ctx.beginPath(); ctx.moveTo(hubX,hubY); ctx.lineTo(bx,by); ctx.stroke();
+  }
+  ctx.shadowBlur=0; ctx.lineCap='butt';
+
+  // Gearbox
+  ctx.fillStyle='rgba(245,166,35,0.2)'; ctx.strokeStyle='rgba(245,166,35,0.7)'; ctx.lineWidth=1.5;
+  ctx.fillRect(tx+30,ty_top-20,35,18); ctx.strokeRect(tx+30,ty_top-20,35,18);
+  ctx.font='bold 7px JetBrains Mono'; ctx.fillStyle='#f5a623'; ctx.textAlign='center';
+  ctx.fillText('GEARBOX',tx+47,ty_top-8);
+
+  // Generator
+  ctx.fillStyle='rgba(245,166,35,0.2)'; ctx.strokeStyle='rgba(245,166,35,0.7)'; ctx.lineWidth=1.5;
+  ctx.fillRect(tx+67,ty_top-20,35,18); ctx.strokeRect(tx+67,ty_top-20,35,18);
+  ctx.fillStyle='#f5a623'; ctx.fillText('GEN',tx+84,ty_top-8);
+
+  // Converter (below nacelle)
+  ctx.fillStyle='rgba(245,166,35,0.15)'; ctx.strokeStyle='rgba(245,166,35,0.5)'; ctx.lineWidth=1;
+  ctx.fillRect(tx+30,ty_top+2,35,14); ctx.strokeRect(tx+30,ty_top+2,35,14);
+  ctx.fillStyle='rgba(245,166,35,0.7)'; ctx.font='7px JetBrains Mono';
+  ctx.fillText('CONVERTER',tx+47,ty_top+11);
+
+  // Yaw system (base of nacelle)
+  ctx.fillStyle='rgba(0,212,255,0.15)'; ctx.strokeStyle='rgba(0,212,255,0.4)';
+  ctx.fillRect(tx-8,ty_top,16,10); ctx.strokeRect(tx-8,ty_top,16,10);
+  ctx.fillStyle='rgba(0,212,255,0.6)'; ctx.font='6px JetBrains Mono';
+  ctx.fillText('YAW',tx,ty_top+7);
+
+  // Cable down tower
+  ctx.strokeStyle='rgba(34,197,94,0.4)'; ctx.lineWidth=2; ctx.setLineDash([4,3]);
+  ctx.beginPath(); ctx.moveTo(tx, ty_top+10); ctx.lineTo(tx, ty_bot); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Transformer at base
+  ctx.fillStyle='rgba(34,197,94,0.15)'; ctx.strokeStyle='rgba(34,197,94,0.5)'; ctx.lineWidth=1.5;
+  ctx.fillRect(tx+25,ty_bot-5,60,18); ctx.strokeRect(tx+25,ty_bot-5,60,18);
+  ctx.fillStyle='#22c55e'; ctx.font='bold 8px JetBrains Mono'; ctx.textAlign='center';
+  ctx.fillText('TRANSFORMER',tx+55,ty_bot+8);
+
+  // Grid line
+  ctx.strokeStyle='rgba(34,197,94,0.5)'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(tx+85,ty_bot+5); ctx.lineTo(W*0.85,ty_bot+5); ctx.stroke();
+  ctx.fillStyle='rgba(34,197,94,0.15)'; ctx.strokeStyle='rgba(34,197,94,0.6)'; ctx.lineWidth=1.5;
+  ctx.fillRect(W*0.85,ty_bot-10,0.12*W,30); ctx.strokeRect(W*0.85,ty_bot-10,0.12*W,30);
+  ctx.fillStyle='#22c55e'; ctx.font='bold 9px JetBrains Mono'; ctx.textAlign='center';
+  ctx.fillText('GRID',W*0.91,ty_bot+6);
+  ctx.font='8px JetBrains Mono'; ctx.fillStyle='rgba(34,197,94,0.5)';
+  ctx.fillText('33kV',W*0.91,ty_bot+17);
+
+  // Wind direction indicator
+  const wx=W*0.88, wy=H*0.12, wr=28;
+  ctx.strokeStyle='rgba(0,212,255,0.3)'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.arc(wx,wy,wr,0,Math.PI*2); ctx.stroke();
+  ctx.strokeStyle='#00d4ff'; ctx.lineWidth=2;
+  const wa = -60*DEG2RAD;
+  ctx.beginPath(); ctx.moveTo(wx,wy); ctx.lineTo(wx+Math.cos(wa)*wr*0.8,wy+Math.sin(wa)*wr*0.8); ctx.stroke();
+  ctx.fillStyle='rgba(0,212,255,0.3)'; ctx.font='8px JetBrains Mono'; ctx.textAlign='center';
+  ctx.fillText('N',wx,wy-wr-4); ctx.fillText('S',wx,wy+wr+10);
+  ctx.fillText('W',wx-wr-8,wy+3); ctx.fillText('E',wx+wr+8,wy+3);
+  ctx.fillStyle='#00d4ff'; ctx.font='bold 8px JetBrains Mono';
+  ctx.fillText(`${P.windSpeed}m/s`,wx,wy+4);
+
+  // Labels
+  [
+    [tx+6, ty_top-80, 'ROTOR\nBLADES', '#00d4ff'],
+    [tx-55, ty_top-11, 'HUB', '#00d4ff'],
+    [tx+47, ty_top-35, 'NACELLE\nASSEMBLY', '#f5a623'],
+  ].forEach(([x,y,txt,c])=>{
+    const lines=txt.split('\n');
+    ctx.font='bold 8px JetBrains Mono'; ctx.fillStyle=c; ctx.textAlign='center';
+    lines.forEach((l,i)=>ctx.fillText(l,x,y+i*12));
+  });
+}
+
+/* ── TOOLTIP ── */
+function initTooltip() {
+  const canvas = document.getElementById('turbineCanvas');
+  const tip    = document.getElementById('component-tooltip');
+  const hitZones = [
+    {id:'rotor_blades', x:0.05, y:0.08, w:0.14, h:0.55},
+    {id:'hub',          x:0.20, y:0.28, w:0.07, h:0.15},
+    {id:'gearbox',      x:0.36, y:0.30, w:0.10, h:0.13},
+    {id:'generator',    x:0.47, y:0.30, w:0.10, h:0.13},
+    {id:'converter',    x:0.36, y:0.45, w:0.10, h:0.10},
+    {id:'transformer',  x:0.55, y:0.60, w:0.10, h:0.10},
+    {id:'yaw_system',   x:0.28, y:0.45, w:0.07, h:0.10},
+  ];
+  canvas.addEventListener('mousemove', e=>{
+    const rect=canvas.getBoundingClientRect();
+    const mx=(e.clientX-rect.left)/rect.width, my=(e.clientY-rect.top)/rect.height;
+    const hit=hitZones.find(z=>mx>=z.x&&mx<=z.x+z.w&&my>=z.y&&my<=z.y+z.h);
+    if(hit){
+      const comp=COMPONENTS.find(c=>c.id===hit.id);
+      if(!comp) return;
+      tip.style.display='block';
+      tip.style.left=Math.min(e.clientX-rect.left+12,rect.width-310)+'px';
+      tip.style.top=Math.max(e.clientY-rect.top-20,0)+'px';
+      tip.innerHTML=`<div class="tt-name">${comp.name}</div>
+        <div class="tt-func">${comp.func}</div>
+        <div class="tt-kpi">📊 KPI: ${comp.kpi}</div>
+        ${EQF===5?`<div class="tt-eqf5">🧠 EQF5: ${comp.eqf5}</div>`:''}`;
+    } else tip.style.display='none';
+  });
+  canvas.addEventListener('mouseleave',()=>tip.style.display='none');
+}
+
+/* ── CHECKLIST ── */
+function buildChecklist() {
+  const grid=document.getElementById('checklist-grid');
+  grid.innerHTML=CHECKLIST_ITEMS.map(item=>`
+    <div class="check-item" id="ci-${item.id}">
+      <div class="check-num">${item.id}</div>
+      <div><div class="check-name">${item.name}</div><div class="check-hint">${item.hint}</div></div>
+      <input class="check-input" type="number" id="cinp-${item.id}" value="${item.defaultVal}" step="any" oninput="liveCheck(${item.id})">
+      <div class="check-tolerance">${item.nominal} ${item.unit}</div>
+      <div class="check-status status-empty" id="cst-${item.id}">—</div>
+    </div>`).join('');
+}
+
+function liveCheck(id) {
+  const item=CHECKLIST_ITEMS.find(i=>i.id===id);
+  const val=parseFloat(document.getElementById(`cinp-${id}`).value);
+  const el=document.getElementById(`ci-${id}`);
+  const stEl=document.getElementById(`cst-${id}`);
+  if(isNaN(val)){stEl.className='check-status status-empty';stEl.textContent='—';el.className='check-item';return;}
+  const ok=val>=item.min&&val<=item.max;
+  el.className='check-item '+(ok?'ok':'deviate');
+  stEl.className='check-status '+(ok?'status-ok':'status-dev');
+  stEl.textContent=ok?'✓ OK':'⚠ DEVIATE';
+}
+
+function runChecklist() {
+  let okCount=0, devItems=[];
+  CHECKLIST_ITEMS.forEach(item=>{
+    const val=parseFloat(document.getElementById(`cinp-${item.id}`).value);
+    if(isNaN(val)) return;
+    const ok=val>=item.min&&val<=item.max;
+    liveCheck(item.id);
+    if(ok) okCount++; else devItems.push({...item,val});
+  });
+  const total=CHECKLIST_ITEMS.length;
+  document.getElementById('cs-ok').textContent=okCount;
+  document.getElementById('cs-dev').textContent=devItems.length;
+  document.getElementById('cs-pct').textContent=Math.round(okCount/total*100)+'%';
+  renderDeviationLog(devItems);
+  progress.l1=okCount>=5; updateProgress();
+}
+
+function renderDeviationLog(devItems) {
+  const logEl=document.getElementById('deviation-log');
+  const bodyEl=document.getElementById('dev-log-body');
+  if(devItems.length===0){logEl.classList.remove('visible');return;}
+  logEl.classList.add('visible');
+  const eqf5t=document.getElementById('dev-eqf5-tag');
+  if(EQF===5) eqf5t.classList.remove('hidden'); else eqf5t.classList.add('hidden');
+  const notes={
+    1:'Gearbox oil temp deviation → check cooling system, oil level and viscosity. May indicate early bearing wear.',
+    2:'Generator winding temp deviation → check cooling fan, ambient temperature, load level. Risk of insulation degradation.',
+    3:'Vibration above satisfactory → check main bearing, blade balance, shaft alignment. Schedule vibration analysis.',
+    4:'Yaw error exceeds threshold → yaw controller not tracking wind direction. Check wind vane sensor and yaw motor.',
+    5:'Rotor speed outside nominal range → check pitch controller and anemometer calibration.',
+    6:'Power factor below grid code minimum → check converter reactive power setpoint.',
+  };
+  bodyEl.innerHTML=devItems.map(item=>{
+    const mid=(item.min+item.max)/2;
+    const diff=((item.val-mid)/Math.max(Math.abs(mid),0.001)*100).toFixed(1);
+    return `<div class="dev-log-item">
+      <div class="dev-item-num">ITEM ${item.id}</div>
+      <div class="dev-item-body">
+        <div class="dev-item-name">${item.name}</div>
+        <div class="dev-item-vals">Recorded: <b>${item.val} ${item.unit}</b> · Range: ${item.nominal}</div>
+        <div class="dev-item-note">${EQF===5?notes[item.id]||'Investigate root cause.':'Flag deviation and report to O&M supervisor.'}</div>
+      </div>
+      <div class="dev-item-badge">${Math.abs(diff)}% off</div>
+    </div>`;
+  }).join('');
+}
+
+function resetChecklist() {
+  CHECKLIST_ITEMS.forEach(item=>{
+    document.getElementById(`cinp-${item.id}`).value=item.defaultVal;
+    document.getElementById(`ci-${item.id}`).className='check-item';
+    document.getElementById(`cst-${item.id}`).className='check-status status-empty';
+    document.getElementById(`cst-${item.id}`).textContent='—';
+  });
+  ['cs-ok','cs-dev'].forEach(id=>document.getElementById(id).textContent='0');
+  document.getElementById('cs-pct').textContent='—';
+  document.getElementById('deviation-log').classList.remove('visible');
+}
+
+/* ── KPI MAP TABLE ── */
+function buildKPIMap() {
+  const tbody=document.getElementById('kpi-map-body');
+  tbody.innerHTML=COMPONENTS.map(c=>`<tr>
+    <td><b style="color:${c.color}">${c.name}</b></td>
+    <td style="color:var(--red)">${c.failMode}</td>
+    <td><span class="kpi-chip">${c.kpiImpact}</span></td>
+  </tr>`).join('');
+  document.getElementById('eqf5-kpi-panel').style.display=EQF===5?'block':'none';
+}
+
+/* ═══ LEVEL 2 ═══ */
+const PARAMS_DEF = [
+  {key:'rho',         label:'Air Density ρ (kg/m³)',   min:0.9,  max:1.4,  step:0.01,  fmt:v=>v.toFixed(3)},
+  {key:'rotorRadius', label:'Rotor Radius r (m)',       min:20,   max:100,  step:1,     fmt:v=>v+'m'},
+  {key:'windSpeed',   label:'Wind Speed v (m/s)',       min:0,    max:25,   step:0.1,   fmt:v=>parseFloat(v).toFixed(1)+' m/s'},
+  {key:'Cp',          label:'Power Coefficient Cp',     min:0.10, max:0.593,step:0.005, fmt:v=>parseFloat(v).toFixed(3)},
+  {key:'yawAngle',    label:'Yaw Error γ (°)',          min:0,    max:45,   step:0.5,   fmt:v=>parseFloat(v).toFixed(1)+'°'},
+  {key:'spacing',     label:'Turbine Spacing (×D)',     min:3,    max:12,   step:0.5,   fmt:v=>parseFloat(v).toFixed(1)+'D'},
+  {key:'turbLoss',    label:'Turbulence Loss',          min:0,    max:0.20, step:0.005, fmt:v=>(v*100).toFixed(1)+'%'},
+  {key:'nTurbines',   label:'Number of Turbines',       min:1,    max:20,   step:1,     fmt:v=>v+' turbines'},
+];
+
+function buildParamSliders() {
+  const grid=document.getElementById('param-grid');
+  if(!grid) return;
+  grid.innerHTML=PARAMS_DEF.map(def=>`
+    <div class="param-row">
+      <div class="param-hdr">
+        <span class="param-name">${def.label}</span>
+        <span class="param-val" id="pv-${def.key}">${def.fmt(P[def.key])}</span>
+      </div>
+      <input type="range" min="${def.min}" max="${def.max}" step="${def.step}" value="${P[def.key]}"
+        oninput="updateParam('${def.key}',this.value)">
+    </div>`).join('');
+}
+
+function updateParam(key,val){
+  P[key]=parseFloat(val);
+  const def=PARAMS_DEF.find(d=>d.key===key);
+  document.getElementById(`pv-${key}`).textContent=def.fmt(P[key]);
+  runPhysics();
+}
+
+function runPhysics() {
+  const r=Wind.calculate(P);
+  const fmt=(v,d=0)=>isFinite(v)?v.toFixed(d):'—';
+  document.getElementById('p-psingle').textContent=fmt(r.P_single,1);
+  document.getElementById('p-pyaw').textContent=fmt(r.P_yaw,1);
+  document.getElementById('p-wake').textContent=fmt(r.loss_wake,1);
+  document.getElementById('p-turb').textContent=fmt(r.loss_turb,1);
+  document.getElementById('p-farm').textContent=fmt(r.P_farm,1);
+  document.getElementById('p-enet').textContent=fmt(r.E_net,0);
+
+  const gamma=P.yawAngle*DEG2RAD;
+  const yawLossPct=((1-Math.pow(Math.cos(gamma),3))*100).toFixed(2);
+  document.getElementById('calc-trace').innerHTML=[
+    `A_rotor = π × ${P.rotorRadius}² = ${(Math.PI*P.rotorRadius*P.rotorRadius).toFixed(1)} m²`,
+    `P_single = ½ × ${P.rho} × A × ${P.windSpeed}³ × ${P.Cp} = <b style="color:var(--wind)">${r.P_single.toFixed(2)} kW</b>`,
+    `P_yaw = P × cos³(${P.yawAngle}°) = ${r.P_single.toFixed(2)} × ${Math.pow(Math.cos(gamma),3).toFixed(4)} = <b style="color:var(--amber)">${r.P_yaw.toFixed(2)} kW</b>`,
+    `L_wake (Jensen) = ${(r.L_wake*100).toFixed(2)}%  →  spacing=${P.spacing}D`,
+    `P_net/T = P_yaw × (1−${(r.L_wake*100).toFixed(2)}%) × (1−${(P.turbLoss*100).toFixed(1)}%) = ${(r.P_farm/P.nTurbines).toFixed(2)} kW`,
+    `P_farm = ${(r.P_farm/P.nTurbines).toFixed(2)} × ${P.nTurbines} = <b style="color:var(--wind)">${r.P_farm.toFixed(2)} kW</b>`,
+    `E_net = ${r.P_farm.toFixed(2)} × 24h = <b style="color:var(--green)">${r.E_net.toFixed(0)} kWh/day</b>`,
+    `Yaw loss: ${yawLossPct}% | Wake loss: ${(r.L_wake*100).toFixed(2)}% | Turb loss: ${(P.turbLoss*100).toFixed(1)}%`,
+  ].join('<br>');
+
+  renderCharts(); updateKPIs();
+  progress.l2=true; updateProgress();
+}
+
+/* ── CHARTS ── */
+const PLOTLY_CFG={displayModeBar:false,responsive:true};
+const PL=(xt='',yt='')=>({
+  paper_bgcolor:'rgba(0,0,0,0)',plot_bgcolor:'rgba(0,0,0,0)',
+  font:{family:'JetBrains Mono',color:'rgba(140,170,210,0.6)',size:9},
+  margin:{l:38,r:8,t:4,b:28},
+  xaxis:{title:{text:xt,font:{size:8}},gridcolor:'rgba(0,212,255,0.06)',tickfont:{size:8}},
+  yaxis:{title:{text:yt,font:{size:8}},gridcolor:'rgba(0,212,255,0.06)',tickfont:{size:8}},
+  showlegend:false,hovermode:'x unified',
+  hoverlabel:{bgcolor:'rgba(7,12,20,0.95)',bordercolor:'rgba(0,212,255,0.5)',font:{color:'#f0f6ff',size:10}},
+});
+
+function renderCharts() {
+  // Speed vs Power
+  const spds=[],pows=[];
+  for(let v=0;v<=25;v+=0.2){spds.push(v);pows.push(Wind.calculate({...P,windSpeed:v}).P_farm);}
+  Plotly.react('g2-speed',[
+    {x:spds,y:pows,type:'scatter',mode:'lines',fill:'tozeroy',line:{color:'rgba(0,212,255,0.9)',width:1.5},fillcolor:'rgba(0,212,255,0.07)',hovertemplate:'%{x:.1f}m/s→%{y:.1f}kW<extra></extra>'},
+    {x:[P.windSpeed],y:[Wind.calculate(P).P_farm],type:'scatter',mode:'markers',marker:{color:'#00d4ff',size:8,symbol:'diamond'}},
+  ],PL('Speed (m/s)','Farm Power (kW)'),PLOTLY_CFG);
+
+  // Yaw vs Power Loss
+  const yaws=[],yloss=[];
+  for(let g=0;g<=45;g+=0.5){
+    yaws.push(g);
+    yloss.push((1-Math.pow(Math.cos(g*DEG2RAD),3))*100);
+  }
+  Plotly.react('g2-yaw',[
+    {x:yaws,y:yloss,type:'scatter',mode:'lines',fill:'tozeroy',line:{color:'rgba(239,68,68,0.9)',width:1.5},fillcolor:'rgba(239,68,68,0.07)',hovertemplate:'γ=%{x:.1f}°→Loss=%{y:.2f}%<extra></extra>'},
+    {x:[P.yawAngle],y:[(1-Math.pow(Math.cos(P.yawAngle*DEG2RAD),3))*100],type:'scatter',mode:'markers',marker:{color:'#ef4444',size:8,symbol:'diamond'}},
+  ],PL('Yaw Error (°)','Power Loss (%)'),PLOTLY_CFG);
+
+  // Spacing vs Wake Loss (Jensen)
+  const sps=[],wls=[];
+  for(let s=3;s<=12;s+=0.1){
+    sps.push(s);
+    wls.push(Wind.calcWake(P.Cp,P.rotorRadius*2,s)*100);
+  }
+  Plotly.react('g2-wake',[
+    {x:sps,y:wls,type:'scatter',mode:'lines',fill:'tozeroy',line:{color:'rgba(168,85,247,0.9)',width:1.5},fillcolor:'rgba(168,85,247,0.07)',hovertemplate:'%{x:.1f}D→Wake=%{y:.2f}%<extra></extra>'},
+    {x:[P.spacing],y:[Wind.calcWake(P.Cp,P.rotorRadius*2,P.spacing)*100],type:'scatter',mode:'markers',marker:{color:'#a855f7',size:8,symbol:'diamond'}},
+    {x:[7,7],y:[0,Math.max(...wls)],type:'scatter',mode:'lines',line:{color:'rgba(239,68,68,0.6)',dash:'dash',width:1.5},hovertemplate:'7D constraint<extra></extra>'},
+  ],PL('Spacing (×D)','Wake Loss (%)'),PLOTLY_CFG);
+
+  // Weibull wind distribution → daily power profile (simulated)
+  const hours=[],hpow=[];
+  for(let h=0;h<24;h++){
+    const v=P.windSpeed*(0.7+0.5*Math.sin((h-6)*Math.PI/12)+0.1*(Math.random()-0.5));
+    hours.push(h); hpow.push(Math.max(0,Wind.calculate({...P,windSpeed:Math.max(0,v)}).P_farm));
+  }
+  Plotly.react('g2-weibull',[
+    {x:hours,y:hpow,type:'scatter',mode:'lines',fill:'tozeroy',line:{color:'rgba(34,197,94,0.9)',width:1.5},fillcolor:'rgba(34,197,94,0.07)',hovertemplate:'%{x}:00→%{y:.1f}kW<extra></extra>'},
+  ],PL('Hour','Farm Power (kW)'),PLOTLY_CFG);
+}
+
+/* ── ANOMALIES ── */
+const ANOMALIES=[
+  {title:'Gearbox Oil Temp 78°C — Pre-Alarm',desc:'SCADA shows gearbox oil temperature rising to 78°C. Alarm threshold is 70°C.',
+   eqf4:'Deviation detected. Log event, notify O&M supervisor. Do not reset alarm without investigation.',
+   eqf5:`Root cause analysis: (1) Cooling system fault → check cooler fan, heat exchanger blockage. (2) Oil viscosity degraded → take oil sample for lab analysis. (3) Gear wear → check vibration spectrum for sidebands. Action: reduce load to 80% nominal until inspection. Formula: ΔT_oil ∝ P_loss/Q_cooling.`},
+  {title:'Sustained Yaw Error 14° for 20 min',desc:'Wind vane shows 14° yaw misalignment sustained for >20 minutes.',
+   eqf4:'Yaw error exceeds 8° threshold. Flag on checklist. Report to O&M.',
+   eqf5:`Power loss = 1−cos³(14°) = 1−0.943³ = 16.3%. At P_rated=4MW: loss = ${(4000*0.163).toFixed(0)} kW. Energy loss = ${(4000*0.163*20/60).toFixed(0)} kWh in 20 min. Root cause: wind vane icing or yaw motor brake fault. Check: yaw_error_SCADA vs met mast wind direction.`},
+  {title:'Power Output 22% Below Baseline',desc:'Monitoring shows farm producing 78% of expected output for given wind speed.',
+   eqf4:'Production gap detected. Flag and report. Check inverter and SCADA alarms.',
+   eqf5:`Systematic analysis: (1) Cp degraded → blade erosion/soiling, check power curve vs reference. (2) Wake effect increased → verify turbine spacing and wind rose direction. (3) Density effect → check air density ρ = P/(RT). P ∝ ρv³ → 1% density drop = 1% power drop. (4) Pitch angle offset → SCADA pitch_angle vs optimal Cp curve.`},
+  {title:'Main Bearing Vibration 6.2 mm/s',desc:'Main bearing vibration exceeds ISO alarm threshold of 4.5 mm/s.',
+   eqf4:'Vibration alarm active. Log and report immediately. Prepare for potential shutdown.',
+   eqf5:`ISO 10816-3 classification: >4.5 mm/s = unsatisfactory. Spectrum analysis: check 1P (rotor frequency), 2P (blade pass), BPFO/BPFI (bearing defect frequencies). Action: reduce speed to 60% rated, schedule CMS data download. Bearing remaining life estimate via Hertz contact stress model.`},
+  {title:'Generator Power Factor 0.87',desc:'Generator output power factor dropped to 0.87, below grid code minimum of 0.95.',
+   eqf4:'Power factor below limit. Log deviation. Report to grid operator if not corrected within 15 min.',
+   eqf5:`Grid code requirement: PF > 0.95 (lagging/leading). Q = P × tan(arccos(PF)) = P_rated × tan(arccos(0.87)) = P × 0.567 → 56.7% reactive injection. Converter reactive power setpoint may have drifted. Check GSC (grid-side converter) reactive power control loop. Penalty risk if grid code breach sustained > 30 min.`},
+  {title:'Blade Icing Event — Cp Drop',desc:'Nacelle temperature −3°C, humidity 95%. Power output 35% below power curve.',
+   eqf4:'Possible blade icing. Safety protocol: do not approach turbine. Activate ice detection system.',
+   eqf5:`Power curve deviation = 35% below reference at measured wind speed. Diagnostic: Cp_measured = P_actual / (½ρπr²v³) vs Cp_design. If Cp drops 30%+: blade profile disrupted → consistent with icing. Action: (1) Activate blade heating if available. (2) Safe stop until T_nacelle > +2°C. (3) Log ice event for AEP correction in performance report.`},
+];
+
+function buildAnomalyGrid() {
+  const grid=document.getElementById('anomaly-grid');
+  if(!grid) return;
+  grid.innerHTML=ANOMALIES.map((a,i)=>`
+    <div class="anomaly-card" id="ancard-${i}">
+      <div class="anomaly-title">${a.title}</div>
+      <div class="anomaly-desc">${a.desc}</div>
+      <button class="anomaly-btn" onclick="triggerAnomaly(${i})">⚡ Trigger Scenario</button>
+      <div class="anomaly-result" id="anres-${i}"></div>
+    </div>`).join('');
+}
+
+function triggerAnomaly(idx){
+  const a=ANOMALIES[idx];
+  const res=document.getElementById(`anres-${idx}`);
+  const card=document.getElementById(`ancard-${idx}`);
+  res.style.display='block';
+  res.innerHTML=EQF===5
+    ?`<span style="color:var(--amber);font-size:9px;font-weight:700;letter-spacing:0.1em">EQF 5 ANALYSIS:</span><br>${a.eqf5}`
+    :`<span style="color:var(--wind);font-size:9px;font-weight:700;letter-spacing:0.1em">EQF 4 RESPONSE:</span><br>${a.eqf4}`;
+  card.classList.add('triggered');
+  progress.l2=true; updateProgress();
+}
+
+/* ═══ LEVEL 3 ═══ */
+const DROP_ZONES=[
+  {id:'rotor_blades', x:0.04, y:0.06, w:0.15, h:0.56},
+  {id:'hub',          x:0.20, y:0.28, w:0.07, h:0.15},
+  {id:'main_shaft',   x:0.28, y:0.38, w:0.10, h:0.07},
+  {id:'gearbox',      x:0.39, y:0.32, w:0.08, h:0.13},
+  {id:'generator',    x:0.48, y:0.32, w:0.08, h:0.13},
+  {id:'converter',    x:0.38, y:0.50, w:0.09, h:0.10},
+  {id:'transformer',  x:0.56, y:0.60, w:0.10, h:0.10},
+  {id:'yaw_system',   x:0.28, y:0.50, w:0.08, h:0.10},
+];
+
+function initLabeling() {
+  dropStates={};
+  const canvas=document.getElementById('labelCanvas');
+  canvas.width=canvas.parentElement.offsetWidth||900;
+  canvas.height=380;
+  drawLabelCanvas();
+
+  // Chips
+  const pool=document.getElementById('drag-pool');
+  const names=COMPONENTS.map(c=>c.name);
+  for(let i=names.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[names[i],names[j]]=[names[j],names[i]];}
+  pool.innerHTML=names.map(n=>`<div class="drag-chip" id="chip-${n.replace(/\W/g,'_')}" draggable="true" ondragstart="onDragStart(event,'${n}')" ondragend="onDragEnd(event)">${n}</div>`).join('');
+
+  renderDropZones(canvas);
+  if(EQF===5) buildKPIQuiz();
+  document.getElementById('kpi-quiz-panel').style.display=EQF===5?'block':'none';
+
+  labelSeconds=900; clearInterval(labelTimer);
+  labelTimer=setInterval(()=>{
+    labelSeconds--;
+    const m=Math.floor(labelSeconds/60),s=labelSeconds%60;
+    document.getElementById('l3-timer').textContent=`⏱ ${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    if(labelSeconds<=0){clearInterval(labelTimer);checkLabeling();}
+  },1000);
+}
+
+function drawLabelCanvas(){
+  const canvas=document.getElementById('labelCanvas');
+  if(!canvas) return;
+  canvas.width=canvas.parentElement.offsetWidth||900;
+  const ctx=canvas.getContext('2d'),W=canvas.width,H=canvas.height;
+  ctx.clearRect(0,0,W,H);
+  const sky=ctx.createLinearGradient(0,0,0,H*0.7);
+  sky.addColorStop(0,'#000d1a');sky.addColorStop(1,'#001830');
+  ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);
+  const gnd=ctx.createLinearGradient(0,H*0.7,0,H);
+  gnd.addColorStop(0,'#0a1a0a');gnd.addColorStop(1,'#050f05');
+  ctx.fillStyle=gnd;ctx.fillRect(0,H*0.7,W,H*0.3);
+
+  // Tower
+  const tx=W*0.35,ty_top=H*0.44,ty_bot=H*0.70;
+  ctx.fillStyle='rgba(0,100,160,0.4)';ctx.strokeStyle='rgba(0,212,255,0.4)';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(tx-12,ty_bot);ctx.lineTo(tx-6,ty_top);ctx.lineTo(tx+6,ty_top);ctx.lineTo(tx+12,ty_bot);ctx.closePath();ctx.fill();ctx.stroke();
+
+  // Nacelle
+  ctx.fillStyle='rgba(0,60,100,0.5)';ctx.strokeStyle='rgba(0,212,255,0.4)';
+  ctx.fillRect(tx-8,ty_top-22,80,22);ctx.strokeRect(tx-8,ty_top-22,80,22);
+
+  // Hub
+  ctx.fillStyle='rgba(0,180,255,0.5)';ctx.beginPath();ctx.arc(tx+6,ty_top-11,8,0,Math.PI*2);ctx.fill();
+
+  // Rotor outline
+  ctx.strokeStyle='rgba(0,212,255,0.2)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.arc(tx+6,ty_top-11,65,0,Math.PI*2);ctx.stroke();
+
+  // Shaft
+  ctx.strokeStyle='rgba(0,212,255,0.3)';ctx.lineWidth=4;
+  ctx.beginPath();ctx.moveTo(tx+14,ty_top-11);ctx.lineTo(tx+38,ty_top-11);ctx.stroke();
+
+  // Gearbox/Gen outline
+  ctx.fillStyle='rgba(245,166,35,0.1)';ctx.strokeStyle='rgba(245,166,35,0.3)';ctx.lineWidth=1;
+  ctx.fillRect(tx+30,ty_top-20,35,18);ctx.strokeRect(tx+30,ty_top-20,35,18);
+  ctx.fillRect(tx+67,ty_top-20,35,18);ctx.strokeRect(tx+67,ty_top-20,35,18);
+
+  // Converter
+  ctx.fillRect(tx+30,ty_top+2,35,14);ctx.strokeRect(tx+30,ty_top+2,35,14);
+
+  // Yaw
+  ctx.fillStyle='rgba(0,212,255,0.1)';ctx.strokeStyle='rgba(0,212,255,0.2)';
+  ctx.fillRect(tx-8,ty_top,16,12);ctx.strokeRect(tx-8,ty_top,16,12);
+
+  // Transformer
+  ctx.fillStyle='rgba(34,197,94,0.1)';ctx.strokeStyle='rgba(34,197,94,0.3)';
+  ctx.fillRect(tx+25,ty_bot-5,60,18);ctx.strokeRect(tx+25,ty_bot-5,60,18);
+
+  // Grid
+  ctx.strokeStyle='rgba(34,197,94,0.4)';ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(tx+85,ty_bot+4);ctx.lineTo(W*0.85,ty_bot+4);ctx.stroke();
+  ctx.fillStyle='rgba(34,197,94,0.1)';ctx.strokeStyle='rgba(34,197,94,0.4)';ctx.lineWidth=1.5;
+  ctx.fillRect(W*0.85,ty_bot-8,W*0.12,26);ctx.strokeRect(W*0.85,ty_bot-8,W*0.12,26);
+  ctx.fillStyle='rgba(34,197,94,0.6)';ctx.font='bold 9px JetBrains Mono';ctx.textAlign='center';
+  ctx.fillText('GRID',W*0.91,ty_bot+5);
+
+  // Drop zones with state
+  DROP_ZONES.forEach(dz=>{
+    const x=dz.x*W,y=dz.y*H,w=dz.w*W,h=dz.h*H;
+    const st=dropStates[dz.id];
+    if(st?.checked){
+      ctx.fillStyle=st.correct?'rgba(34,197,94,0.2)':'rgba(239,68,68,0.2)';
+      ctx.strokeStyle=st.correct?'#22c55e':'#ef4444';
+    } else if(st){
+      ctx.fillStyle='rgba(0,212,255,0.1)';ctx.strokeStyle='rgba(0,212,255,0.6)';
+    } else {
+      ctx.fillStyle='rgba(255,255,255,0.01)';ctx.strokeStyle='rgba(255,255,255,0.1)';
+    }
+    ctx.lineWidth=1.5;ctx.setLineDash([4,3]);
+    ctx.fillRect(x,y,w,h);ctx.strokeRect(x,y,w,h);ctx.setLineDash([]);
+    if(st){
+      ctx.font='bold 9px JetBrains Mono';
+      ctx.fillStyle=st.checked?(st.correct?'#22c55e':'#ef4444'):'#00d4ff';
+      ctx.textAlign='center';ctx.textBaseline='middle';
+      const lines=st.label.split(' ');
+      lines.forEach((l,li)=>ctx.fillText(l.substring(0,12),x+w/2,y+h/2+(li-lines.length/2+0.5)*13));
+      ctx.textBaseline='alphabetic';
+    }
+  });
+}
+
+function renderDropZones(canvas){
+  document.querySelectorAll('.drop-zone').forEach(e=>e.remove());
+  const wrap=document.getElementById('labeling-canvas-wrap');
+  DROP_ZONES.forEach(dz=>{
+    const el=document.createElement('div');
+    el.className='drop-zone';el.id='dz-'+dz.id;
+    el.style.left=(dz.x*100)+'%';el.style.top=(dz.y*100)+'%';
+    el.style.width=(dz.w*100)+'%';el.style.height=(dz.h*100)+'%';
+    el.textContent='Drop here';
+    el.addEventListener('dragover',e=>{e.preventDefault();el.classList.add('over')});
+    el.addEventListener('dragleave',()=>el.classList.remove('over'));
+    el.addEventListener('drop',e=>{e.preventDefault();onDrop(e,dz.id);el.classList.remove('over')});
+    wrap.appendChild(el);
+  });
+}
+
+function onDragStart(e,name){draggedChip=name;e.dataTransfer.setData('text/plain',name);e.target.classList.add('dragging')}
+function onDragEnd(e){e.target.classList.remove('dragging');draggedChip=null}
+function onDrop(e,dzId){
+  const name=e.dataTransfer.getData('text/plain')||draggedChip;
+  if(!name) return;
+  dropStates[dzId]={label:name,checked:false,correct:false};
+  const chipId='chip-'+name.replace(/\W/g,'_');
+  const chip=document.getElementById(chipId);
+  if(chip) chip.classList.add('used');
+  const dzEl=document.getElementById('dz-'+dzId);
+  if(dzEl){dzEl.textContent=name;dzEl.classList.add('filled')}
+  drawLabelCanvas();
+  document.getElementById('l3-remaining').textContent=(8-Object.keys(dropStates).length)+' remaining';
+}
+
+function checkLabeling(){
+  let correct=0;
+  DROP_ZONES.forEach(dz=>{
+    const st=dropStates[dz.id];if(!st) return;
+    const comp=COMPONENTS.find(c=>c.id===dz.id);
+    st.checked=true;st.correct=(st.label===comp.name);
+    if(st.correct) correct++;
+    const dzEl=document.getElementById('dz-'+dz.id);
+    if(dzEl){dzEl.classList.remove('filled');dzEl.classList.add(st.correct?'correct':'wrong');dzEl.textContent=(st.correct?'✓ ':'✗ ')+st.label;}
+  });
+  document.getElementById('l3-score').textContent=correct+' / 8';
+  document.getElementById('l3-score').style.color=correct>=7?'var(--green)':correct>=5?'var(--amber)':'var(--red)';
+  drawLabelCanvas();
+  progress.l3=correct>=6;updateProgress();
+}
+
+function resetLabeling(){
+  dropStates={};clearInterval(labelTimer);labelSeconds=900;
+  document.getElementById('l3-timer').textContent='⏱ 15:00';
+  document.getElementById('l3-score').textContent='0 / 8';
+  document.getElementById('l3-score').style.color='var(--wind)';
+  document.querySelectorAll('.drag-chip').forEach(c=>c.classList.remove('used'));
+  document.querySelectorAll('.drop-zone').forEach(el=>{el.className='drop-zone';el.textContent='Drop here'});
+  document.getElementById('l3-remaining').textContent='8 remaining';
+  drawLabelCanvas();initLabeling();
+}
+
+/* KPI QUIZ */
+const KPI_OPTIONS=['Rotor speed / power output','Vibration / torque','Gearbox efficiency / temp','AC power / speed','DC bus voltage / power factor','Transformer temp / losses','Yaw error / power loss'];
+const CORRECT_ANSWERS=['Rotor speed / power output','Vibration / torque','Vibration / torque','Gearbox efficiency / temp','AC power / speed','DC bus voltage / power factor','Transformer temp / losses'];
+// Note: main_shaft→vibration, yaw→yaw error
+
+function buildKPIQuiz(){
+  const quiz=document.getElementById('kpi-quiz');
+  if(!quiz) return;
+  quiz.innerHTML=COMPONENTS.map((c,i)=>`
+    <div style="display:grid;grid-template-columns:200px 1fr;gap:12px;align-items:center;padding:8px;border:1px solid var(--border);border-radius:var(--r)">
+      <span style="font-size:12px;color:var(--wind);font-weight:600">${c.name}</span>
+      <select id="kq-${i}" style="background:var(--bg0);border:1px solid var(--border);color:var(--text1);font-family:var(--font-mono);font-size:10px;padding:5px 8px;border-radius:3px;outline:none">
+        <option value="">Select KPI…</option>
+        ${KPI_OPTIONS.map(o=>`<option value="${o}">${o}</option>`).join('')}
+      </select>
+    </div>`).join('');
+}
+
+function checkKPIQuiz(){
+  const correctMap={
+    'rotor_blades':'Rotor speed / power output','hub':'Vibration / torque',
+    'main_shaft':'Vibration / torque','gearbox':'Gearbox efficiency / temp',
+    'generator':'AC power / speed','converter':'DC bus voltage / power factor',
+    'transformer':'Transformer temp / losses','yaw_system':'Yaw error / power loss'
+  };
+  let score=0;
+  COMPONENTS.forEach((c,i)=>{
+    const sel=document.getElementById(`kq-${i}`);if(!sel) return;
+    const ok=sel.value===correctMap[c.id];
+    if(ok) score++;
+    sel.style.borderColor=ok?'var(--green)':'var(--red)';
+  });
+  document.getElementById('kpi-quiz-result').textContent=`Score: ${score}/8 ${score>=6?'✓ Pass':'✗ Review component-KPI linkages'}`;
+  document.getElementById('kpi-quiz-result').style.color=score>=6?'var(--green)':'var(--red)';
+}
+
+function exportReport(){
+  const r=Wind.calculate(P);
+  const correct=DROP_ZONES.filter(dz=>{const st=dropStates[dz.id];return st?.checked&&COMPONENTS.find(c=>c.id===dz.id)?.name===st.label}).length;
+  const report={title:'Wind Turbine Component Identification Report',module:'WIN-U01',eqfLevel:'EQF '+EQF,
+    date:new Date().toISOString(),labelingScore:`${correct}/8`,labelingPass:correct>=7,
+    physicsResults:{P_farm:r.P_farm.toFixed(2),E_net:r.E_net.toFixed(0),wakeLoss:(r.L_wake*100).toFixed(2),CF:r.CF.toFixed(1)},
+    parameters:P,components:DROP_ZONES.map(dz=>({zone:dz.id,placed:dropStates[dz.id]?.label||'—',correct:dropStates[dz.id]?.correct||false}))};
+  const blob=new Blob([JSON.stringify(report,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);const a=document.createElement('a');
+  a.href=url;a.download='WIN-U01-report.json';a.click();URL.revokeObjectURL(url);
+}
+
+/* ── GLOBAL CONTROLS ── */
+function updateProgress(){
+  const done=[progress.l1,progress.l2,progress.l3].filter(Boolean).length;
+  document.getElementById('topProgress').textContent=Math.round(done/3*100)+'%';
+}
+function setEQF(level){
+  EQF=level;
+  document.getElementById('eqf4btn').classList.toggle('active',level===4);
+  document.getElementById('eqf5btn').classList.toggle('active',level===5);
+  document.getElementById('eqf5-kpi-panel').style.display=level===5?'block':'none';
+  document.getElementById('kpi-quiz-panel').style.display=level===5&&currentLevel===3?'block':'none';
+  if(level===5) buildKPIQuiz();
+  buildKPIMap();
+}
+function switchLevel(n){
+  currentLevel=n;
+  [1,2,3].forEach(i=>{
+    document.getElementById('panel'+i).classList.toggle('active',i===n);
+    document.getElementById('ltab'+i).classList.toggle('active',i===n);
+    document.querySelectorAll('.nav-tab').forEach((t,ti)=>t.classList.toggle('active',ti===n-1));
+  });
+  if(n===2){runPhysics();buildAnomalyGrid();}
+  if(n===3){initLabeling();document.getElementById('kpi-quiz-panel').style.display=EQF===5?'block':'none';}
+}
+
+/* ── INIT ── */
+document.addEventListener('DOMContentLoaded',()=>{
+  initTurbineCanvas();initTooltip();updateKPIs();buildChecklist();buildKPIMap();buildParamSliders();
+  // Animate turbine
+  const animate=()=>{bladeAngle+=0.025;drawTurbineDiagram();requestAnimationFrame(animate);};
+  animate();
+  window.addEventListener('resize',()=>{
+    setTimeout(()=>{initTurbineCanvas();if(currentLevel===3) drawLabelCanvas();},100);
+  });
+});
+</script>
+</body>
+</html>
