@@ -1820,7 +1820,7 @@ const PhysicsEngine = (() => {
       E_net,
       loss_wave:      Math.max(0, loss_wave),
       loss_corrosion: Math.max(0, loss_corrosion),
-      maint_kWh,
+      maint_kWh: maint_daily_kWh,
       riskViolation: R_sea > safetyThreshold,
       maintenanceAccessible: waveHeight < 3.5, // Hs < 3.5m → crew transfer vessel ok
       formula: `R_sea=${R_sea.toFixed(3)} · E=(${E_wind_kWh.toFixed(1)}×(1-${waveLoss})×(1-${corrosionLoss}))-${maint_daily_kWh.toFixed(0)} kWh/day`,
