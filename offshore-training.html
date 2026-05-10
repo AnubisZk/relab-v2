@@ -1,0 +1,1185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Offshore Wind Training — OFF-U01 · REpower · ZSK Solutions</title>
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@700;800&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg0:#070d17;--bg1:#0c1525;--bg2:#0f1c2e;--card:#0a1628;
+  --sea:#0066cc;--sea-d:rgba(0,102,204,0.15);--sea-g:rgba(0,102,204,0.4);
+  --purple:#a855f7;--purple-d:rgba(168,85,247,0.12);
+  --cyan:#00d4ff;--cyan-d:rgba(0,212,255,0.12);--cyan-g:rgba(0,212,255,0.35);
+  --green:#22c55e;--green-d:rgba(34,197,94,0.12);
+  --amber:#f5a623;--amber-d:rgba(245,166,35,0.12);
+  --red:#ef4444;--red-d:rgba(239,68,68,0.12);
+  --text1:#f0f6ff;--text2:rgba(200,220,255,0.65);--text3:rgba(140,170,210,0.4);
+  --border:rgba(168,85,247,0.12);--borderb:rgba(168,85,247,0.3);
+  --font-ui:'Space Grotesk',sans-serif;--font-mono:'JetBrains Mono',monospace;--font-head:'Syne',sans-serif;
+  --r:6px;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{font-size:14px}
+body{background:var(--bg0);color:var(--text1);font-family:var(--font-ui);min-height:100vh;overflow-x:hidden}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:var(--bg1)}
+::-webkit-scrollbar-thumb{background:rgba(168,85,247,0.3);border-radius:2px}
+
+#topbar{height:52px;background:var(--bg1);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:16px;position:sticky;top:0;z-index:200}
+.brand{font-family:var(--font-head);font-size:14px;font-weight:800;color:var(--purple);letter-spacing:0.06em}
+.brand-sub{font-family:var(--font-mono);font-size:9px;color:var(--text3);letter-spacing:0.1em;margin-top:1px}
+.nav-tabs{display:flex;gap:2px;flex:1;margin-left:16px}
+.nav-tab{font-family:var(--font-mono);font-size:10px;letter-spacing:0.1em;color:var(--text3);padding:6px 14px;border-bottom:2px solid transparent;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px;text-transform:uppercase;white-space:nowrap;background:none;border-top:none;border-left:none;border-right:none}
+.nav-tab:hover{color:var(--text2);border-bottom-color:rgba(168,85,247,0.3)}
+.nav-tab.active{color:var(--purple);border-bottom-color:var(--purple)}
+.eqf-switch{display:flex;margin-left:auto}
+.eqf-btn{font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:0.1em;padding:6px 14px;border:1px solid var(--borderb);cursor:pointer;transition:all .2s;background:transparent;color:var(--text3)}
+.eqf-btn:first-child{border-radius:var(--r) 0 0 var(--r)}
+.eqf-btn:last-child{border-radius:0 var(--r) var(--r) 0;border-left:none}
+.eqf-btn.active{background:var(--purple);color:#fff;border-color:var(--purple)}
+.progress-ring{display:flex;align-items:center;gap:8px;margin-left:12px}
+.ring-label{font-family:var(--font-mono);font-size:9px;color:var(--text3);letter-spacing:0.1em}
+.ring-val{font-family:var(--font-mono);font-size:12px;font-weight:700;color:var(--purple)}
+
+#level-nav{display:flex;padding:0 20px;background:var(--bg1);border-bottom:1px solid var(--border)}
+.level-tab{font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:0.12em;color:var(--text3);padding:10px 20px;cursor:pointer;transition:all .2s;border-bottom:3px solid transparent;text-transform:uppercase;display:flex;align-items:center;gap:8px;background:none;border-top:none;border-left:none;border-right:none}
+.level-tab:hover{color:var(--text2)}
+.level-tab.active{color:var(--purple);border-bottom-color:var(--purple)}
+.level-badge{font-size:8px;padding:2px 6px;border-radius:10px;background:var(--purple-d);color:var(--purple);border:1px solid rgba(168,85,247,0.3)}
+
+#main{max-width:1600px;margin:0 auto;padding:16px 20px 40px}
+.section-panel{display:none}
+.section-panel.active{display:block}
+
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:12px}
+.card-hdr{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border);background:rgba(0,0,0,0.2)}
+.card-title{font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:0.14em;color:var(--text2);text-transform:uppercase}
+.card-body{padding:14px}
+
+.kpi-strip{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:12px}
+@media(max-width:1100px){.kpi-strip{grid-template-columns:repeat(3,1fr)}}
+.kpi{background:var(--card);border:1px solid var(--border);border-top:2px solid var(--kpi-c,var(--purple));border-radius:var(--r);padding:10px 12px;position:relative;overflow:hidden}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:36px;background:linear-gradient(to bottom,var(--kpi-d,var(--purple-d)),transparent);pointer-events:none}
+.kpi-label{font-family:var(--font-mono);font-size:8px;letter-spacing:0.14em;color:var(--text3);text-transform:uppercase;margin-bottom:4px}
+.kpi-value{font-family:var(--font-mono);font-size:clamp(16px,1.8vw,22px);font-weight:700;color:var(--kpi-c,var(--purple));text-shadow:0 0 16px var(--kpi-c,var(--purple));line-height:1}
+.kpi-unit{font-family:var(--font-mono);font-size:9px;color:var(--text3);margin-top:2px}
+.kpi-sub{font-family:var(--font-mono);font-size:9px;color:var(--text2);margin-top:4px}
+.c-purple{--kpi-c:var(--purple);--kpi-d:var(--purple-d)}
+.c-cyan{--kpi-c:var(--cyan);--kpi-d:var(--cyan-d)}
+.c-green{--kpi-c:var(--green);--kpi-d:var(--green-d)}
+.c-amber{--kpi-c:var(--amber);--kpi-d:var(--amber-d)}
+.c-red{--kpi-c:var(--red);--kpi-d:var(--red-d)}
+
+#offshore-canvas-wrap{position:relative;background:var(--bg2);border-radius:var(--r)}
+#offshoreCanvas{display:block;width:100%;cursor:pointer}
+#component-tooltip{position:absolute;display:none;background:rgba(7,10,20,0.97);border:1px solid var(--purple);border-radius:var(--r);padding:12px 16px;max-width:300px;z-index:100;pointer-events:none}
+.tt-name{font-family:var(--font-mono);font-size:11px;font-weight:700;color:var(--purple);margin-bottom:6px;letter-spacing:0.1em}
+.tt-func{font-size:12px;color:var(--text2);line-height:1.5;margin-bottom:6px}
+.tt-kpi{font-family:var(--font-mono);font-size:9px;color:var(--green);letter-spacing:0.08em}
+.tt-eqf5{font-family:var(--font-mono);font-size:9px;color:var(--amber);margin-top:4px;letter-spacing:0.06em}
+
+.mid-grid{display:grid;grid-template-columns:1fr 340px;gap:12px}
+@media(max-width:1100px){.mid-grid{grid-template-columns:1fr}}
+
+.param-grid{display:flex;flex-direction:column;gap:10px}
+.param-row{display:flex;flex-direction:column;gap:4px}
+.param-hdr{display:flex;justify-content:space-between;align-items:center}
+.param-name{font-size:11px;color:var(--text2)}
+.param-val{font-family:var(--font-mono);font-size:12px;font-weight:700;color:var(--purple)}
+input[type=range]{-webkit-appearance:none;width:100%;height:3px;background:rgba(255,255,255,0.08);outline:none;cursor:pointer;border-radius:0}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:2px;background:var(--purple);box-shadow:0 0 8px var(--purple);cursor:pointer}
+.formula-box{font-family:var(--font-mono);font-size:10px;color:var(--text3);background:rgba(0,0,0,0.3);padding:8px 10px;border-left:2px solid var(--purple);line-height:1.6;margin-top:8px}
+
+.graphs-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.graph-cell{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.graph-cell-title{font-family:var(--font-mono);font-size:9px;font-weight:700;letter-spacing:0.12em;color:var(--text3);text-transform:uppercase;padding:7px 10px;border-bottom:1px solid var(--border)}
+.plotly-g{width:100%;height:140px}
+
+.anomaly-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+@media(max-width:900px){.anomaly-grid{grid-template-columns:1fr}}
+.anomaly-card{border:1px solid var(--border);border-radius:var(--r);padding:12px;background:var(--bg2);cursor:pointer;transition:all .2s}
+.anomaly-card:hover{border-color:var(--purple);background:rgba(168,85,247,0.04)}
+.anomaly-card.triggered{border-color:var(--red);background:var(--red-d)}
+.anomaly-title{font-family:var(--font-mono);font-size:10px;font-weight:700;color:var(--text2);letter-spacing:0.1em;margin-bottom:6px}
+.anomaly-desc{font-size:11px;color:var(--text3);line-height:1.5;margin-bottom:8px}
+.anomaly-btn{font-family:var(--font-mono);font-size:9px;font-weight:700;letter-spacing:0.1em;padding:5px 10px;border:1px solid var(--purple);color:var(--purple);background:var(--purple-d);cursor:pointer;border-radius:3px;transition:all .2s}
+.anomaly-btn:hover{background:rgba(168,85,247,0.35);color:#fff}
+.anomaly-result{font-family:var(--font-mono);font-size:10px;margin-top:8px;padding:8px;background:rgba(0,0,0,0.3);border-radius:3px;display:none;line-height:1.6}
+
+.checklist-grid{display:flex;flex-direction:column;gap:6px}
+.check-item{display:grid;grid-template-columns:auto 1fr auto auto auto;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--r);background:var(--bg2);transition:all .2s}
+.check-item.ok{border-color:rgba(34,197,94,0.4);background:rgba(34,197,94,0.04)}
+.check-item.deviate{border-color:rgba(239,68,68,0.4);background:rgba(239,68,68,0.04)}
+.check-num{font-family:var(--font-mono);font-size:10px;font-weight:700;color:var(--text3);width:20px}
+.check-name{font-size:12px;color:var(--text2)}
+.check-hint{font-size:10px;color:var(--text3);margin-top:2px}
+.check-input{width:90px;background:var(--bg0);border:1px solid rgba(255,255,255,0.1);color:var(--text1);font-family:var(--font-mono);font-size:12px;font-weight:600;padding:4px 8px;border-radius:3px;outline:none;text-align:right;-moz-appearance:textfield}
+.check-input::-webkit-inner-spin-button{-webkit-appearance:none}
+.check-input:focus{border-color:var(--purple)}
+.check-tolerance{font-family:var(--font-mono);font-size:9px;color:var(--text3);white-space:nowrap}
+.check-status{font-family:var(--font-mono);font-size:9px;font-weight:700;letter-spacing:0.1em;padding:3px 8px;border-radius:3px;border:1px solid;white-space:nowrap}
+.status-ok{color:var(--green);border-color:rgba(34,197,94,0.3);background:var(--green-d)}
+.status-dev{color:var(--red);border-color:rgba(239,68,68,0.3);background:var(--red-d)}
+.status-empty{color:var(--text3);border-color:rgba(255,255,255,0.08);background:transparent}
+#deviation-log{margin-top:12px;display:none}
+#deviation-log.visible{display:block}
+.dev-log-item{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:start;padding:10px 12px;border-left:3px solid var(--red);background:var(--red-d);border-radius:0 var(--r) var(--r) 0;margin-bottom:6px}
+.dev-item-num{font-family:var(--font-mono);font-size:10px;font-weight:700;color:var(--red)}
+.dev-item-body{display:flex;flex-direction:column;gap:3px}
+.dev-item-name{font-size:12px;color:var(--text1);font-weight:600}
+.dev-item-vals{font-family:var(--font-mono);font-size:10px;color:var(--text2)}
+.dev-item-note{font-size:11px;color:var(--text3);margin-top:2px}
+.dev-item-badge{font-family:var(--font-mono);font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;background:var(--red-d);color:var(--red);border:1px solid rgba(239,68,68,0.3);white-space:nowrap}
+.check-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:12px;border-top:1px solid var(--border);margin-top:8px}
+.sum-item{display:flex;flex-direction:column;gap:3px;align-items:center}
+.sum-val{font-family:var(--font-mono);font-size:18px;font-weight:700}
+.sum-label{font-family:var(--font-mono);font-size:8px;letter-spacing:0.12em;color:var(--text3);text-transform:uppercase}
+
+.drag-pool{display:flex;flex-wrap:wrap;gap:8px;padding:12px}
+.drag-chip{font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:0.08em;padding:6px 12px;border:1px solid var(--purple);color:var(--purple);background:var(--purple-d);border-radius:3px;cursor:grab;transition:all .2s;user-select:none}
+.drag-chip:hover{background:rgba(168,85,247,0.35);color:#fff;transform:scale(1.04)}
+.drag-chip.used{opacity:0.3;cursor:not-allowed;pointer-events:none}
+.drop-zone{position:absolute;border:2px dashed rgba(168,85,247,0.4);border-radius:4px;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:9px;color:rgba(168,85,247,0.5);transition:all .2s;cursor:pointer}
+.drop-zone.over{border-color:var(--purple);background:var(--purple-d);color:var(--purple)}
+.drop-zone.correct{border-color:var(--green);background:var(--green-d);color:var(--green);border-style:solid}
+.drop-zone.wrong{border-color:var(--red);background:var(--red-d);color:var(--red);border-style:solid}
+.drop-zone.filled{border-style:solid;border-color:var(--purple);background:var(--purple-d);color:var(--purple)}
+.score-panel{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--bg2);border-radius:var(--r);border:1px solid var(--border);margin-bottom:8px}
+.score-big{font-family:var(--font-mono);font-size:28px;font-weight:700;color:var(--purple);text-shadow:0 0 20px var(--purple)}
+.score-label{font-family:var(--font-mono);font-size:9px;color:var(--text3);letter-spacing:0.12em;text-transform:uppercase;margin-top:2px}
+.score-actions{display:flex;gap:8px}
+.act-btn{font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:0.1em;padding:8px 16px;border:1px solid;border-radius:var(--r);cursor:pointer;transition:all .2s}
+.btn-reset{color:var(--text3);border-color:rgba(255,255,255,0.15);background:transparent}
+.btn-check{color:var(--purple);border-color:var(--purple);background:var(--purple-d)}
+.btn-check:hover{background:rgba(168,85,247,0.35);color:#fff}
+.btn-export{color:var(--green);border-color:var(--green);background:var(--green-d)}
+.btn-export:hover{background:rgba(34,197,94,0.3);color:#000}
+.kpi-map-table{width:100%;border-collapse:collapse}
+.kpi-map-table th{font-family:var(--font-mono);font-size:9px;letter-spacing:0.12em;color:var(--text3);text-transform:uppercase;padding:6px 10px;text-align:left;border-bottom:1px solid var(--border)}
+.kpi-map-table td{font-size:11px;color:var(--text2);padding:7px 10px;border-bottom:1px solid var(--border)}
+.kpi-map-table tr:last-child td{border-bottom:none}
+.kpi-chip{font-family:var(--font-mono);font-size:9px;padding:2px 7px;border-radius:3px;background:var(--purple-d);color:var(--purple);border:1px solid rgba(168,85,247,0.2)}
+.tag{font-family:var(--font-mono);font-size:8px;letter-spacing:0.1em;padding:2px 7px;border-radius:3px;border:1px solid;text-transform:uppercase}
+.tag-ok{color:var(--green);border-color:rgba(34,197,94,0.3);background:var(--green-d)}
+.tag-warn{color:var(--amber);border-color:rgba(245,166,35,0.3);background:var(--amber-d)}
+.tag-info{color:var(--cyan);border-color:rgba(0,212,255,0.3);background:var(--cyan-d)}
+.tag-eqf5{color:var(--purple);border-color:rgba(168,85,247,0.3);background:var(--purple-d)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:900px){.row2{grid-template-columns:1fr}}
+
+/* Wave animation */
+@keyframes waveMove{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.wave-anim{animation:waveMove 4s linear infinite}
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <div>
+    <div class="brand">⚓ Offshore Wind Training</div>
+    <div class="brand-sub">OFF-U01 · REpower Erasmus+ KA220-VET · ZSK Solutions</div>
+  </div>
+  <nav class="nav-tabs">
+    <button class="nav-tab active" onclick="switchLevel(1)">① Offshore System &amp; KPIs</button>
+    <button class="nav-tab" onclick="switchLevel(2)">② Physics &amp; Anomaly</button>
+    <button class="nav-tab" onclick="switchLevel(3)">③ VR Labeling</button>
+  </nav>
+  <div class="eqf-switch">
+    <button class="eqf-btn active" id="eqf4btn" onclick="setEQF(4)">EQF 4</button>
+    <button class="eqf-btn" id="eqf5btn" onclick="setEQF(5)">EQF 5</button>
+  </div>
+  <div class="progress-ring">
+    <span class="ring-label">PROGRESS</span>
+    <span class="ring-val" id="topProgress">0%</span>
+  </div>
+</div>
+
+<div id="level-nav">
+  <button class="level-tab active" id="ltab1" onclick="switchLevel(1)">
+    <span>📋</span> Level 1 — Offshore System Overview
+    <span class="level-badge">OFF-U01 A1</span>
+  </button>
+  <button class="level-tab" id="ltab2" onclick="switchLevel(2)">
+    <span>⚡</span> Level 2 — Physics &amp; Risk Analysis
+    <span class="level-badge">OFF-U01 A2–A3</span>
+  </button>
+  <button class="level-tab" id="ltab3" onclick="switchLevel(3)">
+    <span>🎮</span> Level 3 — VR Component Labeling
+    <span class="level-badge">OFF-U01 A1 VR</span>
+  </button>
+</div>
+
+<div id="main">
+
+<!-- ═══ LEVEL 1 ═══ -->
+<div class="section-panel active" id="panel1">
+
+  <div class="kpi-strip">
+    <div class="kpi c-purple"><div class="kpi-label">Sea Risk Score R_sea</div><div class="kpi-value" id="k-rsea">—</div><div class="kpi-unit">/ threshold</div><div class="kpi-sub" id="k-rsea-s">w1·Hs+w2·Tp+w3·v+w4·δ</div></div>
+    <div class="kpi c-cyan"><div class="kpi-label">Net Energy Output</div><div class="kpi-value" id="k-enet">—</div><div class="kpi-unit">kWh/day</div><div class="kpi-sub">After wave+corrosion loss</div></div>
+    <div class="kpi c-green"><div class="kpi-label">Maintenance Access</div><div class="kpi-value" id="k-access">—</div><div class="kpi-unit">Hs threshold: 3.5m</div><div class="kpi-sub" id="k-access-s">—</div></div>
+    <div class="kpi c-amber"><div class="kpi-label">Wave Loss</div><div class="kpi-value" id="k-wloss">—</div><div class="kpi-unit">% of wind output</div><div class="kpi-sub" id="k-wloss-s">—</div></div>
+    <div class="kpi c-red"><div class="kpi-label">Corrosion Loss</div><div class="kpi-value" id="k-closs">—</div><div class="kpi-unit">% annual</div><div class="kpi-sub" id="k-closs-s">Cathodic protection</div></div>
+    <div class="kpi c-purple"><div class="kpi-label">Platform Motion</div><div class="kpi-value" id="k-motion">—</div><div class="kpi-unit">° roll/pitch</div><div class="kpi-sub" id="k-motion-s">Limit: 5°</div></div>
+  </div>
+
+  <!-- OFFSHORE DIAGRAM -->
+  <div class="card">
+    <div class="card-hdr">
+      <span class="card-title">⚓ Interactive Offshore Wind System — Click any component</span>
+      <div style="display:flex;gap:6px;align-items:center">
+        <span class="tag tag-info" id="platform-type-tag">MONOPILE · 5 MW CLASS</span>
+        <span class="tag tag-ok" id="sys-status-tag">OPERATIONAL</span>
+      </div>
+    </div>
+    <div id="offshore-canvas-wrap" class="card-body" style="padding:0;position:relative">
+      <canvas id="offshoreCanvas" height="360"></canvas>
+      <div id="component-tooltip"></div>
+    </div>
+    <div style="padding:8px 14px;border-top:1px solid var(--border);display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+      <span style="font-family:var(--font-mono);font-size:9px;color:var(--text3)">LEGEND:</span>
+      <span style="font-family:var(--font-mono);font-size:9px;color:var(--purple)">█ Structural</span>
+      <span style="font-family:var(--font-mono);font-size:9px;color:var(--cyan)">█ Electrical</span>
+      <span style="font-family:var(--font-mono);font-size:9px;color:var(--amber)">█ Mechanical</span>
+      <span style="font-family:var(--font-mono);font-size:9px;color:var(--green)">█ Grid/Export</span>
+      <span style="font-family:var(--font-mono);font-size:9px;color:var(--text3);margin-left:auto">Click component · EQF 5: R_sea formula linkage shown</span>
+    </div>
+  </div>
+
+  <!-- WAVE ANIMATION BAR -->
+  <div class="card" style="overflow:hidden;height:60px">
+    <svg class="wave-anim" style="width:200%;height:100%" viewBox="0 0 800 60" preserveAspectRatio="none">
+      <defs><linearGradient id="wg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" style="stop-color:rgba(168,85,247,0.3)"/><stop offset="100%" style="stop-color:rgba(168,85,247,0)"/></linearGradient></defs>
+      <path d="M0,30 C50,5 100,55 150,30 C200,5 250,55 300,30 C350,5 400,55 450,30 C500,5 550,55 600,30 C650,5 700,55 750,30 C800,5 800,30 800,30 L800,60 L0,60 Z" fill="url(#wg)"/>
+      <path d="M0,30 C50,5 100,55 150,30 C200,5 250,55 300,30 C350,5 400,55 450,30 C500,5 550,55 600,30 C650,5 700,55 750,30 C800,5 800,30 800,30" fill="none" stroke="rgba(168,85,247,0.6)" stroke-width="1.5"/>
+    </svg>
+  </div>
+
+  <div class="row2">
+    <div class="card">
+      <div class="card-hdr">
+        <span class="card-title">📋 Offshore Checklist — OFF-CHK-01</span>
+        <div style="display:flex;gap:6px">
+          <button class="act-btn btn-reset" style="padding:4px 10px;font-size:9px" onclick="resetChecklist()">Reset</button>
+          <button class="act-btn btn-check" style="padding:4px 10px;font-size:9px" onclick="runChecklist()">▶ Validate</button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="checklist-grid" id="checklist-grid"></div>
+        <div class="check-summary">
+          <div class="sum-item"><div class="sum-val" id="cs-total" style="color:var(--text2)">6</div><div class="sum-label">Items</div></div>
+          <div class="sum-item"><div class="sum-val" id="cs-ok" style="color:var(--green)">0</div><div class="sum-label">OK</div></div>
+          <div class="sum-item"><div class="sum-val" id="cs-dev" style="color:var(--red)">0</div><div class="sum-label">Deviations</div></div>
+          <div class="sum-item"><div class="sum-val" id="cs-pct" style="color:var(--purple)">—</div><div class="sum-label">Score</div></div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card" id="deviation-log">
+        <div class="card-hdr"><span class="card-title" style="color:var(--red)">⚠ Deviation Log</span><span class="tag tag-eqf5 hidden" id="dev-eqf5-tag">EQF 5: Risk Quantification</span></div>
+        <div class="card-body" id="dev-log-body"></div>
+      </div>
+      <div class="card" id="eqf5-kpi-panel">
+        <div class="card-hdr"><span class="card-title">🧠 Component → R_sea Contribution</span><span class="tag tag-eqf5">EQF 5</span></div>
+        <div class="card-body" style="padding:0"><table class="kpi-map-table"><thead><tr><th>Component</th><th>Failure Mode</th><th>R_sea Impact</th></tr></thead><tbody id="kpi-map-body"></tbody></table></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ LEVEL 2 ═══ -->
+<div class="section-panel" id="panel2">
+  <div class="mid-grid">
+    <div class="card">
+      <div class="card-hdr">
+        <span class="card-title">⚙ Offshore Physics Parameters</span>
+        <span class="tag tag-info">R_sea Model Active</span>
+      </div>
+      <div class="card-body">
+        <div class="param-grid" id="param-grid"></div>
+        <div class="formula-box" id="formula-display">
+          R_sea = 0.40·Hs + 0.15·Tp + 0.25·v_cur + 0.20·δ_osc<br>
+          E_net = E_wind · (1−L_wave) · (1−L_corr) − C_maint/365/0.12
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="kpi-strip" style="grid-template-columns:1fr 1fr;margin-bottom:12px">
+        <div class="kpi c-purple"><div class="kpi-label">R_sea Score</div><div class="kpi-value" id="p-rsea">—</div><div class="kpi-unit">composite risk</div></div>
+        <div class="kpi c-cyan"><div class="kpi-label">E_net</div><div class="kpi-value" id="p-enet">—</div><div class="kpi-unit">kWh/day</div></div>
+        <div class="kpi c-red"><div class="kpi-label">Wave Loss</div><div class="kpi-value" id="p-wloss">—</div><div class="kpi-unit">kWh/day</div></div>
+        <div class="kpi c-red"><div class="kpi-label">Corrosion Loss</div><div class="kpi-value" id="p-closs">—</div><div class="kpi-unit">kWh/day</div></div>
+        <div class="kpi c-green"><div class="kpi-label">Crew Access</div><div class="kpi-value" id="p-access" style="font-size:13px">—</div><div class="kpi-unit">Hs limit: 3.5m</div></div>
+        <div class="kpi c-amber"><div class="kpi-label">Maint Cost/day</div><div class="kpi-value" id="p-maint">—</div><div class="kpi-unit">$/day</div></div>
+      </div>
+      <div class="card">
+        <div class="card-hdr"><span class="card-title">📐 Calculation Trace</span></div>
+        <div class="card-body" id="calc-trace" style="font-family:var(--font-mono);font-size:10px;color:var(--text3);line-height:1.8"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="graphs-grid" style="margin-bottom:12px">
+    <div class="graph-cell"><div class="graph-cell-title">Wave Height Hs vs R_sea Risk Score</div><div class="plotly-g" id="g2-wave"></div></div>
+    <div class="graph-cell"><div class="graph-cell-title">Platform Motion vs Power Loss %</div><div class="plotly-g" id="g2-motion"></div></div>
+    <div class="graph-cell"><div class="graph-cell-title">Corrosion Loss % vs Years Exposure</div><div class="plotly-g" id="g2-corr"></div></div>
+    <div class="graph-cell"><div class="graph-cell-title">Maintenance Cost vs Net Energy (Daily)</div><div class="plotly-g" id="g2-maint"></div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-hdr">
+      <span class="card-title">🔍 Offshore Anomaly Detection — OFF-U01 A3</span>
+      <span class="tag tag-eqf5">EQF 5: Risk Quantification Required</span>
+    </div>
+    <div class="card-body">
+      <div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);margin-bottom:10px">Trigger scenario → identify R_sea contribution and operational impact</div>
+      <div class="anomaly-grid" id="anomaly-grid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ LEVEL 3 ═══ -->
+<div class="section-panel" id="panel3">
+  <div class="score-panel">
+    <div><div class="score-big" id="l3-score">0 / 7</div><div class="score-label">Components Correctly Labeled</div></div>
+    <div style="text-align:center"><div style="font-family:var(--font-mono);font-size:11px;color:var(--text3)" id="l3-timer">⏱ 15:00</div><div style="font-family:var(--font-mono);font-size:9px;color:var(--text3);margin-top:2px">Time Remaining</div></div>
+    <div class="score-actions">
+      <button class="act-btn btn-reset" onclick="resetLabeling()">↺ Reset</button>
+      <button class="act-btn btn-check" onclick="checkLabeling()">✓ Check Labels</button>
+      <button class="act-btn btn-export" onclick="exportReport()">↓ Export Report</button>
+    </div>
+  </div>
+  <div class="card" style="margin-bottom:8px">
+    <div class="card-hdr">
+      <span class="card-title">🏷 Component Name Pool — Drag to schematic</span>
+      <span class="tag tag-info" id="l3-remaining">7 remaining</span>
+    </div>
+    <div class="drag-pool" id="drag-pool"></div>
+  </div>
+  <div class="card">
+    <div class="card-hdr">
+      <span class="card-title">📐 Offshore Wind System Schematic</span>
+      <div style="display:flex;gap:6px">
+        <span class="tag tag-ok">✓ Correct = green</span>
+        <span class="tag" style="color:var(--red);border-color:rgba(239,68,68,0.3)">✗ Wrong = red</span>
+      </div>
+    </div>
+    <div id="labeling-canvas-wrap" class="card-body" style="padding:0;position:relative;min-height:380px">
+      <canvas id="labelCanvas" height="380"></canvas>
+    </div>
+  </div>
+  <div class="card" id="kpi-quiz-panel">
+    <div class="card-hdr">
+      <span class="card-title">🧠 EQF 5 — R_sea Contribution Quiz</span>
+      <span class="tag tag-eqf5">Analyse Risk</span>
+    </div>
+    <div class="card-body">
+      <div style="font-size:12px;color:var(--text2);margin-bottom:12px">For each parameter, select its weight in the R_sea formula:</div>
+      <div id="kpi-quiz" style="display:flex;flex-direction:column;gap:8px"></div>
+      <div style="margin-top:12px;display:flex;gap:8px">
+        <button class="act-btn btn-check" onclick="checkKPIQuiz()">✓ Check Answers</button>
+        <span id="kpi-quiz-result" style="font-family:var(--font-mono);font-size:11px;color:var(--green);align-self:center"></span>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+'use strict';
+/* ═══════════════════════════════════════════════════
+   OFFSHORE WIND TRAINING MODULE
+   ZSK Solutions · REpower KA220-VET
+   ═══════════════════════════════════════════════════ */
+
+let EQF = 4, currentLevel = 1;
+let progress = { l1:false, l2:false, l3:false };
+let labelTimer = null, labelSeconds = 900;
+let dropStates = {}, draggedChip = null;
+
+/* ── COMPONENT DATA ── */
+const COMPONENTS = [
+  { id:'monopile', name:'Monopile Foundation',
+    func:'Steel tube pile driven 20–40m into seabed. Transfers all structural loads (wind, wave, current) from turbine to seabed. Most common foundation type for water depths < 40m.',
+    kpi:'Foundation scour depth (m), cathodic protection current (mA), structural fatigue (cycles)',
+    eqf5:'Scour threatens monopile stability. R_sea weight: indirect via platform_motion (w4=0.20). Wave loading: F_wave = 0.5·Cd·ρ_w·D·v_w². Cathodic protection: Zn anodes deplete over time — inspect every 2 years.',
+    failMode:'Scour / corrosion fatigue', kpiImpact:'R_sea ↑, structural integrity risk',
+    color:'#a855f7', x:0.38, y:0.72, w:0.06, h:0.22 },
+  { id:'transition_piece', name:'Transition Piece',
+    func:'Steel collar connecting monopile to tower. Houses J-tubes for cables, boat landing, platforms and corrosion protection systems. Located at sea level — highest corrosion risk zone.',
+    kpi:'Grout integrity, J-tube seal status, cathodic protection voltage (-800 to -1100 mV vs Ag/AgCl)',
+    eqf5:'Splash zone: most aggressive corrosion environment (wet-dry cycling, O₂-rich). Cathodic protection must maintain E < -800 mV vs Ag/AgCl. Grout annulus failure = mechanical instability.',
+    failMode:'Grout failure / corrosion', kpiImpact:'Structural risk, corrosion loss L_corr ↑',
+    color:'#a855f7', x:0.35, y:0.62, w:0.12, h:0.10 },
+  { id:'tower', name:'Offshore Tower',
+    func:'Tubular steel tower supporting nacelle at hub height (80–120m). Offshore towers are wider and heavier than onshore due to marine loads. Painted with anti-corrosion coating.',
+    kpi:'Tower top acceleration (m/s²), natural frequency (Hz), coating thickness (μm)',
+    eqf5:'Tower natural frequency must avoid 1P and 3P rotor excitation. Soft-soft / soft-stiff / stiff-stiff design. Dynamic amplification factor: DAF = 1/sqrt((1-r²)²+(2ζr)²). Coating degradation → corrosion loss increases.',
+    failMode:'Resonance / fatigue crack', kpiImpact:'Vibration alarm, availability risk',
+    color:'#a855f7', x:0.37, y:0.35, w:0.08, h:0.27 },
+  { id:'nacelle_offshore', name:'Offshore Nacelle',
+    func:'Houses drivetrain, generator, converter and yaw system. Offshore nacelles are sealed against salt air ingress. Crane access only — crew transfer required for major maintenance.',
+    kpi:'Nacelle acceleration (m/s²), temperature, pressure differential (positive pressure to prevent salt ingress)',
+    eqf5:'Salt air + humidity → corrosion accelerated 5–10× vs onshore. Positive nacelle pressure system keeps marine air out. Platform motion affects nacelle: ±δ_osc contributes to R_sea via w4.',
+    failMode:'Salt ingress / corrosion of internal components', kpiImpact:'L_corr ↑, maintenance cost ↑',
+    color:'#f5a623', x:0.38, y:0.22, w:0.16, h:0.13 },
+  { id:'array_cable', name:'Inter-Array Cable',
+    func:'33kV submarine cables connecting turbines in strings. Buried or rock-armoured on seabed. Carries power from turbine to offshore substation. Failure causes string outage.',
+    kpi:'Cable current (A), insulation resistance (MΩ), thermal rating (°C), fault location',
+    eqf5:'Cable current rating: I = P/(sqrt(3)·V·PF). At 33kV, PF=0.95: I = P/(54.1kV). Current speed affects cable burial: v_cur > 1.5 m/s → scour risk → cable exposure → mechanical damage.',
+    failMode:'Cable fault / scour exposure', kpiImpact:'String offline, R_sea ↑ via v_cur (w3=0.25)',
+    color:'#00d4ff', x:0.65, y:0.58, w:0.15, h:0.05 },
+  { id:'oss', name:'Offshore Substation',
+    func:'Steps up from 33kV (array) to 132–220kV (export). Houses MV switchgear, HV transformers, protection relays, SCADA, fire suppression and accommodation. Critical single point of failure.',
+    kpi:'Transformer temperature, busbar voltage (kV), export power (MW), availability',
+    eqf5:'OSS failure = full farm offline. N-1 criterion: most OSS are single-transformer. Redundancy option: two half-capacity transformers. Availability target: >99.5%. Maintenance access limited by Hs: crews need Hs < 2.5m for OSS vessel transfer.',
+    failMode:'Transformer fault / power outage', kpiImpact:'Full farm offline, 100% energy loss',
+    color:'#00d4ff', x:0.75, y:0.38, w:0.12, h:0.20 },
+  { id:'export_cable', name:'Export Cable',
+    func:'High-voltage (132–220kV) submarine cable from OSS to onshore grid connection point. Typically 20–100km length. Failure results in prolonged farm outage (cable repair takes weeks).',
+    kpi:'Cable voltage (kV), current (A), insulation resistance, fault distance (km)',
+    eqf5:'Export cable fault repair: CTV (cable repair vessel) mobilisation 2–4 weeks, repair 1–3 weeks. Energy loss = P_rated × downtime. Insurance clause: force majeure for wave Hs > threshold delays repair further. Current speed (w3=0.25 in R_sea) affects cable burial stability.',
+    failMode:'Cable fault (anchor/fishing damage)', kpiImpact:'Entire farm offline for weeks',
+    color:'#22c55e', x:0.87, y:0.55, w:0.10, h:0.04 },
+];
+
+/* ── CHECKLIST ── */
+const CHECKLIST_ITEMS = [
+  { id:1, name:'Significant Wave Height Hs', unit:'m', nominal:'< 3.5m (access)', min:0, max:3.5, defaultVal:1.8, hint:'CTV access limit: Hs < 3.5m. SOV: Hs < 4.5m' },
+  { id:2, name:'Platform Motion (roll/pitch)', unit:'°', nominal:'< 5°', min:0, max:5, defaultVal:2.1, hint:'Limit for personnel safety on platform: < 5°' },
+  { id:3, name:'Cathodic Protection Potential', unit:'mV', nominal:'-800 to -1100 mV', min:-1100, max:-800, defaultVal:-950, hint:'Ag/AgCl reference. More negative = overprotected (H₂ generation risk)' },
+  { id:4, name:'Sea Current Speed', unit:'m/s', nominal:'< 1.5 m/s (scour)', min:0, max:1.5, defaultVal:0.9, hint:'> 1.5 m/s: cable scour risk, diving operations suspended' },
+  { id:5, name:'Offshore Risk Score R_sea', unit:'—', nominal:'< safety threshold', min:0, max:10, defaultVal:3.2, hint:'R_sea = 0.40·Hs + 0.15·Tp + 0.25·v + 0.20·δ. Threshold typically 7–10' },
+  { id:6, name:'Export Cable Insulation (MΩ)', unit:'MΩ', nominal:'> 100 MΩ', min:100, max:10000, defaultVal:850, hint:'< 100 MΩ = cable degradation alarm. < 10 MΩ = immediate shutdown' },
+];
+
+/* ── PHYSICS ENGINE ── */
+const Offshore = {
+  // R_sea = w1·Hs + w2·Tp + w3·v_cur + w4·δ_osc
+  calcRSea(Hs, Tp, v_cur, delta_osc) {
+    return 0.40*Hs + 0.15*Tp + 0.25*v_cur + 0.20*delta_osc;
+  },
+  // E_net = E_wind * (1-L_wave) * (1-L_corr) - maint_daily_kWh
+  calcEnet(E_wind, L_wave, L_corr, maint_cost) {
+    const ENERGY_PRICE = 0.12;
+    const maint_daily  = (maint_cost / 365) / ENERGY_PRICE;
+    return Math.max(0, E_wind * (1 - L_wave) * (1 - L_corr) - maint_daily);
+  },
+  calculate(p) {
+    const R_sea   = this.calcRSea(p.Hs, p.Tp, p.v_cur, p.delta_osc);
+    const E_gross = p.E_wind_gross;
+    const E_net   = this.calcEnet(E_gross, p.L_wave, p.L_corr, p.maint_cost);
+    const loss_wave = E_gross * p.L_wave;
+    const loss_corr = E_gross * p.L_corr;
+    const maint_daily = p.maint_cost / 365;
+    const access  = p.Hs < 3.5;
+    return { R_sea, E_net, E_gross, loss_wave, loss_corr, maint_daily, access };
+  }
+};
+
+let P = { Hs:1.8, Tp:6.5, v_cur:0.9, delta_osc:2.1, L_wave:0.10, L_corr:0.08, maint_cost:35000, E_wind_gross:5000, safety_threshold:10 };
+
+/* ── KPI UPDATE ── */
+function updateKPIs() {
+  const r = Offshore.calculate(P);
+  const fmt = (v,d=0) => isFinite(v) ? v.toFixed(d) : '—';
+  document.getElementById('k-rsea').textContent    = fmt(r.R_sea,2);
+  document.getElementById('k-rsea-s').textContent  = r.R_sea < P.safety_threshold ? 'Within threshold' : '⚠ EXCEEDS threshold';
+  document.getElementById('k-enet').textContent    = fmt(r.E_net,0);
+  document.getElementById('k-access').textContent  = r.access ? 'YES' : 'NO';
+  document.getElementById('k-access-s').textContent= r.access ? 'CTV transfer possible' : '⚠ Hs > 3.5m — suspended';
+  document.getElementById('k-access').style.color  = r.access ? 'var(--green)' : 'var(--red)';
+  document.getElementById('k-wloss').textContent   = (P.L_wave*100).toFixed(0);
+  document.getElementById('k-wloss-s').textContent = fmt(r.loss_wave,0)+' kWh/day';
+  document.getElementById('k-closs').textContent   = (P.L_corr*100).toFixed(0);
+  document.getElementById('k-motion').textContent  = fmt(P.delta_osc,1);
+  document.getElementById('k-motion-s').textContent= P.delta_osc < 5 ? '✓ Within limit' : '⚠ Exceeds 5°';
+}
+
+/* ── OFFSHORE CANVAS ── */
+function initOffshoreCanvas() {
+  const canvas = document.getElementById('offshoreCanvas');
+  canvas.width  = canvas.parentElement.offsetWidth || 900;
+  canvas.height = 360;
+  drawOffshoreDiagram();
+}
+
+let waveOffset = 0;
+function drawOffshoreDiagram() {
+  const canvas = document.getElementById('offshoreCanvas');
+  if (!canvas) return;
+  canvas.width = canvas.parentElement.offsetWidth || 900;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0,0,W,H);
+
+  // Sky
+  const sky = ctx.createLinearGradient(0,0,0,H*0.55);
+  sky.addColorStop(0,'#000820'); sky.addColorStop(1,'#001535');
+  ctx.fillStyle=sky; ctx.fillRect(0,0,W,H);
+
+  // Moon + stars
+  ctx.shadowBlur=15; ctx.shadowColor='rgba(200,220,255,0.5)';
+  ctx.fillStyle='rgba(220,230,255,0.8)'; ctx.beginPath(); ctx.arc(W*0.88,H*0.10,12,0,Math.PI*2); ctx.fill();
+  ctx.shadowBlur=0;
+  [0.05,0.12,0.25,0.40,0.55,0.70,0.15,0.30,0.60,0.78].forEach((x,i)=>{
+    ctx.fillStyle='rgba(255,255,255,'+(0.3+i*0.05)+')';
+    ctx.beginPath(); ctx.arc(x*W,(i%3+1)*H*0.08,1,0,Math.PI*2); ctx.fill();
+  });
+
+  // Sea (animated waves)
+  const seaY = H*0.55;
+  const seaG = ctx.createLinearGradient(0,seaY,0,H);
+  seaG.addColorStop(0,'rgba(0,30,100,0.9)'); seaG.addColorStop(1,'rgba(0,10,50,0.95)');
+  ctx.fillStyle=seaG; ctx.fillRect(0,seaY,W,H-seaY);
+
+  // Wave surface
+  ctx.strokeStyle='rgba(168,85,247,0.5)'; ctx.lineWidth=2;
+  ctx.beginPath();
+  for(let x=0;x<=W;x+=4){
+    const wh = P.Hs * 8;
+    const y = seaY + Math.sin((x+waveOffset)*0.03)*wh + Math.sin((x+waveOffset)*0.05+1)*wh*0.4;
+    x===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+  }
+  ctx.stroke();
+
+  // Seabed
+  const sbG = ctx.createLinearGradient(0,H*0.88,0,H);
+  sbG.addColorStop(0,'#1a1008'); sbG.addColorStop(1,'#0a0804');
+  ctx.fillStyle=sbG; ctx.fillRect(0,H*0.88,W,H*0.12);
+
+  // Water depth indicator
+  ctx.strokeStyle='rgba(0,212,255,0.2)'; ctx.lineWidth=1; ctx.setLineDash([4,4]);
+  ctx.beginPath(); ctx.moveTo(W*0.15,seaY); ctx.lineTo(W*0.15,H*0.88); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.font='8px JetBrains Mono'; ctx.fillStyle='rgba(0,212,255,0.4)'; ctx.textAlign='center';
+  ctx.fillText('~25m',W*0.15,(seaY+H*0.88)/2);
+
+  // ── MONOPILE ──
+  const mpX=W*0.40, mpW=28;
+  const mpG=ctx.createLinearGradient(mpX-mpW/2,0,mpX+mpW/2,0);
+  mpG.addColorStop(0,'rgba(100,30,180,0.3)'); mpG.addColorStop(0.5,'rgba(168,85,247,0.6)'); mpG.addColorStop(1,'rgba(100,30,180,0.3)');
+  ctx.fillStyle=mpG; ctx.strokeStyle='rgba(168,85,247,0.6)'; ctx.lineWidth=1.5;
+  ctx.fillRect(mpX-mpW/2,H*0.88,mpW,H*0.12);  // seabed section
+  ctx.strokeRect(mpX-mpW/2,H*0.88,mpW,H*0.12);
+  ctx.fillRect(mpX-mpW/2,seaY,mpW,H*0.88-seaY); // underwater
+  ctx.strokeRect(mpX-mpW/2,seaY,mpW,H*0.88-seaY);
+
+  // ── TRANSITION PIECE ──
+  ctx.fillStyle='rgba(168,85,247,0.25)'; ctx.strokeStyle='rgba(168,85,247,0.7)';
+  ctx.fillRect(mpX-22,seaY-30,44,30); ctx.strokeRect(mpX-22,seaY-30,44,30);
+  // Boat landing
+  ctx.fillStyle='rgba(168,85,247,0.4)';
+  ctx.fillRect(mpX+22,seaY-22,8,18); ctx.strokeRect(mpX+22,seaY-22,8,18);
+
+  // ── TOWER ──
+  const twH=H*0.40, twY=seaY-30-twH;
+  const twG=ctx.createLinearGradient(mpX-12,0,mpX+12,0);
+  twG.addColorStop(0,'rgba(80,20,150,0.4)'); twG.addColorStop(0.5,'rgba(168,85,247,0.7)'); twG.addColorStop(1,'rgba(80,20,150,0.4)');
+  ctx.fillStyle=twG; ctx.strokeStyle='rgba(168,85,247,0.5)';
+  ctx.beginPath();
+  ctx.moveTo(mpX-13,seaY-30); ctx.lineTo(mpX-8,twY);
+  ctx.lineTo(mpX+8,twY); ctx.lineTo(mpX+13,seaY-30); ctx.closePath();
+  ctx.fill(); ctx.stroke();
+
+  // ── NACELLE ──
+  ctx.fillStyle='rgba(245,166,35,0.25)'; ctx.strokeStyle='rgba(245,166,35,0.7)';
+  ctx.fillRect(mpX-8,twY-18,75,18); ctx.strokeRect(mpX-8,twY-18,75,18);
+
+  // ── ROTOR ──
+  ctx.shadowBlur=12; ctx.shadowColor='rgba(168,85,247,0.5)';
+  const hubY=twY-9;
+  ctx.fillStyle='rgba(168,85,247,0.8)'; ctx.beginPath(); ctx.arc(mpX+2,hubY,6,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle='rgba(168,85,247,0.8)'; ctx.lineWidth=3.5; ctx.lineCap='round';
+  for(let i=0;i<3;i++){
+    const a=i*Math.PI*2/3+Date.now()/1200;
+    ctx.beginPath(); ctx.moveTo(mpX+2,hubY); ctx.lineTo(mpX+2+Math.cos(a)*55,hubY+Math.sin(a)*55); ctx.stroke();
+  }
+  ctx.shadowBlur=0; ctx.lineCap='butt';
+
+  // ── ARRAY CABLES (seabed) ──
+  ctx.strokeStyle='rgba(0,212,255,0.5)'; ctx.lineWidth=2; ctx.setLineDash([6,4]);
+  ctx.beginPath(); ctx.moveTo(mpX+14,H*0.82); ctx.bezierCurveTo(W*0.55,H*0.82,W*0.65,H*0.78,W*0.72,H*0.72); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.font='8px JetBrains Mono'; ctx.fillStyle='rgba(0,212,255,0.4)'; ctx.textAlign='center';
+  ctx.fillText('33kV array cable',W*0.58,H*0.80);
+
+  // ── OFFSHORE SUBSTATION ──
+  ctx.fillStyle='rgba(0,212,255,0.12)'; ctx.strokeStyle='rgba(0,212,255,0.6)'; ctx.lineWidth=2;
+  ctx.fillRect(W*0.72,H*0.38,W*0.14,H*0.28); ctx.strokeRect(W*0.72,H*0.38,W*0.14,H*0.28);
+  ctx.font='bold 9px JetBrains Mono'; ctx.fillStyle='rgba(0,212,255,0.8)'; ctx.textAlign='center';
+  ctx.fillText('OFFSHORE',W*0.79,H*0.50); ctx.fillText('SUBSTATION',W*0.79,H*0.52+10);
+  ctx.font='8px JetBrains Mono'; ctx.fillStyle='rgba(0,212,255,0.4)';
+  ctx.fillText('132kV',W*0.79,H*0.60);
+  // OSS monopile
+  ctx.fillStyle='rgba(0,100,160,0.4)'; ctx.strokeStyle='rgba(0,212,255,0.3)';
+  ctx.fillRect(W*0.775,H*0.66,16,H*0.22); ctx.strokeRect(W*0.775,H*0.66,16,H*0.22);
+
+  // ── EXPORT CABLE ──
+  ctx.strokeStyle='rgba(34,197,94,0.6)'; ctx.lineWidth=3; ctx.setLineDash([8,4]);
+  ctx.beginPath(); ctx.moveTo(W*0.86,H*0.55); ctx.bezierCurveTo(W*0.90,H*0.80,W*0.95,H*0.75,W,H*0.70); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.font='8px JetBrains Mono'; ctx.fillStyle='rgba(34,197,94,0.5)'; ctx.textAlign='center';
+  ctx.fillText('132kV export',W*0.93,H*0.68);
+
+  // ── LABELS ──
+  ctx.textAlign='left';
+  [[mpX-70,H*0.93,'MONOPILE','rgba(168,85,247,0.7)'],
+   [mpX-70,seaY-15,'TRANSITION\nPIECE','rgba(168,85,247,0.6)'],
+   [mpX+55,twY-5,'NACELLE','rgba(245,166,35,0.7)'],
+  ].forEach(([x,y,txt,c])=>{
+    const lines=txt.split('\n');
+    ctx.font='bold 8px JetBrains Mono'; ctx.fillStyle=c; ctx.textAlign='left';
+    lines.forEach((l,i)=>ctx.fillText(l,x,y+i*12));
+  });
+
+  // R_sea display
+  const r=Offshore.calculate(P);
+  ctx.fillStyle='rgba(168,85,247,0.15)'; ctx.strokeStyle='rgba(168,85,247,0.4)'; ctx.lineWidth=1;
+  ctx.fillRect(8,8,200,50); ctx.strokeRect(8,8,200,50);
+  ctx.font='bold 8px JetBrains Mono'; ctx.fillStyle='rgba(168,85,247,0.9)'; ctx.textAlign='left';
+  ctx.fillText('R_sea = '+r.R_sea.toFixed(2),14,24);
+  ctx.font='7px JetBrains Mono'; ctx.fillStyle='rgba(168,85,247,0.6)';
+  ctx.fillText('Hs='+P.Hs+'m  Tp='+P.Tp+'s',14,36);
+  ctx.fillText('v='+P.v_cur+'m/s  δ='+P.delta_osc+'°',14,48);
+
+  // Wind arrows
+  ctx.strokeStyle='rgba(200,220,255,0.15)'; ctx.lineWidth=1.5; ctx.setLineDash([6,4]);
+  [[0.02,0.15],[0.02,0.28],[0.02,0.40]].forEach(([x,y])=>{
+    ctx.beginPath(); ctx.moveTo(x*W,y*H); ctx.lineTo(x*W+W*0.08,y*H); ctx.stroke();
+  });
+  ctx.setLineDash([]);
+  ctx.font='8px JetBrains Mono'; ctx.fillStyle='rgba(200,220,255,0.3)'; ctx.textAlign='left';
+  ctx.fillText('v='+P.v_cur+' m/s',6,H*0.45);
+}
+
+/* ── TOOLTIP ── */
+const HIT_ZONES = [
+  {id:'monopile',         x:0.36, y:0.68, w:0.10, h:0.25},
+  {id:'transition_piece', x:0.34, y:0.60, w:0.14, h:0.09},
+  {id:'tower',            x:0.36, y:0.22, w:0.10, h:0.39},
+  {id:'nacelle_offshore', x:0.37, y:0.10, w:0.18, h:0.13},
+  {id:'array_cable',      x:0.50, y:0.55, w:0.22, h:0.12},
+  {id:'oss',              x:0.72, y:0.36, w:0.15, h:0.30},
+  {id:'export_cable',     x:0.85, y:0.50, w:0.12, h:0.20},
+];
+
+function initTooltip() {
+  const canvas = document.getElementById('offshoreCanvas');
+  const tip    = document.getElementById('component-tooltip');
+  canvas.addEventListener('mousemove', e => {
+    const rect=canvas.getBoundingClientRect();
+    const mx=(e.clientX-rect.left)/rect.width, my=(e.clientY-rect.top)/rect.height;
+    const hit=HIT_ZONES.find(z=>mx>=z.x&&mx<=z.x+z.w&&my>=z.y&&my<=z.y+z.h);
+    if(hit){
+      const comp=COMPONENTS.find(c=>c.id===hit.id);
+      if(!comp) return;
+      tip.style.display='block';
+      tip.style.left=Math.min(e.clientX-rect.left+12,rect.width-310)+'px';
+      tip.style.top=Math.max(e.clientY-rect.top-20,0)+'px';
+      tip.innerHTML='<div class="tt-name">'+comp.name+'</div>'
+        +'<div class="tt-func">'+comp.func+'</div>'
+        +'<div class="tt-kpi">📊 KPI: '+comp.kpi+'</div>'
+        +(EQF===5?'<div class="tt-eqf5">🧠 EQF5: '+comp.eqf5+'</div>':'');
+    } else tip.style.display='none';
+  });
+  canvas.addEventListener('mouseleave',()=>tip.style.display='none');
+}
+
+/* ── CHECKLIST ── */
+function buildChecklist() {
+  document.getElementById('checklist-grid').innerHTML=CHECKLIST_ITEMS.map(item=>
+    '<div class="check-item" id="ci-'+item.id+'">'
+    +'<div class="check-num">'+item.id+'</div>'
+    +'<div><div class="check-name">'+item.name+'</div><div class="check-hint">'+item.hint+'</div></div>'
+    +'<input class="check-input" type="number" id="cinp-'+item.id+'" value="'+item.defaultVal+'" step="any" oninput="liveCheck('+item.id+')">'
+    +'<div class="check-tolerance">'+item.nominal+' '+item.unit+'</div>'
+    +'<div class="check-status status-empty" id="cst-'+item.id+'">—</div>'
+    +'</div>').join('');
+}
+
+function liveCheck(id) {
+  const item=CHECKLIST_ITEMS.find(i=>i.id===id);
+  const val=parseFloat(document.getElementById('cinp-'+id).value);
+  const el=document.getElementById('ci-'+id);
+  const stEl=document.getElementById('cst-'+id);
+  if(isNaN(val)){stEl.className='check-status status-empty';stEl.textContent='—';el.className='check-item';return;}
+  const ok=val>=item.min&&val<=item.max;
+  el.className='check-item '+(ok?'ok':'deviate');
+  stEl.className='check-status '+(ok?'status-ok':'status-dev');
+  stEl.textContent=ok?'✓ OK':'⚠ DEVIATE';
+}
+
+function runChecklist() {
+  let okCount=0, devItems=[];
+  CHECKLIST_ITEMS.forEach(item=>{
+    const val=parseFloat(document.getElementById('cinp-'+item.id).value);
+    if(isNaN(val)) return;
+    const ok=val>=item.min&&val<=item.max;
+    liveCheck(item.id);
+    if(ok) okCount++; else devItems.push({...item,val});
+  });
+  const total=CHECKLIST_ITEMS.length;
+  document.getElementById('cs-ok').textContent=okCount;
+  document.getElementById('cs-dev').textContent=devItems.length;
+  document.getElementById('cs-pct').textContent=Math.round(okCount/total*100)+'%';
+  renderDeviationLog(devItems);
+  progress.l1=okCount>=5; updateProgress();
+}
+
+function renderDeviationLog(devItems) {
+  const logEl=document.getElementById('deviation-log');
+  if(devItems.length===0){logEl.classList.remove('visible');return;}
+  logEl.classList.add('visible');
+  const eqf5t=document.getElementById('dev-eqf5-tag');
+  if(EQF===5) eqf5t.classList.remove('hidden'); else eqf5t.classList.add('hidden');
+  const notes={
+    1:'Hs exceeds CTV access limit. Suspend all personnel transfer. Use ROV for inspection if urgent. Calculate energy loss from suspended maintenance.',
+    2:'Platform motion exceeds safe working limit. Personnel evacuation may be required. Reduce on-platform activities to essential only.',
+    3:'Cathodic protection outside optimal range. Schedule anode inspection. Risk of accelerated corrosion → L_corr increases over time.',
+    4:'Current speed exceeds safe diving limit. ROV operations only. Monitor cable scour risk — check burial depth with multibeam sonar.',
+    5:'R_sea exceeds safety threshold. Full risk assessment required. Halt non-essential marine operations. Review weather forecast.',
+    6:'Cable insulation resistance below alarm threshold. Locate fault using TDR/impedance measurement. Assess cable replacement urgency.',
+  };
+  document.getElementById('dev-log-body').innerHTML=devItems.map(item=>{
+    const mid=(item.min+item.max)/2;
+    const diff=((item.val-mid)/Math.max(Math.abs(mid),0.001)*100).toFixed(1);
+    return '<div class="dev-log-item">'
+      +'<div class="dev-item-num">ITEM '+item.id+'</div>'
+      +'<div class="dev-item-body">'
+      +'<div class="dev-item-name">'+item.name+'</div>'
+      +'<div class="dev-item-vals">Recorded: <b>'+item.val+' '+item.unit+'</b> · Range: '+item.nominal+'</div>'
+      +'<div class="dev-item-note">'+(EQF===5?notes[item.id]||'Investigate root cause.':'Flag deviation and report to O&M supervisor.')+'</div>'
+      +'</div>'
+      +'<div class="dev-item-badge">'+Math.abs(diff)+'% off</div>'
+      +'</div>';
+  }).join('');
+}
+
+function resetChecklist() {
+  CHECKLIST_ITEMS.forEach(item=>{
+    document.getElementById('cinp-'+item.id).value=item.defaultVal;
+    document.getElementById('ci-'+item.id).className='check-item';
+    document.getElementById('cst-'+item.id).className='check-status status-empty';
+    document.getElementById('cst-'+item.id).textContent='—';
+  });
+  ['cs-ok','cs-dev'].forEach(id=>document.getElementById(id).textContent='0');
+  document.getElementById('cs-pct').textContent='—';
+  document.getElementById('deviation-log').classList.remove('visible');
+}
+
+function buildKPIMap() {
+  document.getElementById('kpi-map-body').innerHTML=COMPONENTS.map(c=>
+    '<tr><td><b style="color:'+c.color+'">'+c.name+'</b></td>'
+    +'<td style="color:var(--red)">'+c.failMode+'</td>'
+    +'<td><span class="kpi-chip">'+c.kpiImpact+'</span></td></tr>'
+  ).join('');
+  document.getElementById('eqf5-kpi-panel').style.display=EQF===5?'block':'none';
+}
+
+/* ═══ LEVEL 2 ═══ */
+const PARAMS_DEF = [
+  {key:'Hs',        label:'Wave Height Hs (m)',        min:0.1, max:10,    step:0.1,  fmt:v=>parseFloat(v).toFixed(1)+'m'},
+  {key:'Tp',        label:'Wave Period Tp (s)',         min:2,   max:20,    step:0.5,  fmt:v=>parseFloat(v).toFixed(1)+'s'},
+  {key:'v_cur',     label:'Current Speed (m/s)',        min:0,   max:3,     step:0.1,  fmt:v=>parseFloat(v).toFixed(1)+'m/s'},
+  {key:'delta_osc', label:'Platform Motion δ (°)',      min:0,   max:15,    step:0.1,  fmt:v=>parseFloat(v).toFixed(1)+'°'},
+  {key:'L_wave',    label:'Wave Loss L_wave',           min:0,   max:0.4,   step:0.01, fmt:v=>(v*100).toFixed(0)+'%'},
+  {key:'L_corr',    label:'Corrosion Loss L_corr',      min:0,   max:0.3,   step:0.005,fmt:v=>(v*100).toFixed(1)+'%'},
+  {key:'maint_cost',label:'Maintenance Cost ($/yr)',    min:0,   max:200000,step:1000, fmt:v=>'$'+parseInt(v).toLocaleString()},
+  {key:'E_wind_gross',label:'Wind Gross Energy (kWh/day)',min:100,max:50000,step:100,  fmt:v=>parseInt(v).toLocaleString()+' kWh'},
+];
+
+function buildParamSliders() {
+  const grid=document.getElementById('param-grid');
+  if(!grid) return;
+  grid.innerHTML=PARAMS_DEF.map(def=>
+    '<div class="param-row">'
+    +'<div class="param-hdr"><span class="param-name">'+def.label+'</span>'
+    +'<span class="param-val" id="pv-'+def.key+'">'+def.fmt(P[def.key])+'</span></div>'
+    +'<input type="range" min="'+def.min+'" max="'+def.max+'" step="'+def.step+'" value="'+P[def.key]+'"'
+    +' oninput="updateParam(\''+def.key+'\',this.value)">'
+    +'</div>'
+  ).join('');
+}
+
+function updateParam(key,val) {
+  P[key]=parseFloat(val);
+  const def=PARAMS_DEF.find(d=>d.key===key);
+  document.getElementById('pv-'+key).textContent=def.fmt(P[key]);
+  runPhysics();
+}
+
+function runPhysics() {
+  const r=Offshore.calculate(P);
+  const fmt=(v,d=0)=>isFinite(v)?v.toFixed(d):'—';
+  document.getElementById('p-rsea').textContent   = fmt(r.R_sea,3);
+  document.getElementById('p-enet').textContent   = fmt(r.E_net,0);
+  document.getElementById('p-wloss').textContent  = fmt(r.loss_wave,0);
+  document.getElementById('p-closs').textContent  = fmt(r.loss_corr,0);
+  document.getElementById('p-access').textContent = r.access ? 'POSSIBLE' : 'SUSPENDED';
+  document.getElementById('p-access').style.color = r.access ? 'var(--green)' : 'var(--red)';
+  document.getElementById('p-maint').textContent  = fmt(r.maint_daily,0);
+
+  const ENERGY_PRICE=0.12;
+  const maint_kWh=(P.maint_cost/365)/ENERGY_PRICE;
+  document.getElementById('calc-trace').innerHTML=[
+    'R_sea = 0.40×'+P.Hs+' + 0.15×'+P.Tp+' + 0.25×'+P.v_cur+' + 0.20×'+P.delta_osc,
+    '      = '+fmt(0.40*P.Hs,3)+' + '+fmt(0.15*P.Tp,3)+' + '+fmt(0.25*P.v_cur,3)+' + '+fmt(0.20*P.delta_osc,3),
+    '      = <b style="color:var(--purple)">'+fmt(r.R_sea,3)+'</b>  (threshold: '+P.safety_threshold+')',
+    '',
+    'E_gross = '+parseInt(P.E_wind_gross).toLocaleString()+' kWh/day',
+    'After wave loss ('+fmt(P.L_wave*100,0)+'%): '+fmt(P.E_wind_gross*(1-P.L_wave),0)+' kWh',
+    'After corr loss ('+fmt(P.L_corr*100,1)+'%): '+fmt(P.E_wind_gross*(1-P.L_wave)*(1-P.L_corr),0)+' kWh',
+    'Maint cost: $'+parseInt(P.maint_cost/365).toLocaleString()+'/day = '+fmt(maint_kWh,0)+' kWh equiv.',
+    'E_net = <b style="color:var(--cyan)">'+fmt(r.E_net,0)+' kWh/day</b>',
+    'Crew access (Hs < 3.5m): <b style="color:'+(r.access?'var(--green)':'var(--red)')+'">'+(r.access?'POSSIBLE':'SUSPENDED')+'</b>',
+  ].join('<br>');
+
+  renderCharts(); updateKPIs();
+  progress.l2=true; updateProgress();
+}
+
+/* ── CHARTS ── */
+const PLOTLY_CFG={displayModeBar:false,responsive:true};
+const PL=(xt='',yt='')=>({
+  paper_bgcolor:'rgba(0,0,0,0)',plot_bgcolor:'rgba(0,0,0,0)',
+  font:{family:'JetBrains Mono',color:'rgba(140,170,210,0.6)',size:9},
+  margin:{l:38,r:8,t:4,b:28},
+  xaxis:{title:{text:xt,font:{size:8}},gridcolor:'rgba(168,85,247,0.07)',tickfont:{size:8}},
+  yaxis:{title:{text:yt,font:{size:8}},gridcolor:'rgba(168,85,247,0.07)',tickfont:{size:8}},
+  showlegend:false,hovermode:'x unified',
+  hoverlabel:{bgcolor:'rgba(7,10,20,0.95)',bordercolor:'rgba(168,85,247,0.5)',font:{color:'#f0f6ff',size:10}},
+});
+
+function renderCharts() {
+  // Wave Height vs R_sea
+  const hs=[],rs=[];
+  for(let h=0;h<=10;h+=0.1){hs.push(h);rs.push(Offshore.calcRSea(h,P.Tp,P.v_cur,P.delta_osc));}
+  const curR=Offshore.calcRSea(P.Hs,P.Tp,P.v_cur,P.delta_osc);
+  Plotly.react('g2-wave',[
+    {x:hs,y:rs,type:'scatter',mode:'lines',fill:'tozeroy',line:{color:'rgba(168,85,247,0.9)',width:1.5},fillcolor:'rgba(168,85,247,0.07)',hovertemplate:'Hs=%{x:.1f}m→R=%{y:.2f}<extra></extra>'},
+    {x:[P.Hs],y:[curR],type:'scatter',mode:'markers',marker:{color:'#a855f7',size:8,symbol:'diamond'}},
+    {x:[3.5,3.5],y:[0,Math.max(...rs)],type:'scatter',mode:'lines',line:{color:'rgba(34,197,94,0.6)',dash:'dash',width:1.5},hovertemplate:'CTV limit 3.5m<extra></extra>'},
+  ],PL('Hs (m)','R_sea'),PLOTLY_CFG);
+
+  // Platform motion vs power loss
+  const osc=[],ploss=[];
+  for(let d=0;d<=15;d+=0.2){osc.push(d);ploss.push(d/15*12);}
+  Plotly.react('g2-motion',[
+    {x:osc,y:ploss,type:'scatter',mode:'lines',fill:'tozeroy',line:{color:'rgba(239,68,68,0.9)',width:1.5},fillcolor:'rgba(239,68,68,0.07)',hovertemplate:'δ=%{x:.1f}°→Loss≈%{y:.1f}%<extra></extra>'},
+    {x:[P.delta_osc],y:[P.delta_osc/15*12],type:'scatter',mode:'markers',marker:{color:'#ef4444',size:8,symbol:'diamond'}},
+    {x:[5,5],y:[0,12],type:'scatter',mode:'lines',line:{color:'rgba(245,166,35,0.6)',dash:'dash',width:1.5}},
+  ],PL('Platform Motion (°)','Approx Power Loss (%)'),PLOTLY_CFG);
+
+  // Corrosion loss over years
+  const yrs=[],corr=[];
+  for(let y=0;y<=30;y++){yrs.push(y);corr.push(Math.min(30,y*0.5+y*y*0.02));}
+  Plotly.react('g2-corr',[
+    {x:yrs,y:corr,type:'scatter',mode:'lines',fill:'tozeroy',line:{color:'rgba(245,166,35,0.9)',width:1.5},fillcolor:'rgba(245,166,35,0.07)',hovertemplate:'%{x}yr→%{y:.1f}%<extra></extra>'},
+  ],PL('Years Exposure','Corrosion Loss (%)'),PLOTLY_CFG);
+
+  // Maintenance cost vs net energy
+  const costs=[],nets=[];
+  for(let c=0;c<=200000;c+=5000){
+    costs.push(c/1000);
+    nets.push(Offshore.calcEnet(P.E_wind_gross,P.L_wave,P.L_corr,c));
+  }
+  Plotly.react('g2-maint',[
+    {x:costs,y:nets,type:'scatter',mode:'lines',fill:'tozeroy',line:{color:'rgba(0,212,255,0.9)',width:1.5},fillcolor:'rgba(0,212,255,0.07)',hovertemplate:'$%{x}k/yr→%{y:.0f}kWh<extra></extra>'},
+    {x:[P.maint_cost/1000],y:[Offshore.calcEnet(P.E_wind_gross,P.L_wave,P.L_corr,P.maint_cost)],type:'scatter',mode:'markers',marker:{color:'#00d4ff',size:8,symbol:'diamond'}},
+  ],PL('Maint Cost ($k/yr)','Net Energy (kWh/day)'),PLOTLY_CFG);
+}
+
+/* ── ANOMALIES ── */
+const ANOMALIES=[
+  {title:'Storm Warning — Hs 5.2m Forecast',desc:'24h forecast shows Hs rising to 5.2m. Current Hs 2.1m. 3 turbines require maintenance.',
+   eqf4:'Suspend all marine operations when Hs > 3.5m. Recall all personnel to shore. Log event.',
+   eqf5:'R_sea contribution from Hs=5.2m: 0.40×5.2=2.08 (vs current 0.40×2.1=0.84). Full R_sea will exceed threshold. Actions: (1) Calculate access window before Hs exceeds 3.5m. (2) Prioritise which turbines to service. (3) Energy loss = P_rated × downtime_hours × N_turbines. (4) Notify grid operator of expected output reduction.'},
+  {title:'Cathodic Protection Alarm -760mV',desc:'Transition piece CP potential measured at -760mV vs Ag/AgCl. Below -800mV minimum.',
+   eqf4:'CP deviation detected. Log reading and notify O&M supervisor. Schedule inspection.',
+   eqf5:'CP potential -760mV < -800mV minimum: under-protection → active corrosion. Corrosion rate doubles per 10mV above -800mV. Action: (1) Check Zn anode depletion. (2) Estimate remaining anode life: L_anode = M_anode/(I_protection×8760h). (3) Schedule emergency anode replacement. (4) Temporary: increase impressed current if ICCP system fitted.'},
+  {title:'Scour Alert — Foundation Exposure',desc:'Side-scan sonar shows 1.8m scour depth around monopile, exceeding 1.5m alarm threshold.',
+   eqf4:'Scour alarm. Report to O&M supervisor. Schedule geotechnical assessment.',
+   eqf5:'Scour affects lateral capacity of monopile. Critical scour depth s_crit ≈ 1.3D for monopiles (D=rotor diameter). At s=1.8m: verify D. Platform motion δ increases with scour → R_sea w4 contribution rises. Action: (1) Rock-dump placement when sea conditions allow (Hs < 2.5m). (2) Recalculate natural frequency with scoured foundation: f_0 changes → check 1P/3P resonance avoidance.'},
+  {title:'Export Cable Fault — TDR Shows 23km',desc:'Protection relay tripped. TDR measurement locates fault at 23km from OSS.',
+   eqf4:'Farm offline. Report to control room. Initiate cable repair mobilisation procedure.',
+   eqf5:'Energy loss = P_farm × repair_duration. Typical cable repair timeline: vessel mobilisation 2-4 weeks + repair 1-2 weeks. Loss estimate: P_rated × 25 days = significant AEP loss. R_sea current speed (w3=0.25): v_cur at fault location determines burial stability. If anchor dragging cause confirmed → insurance claim. Notify grid operator: extended outage declaration.'},
+  {title:'Array Cable Over-temperature',desc:'Array cable thermal monitoring shows 82°C at junction box J3. Rating is 90°C.',
+   eqf4:'Temperature deviation. Reduce farm output if approaching 90°C. Log and report.',
+   eqf5:'Cable thermal rating: I²R losses heat conductor. I²max at Tmax=90°C. Current margin: (90-82)/90 ≈ 8.9% temperature headroom. Power reduction needed: P_reduced = P_rated × sqrt((Tmax-Tambient)/(T_current-Tambient)). Current speed v_cur (R_sea w3=0.25): higher current cools cable. Monitor: if v_cur drops AND load increases → thermal limit risk.'},
+  {title:'High Platform Motion 7.2° During Maintenance',desc:'Significant wave height Hs=2.8m causing platform motion 7.2°, exceeding 5° personnel limit.',
+   eqf4:'Evacuate non-essential personnel from platform immediately. Suspend heavy lift operations.',
+   eqf5:'R_sea w4 contribution: 0.20×7.2 = 1.44 (vs limit 0.20×5=1.00). Delta_R_sea = +0.44. Personnel safety absolute limit 5°: no exceptions. Stabilisation options: (1) Wait for Hs reduction. (2) If FOWT (floating): adjust mooring tension. Platform motion formula for monopile: δ ≈ F_wave × H_lever / EI_tower. Verify with structural model.'},
+];
+
+function buildAnomalyGrid() {
+  const grid=document.getElementById('anomaly-grid');
+  if(!grid) return;
+  grid.innerHTML=ANOMALIES.map((a,i)=>
+    '<div class="anomaly-card" id="ancard-'+i+'">'
+    +'<div class="anomaly-title">'+a.title+'</div>'
+    +'<div class="anomaly-desc">'+a.desc+'</div>'
+    +'<button class="anomaly-btn" onclick="triggerAnomaly('+i+')">⚡ Trigger Scenario</button>'
+    +'<div class="anomaly-result" id="anres-'+i+'"></div>'
+    +'</div>'
+  ).join('');
+}
+
+function triggerAnomaly(idx) {
+  const a=ANOMALIES[idx];
+  const res=document.getElementById('anres-'+idx);
+  const card=document.getElementById('ancard-'+idx);
+  res.style.display='block';
+  res.innerHTML=(EQF===5)
+    ?'<span style="color:var(--amber);font-size:9px;font-weight:700;letter-spacing:0.1em">EQF 5 ANALYSIS:</span><br>'+a.eqf5
+    :'<span style="color:var(--purple);font-size:9px;font-weight:700;letter-spacing:0.1em">EQF 4 RESPONSE:</span><br>'+a.eqf4;
+  card.classList.add('triggered');
+  progress.l2=true; updateProgress();
+}
+
+/* ═══ LEVEL 3 ═══ */
+const DROP_ZONES=[
+  {id:'monopile',         x:0.35, y:0.68, w:0.10, h:0.24},
+  {id:'transition_piece', x:0.33, y:0.58, w:0.14, h:0.10},
+  {id:'tower',            x:0.35, y:0.22, w:0.10, h:0.37},
+  {id:'nacelle_offshore', x:0.36, y:0.10, w:0.18, h:0.12},
+  {id:'array_cable',      x:0.48, y:0.55, w:0.22, h:0.08},
+  {id:'oss',              x:0.71, y:0.35, w:0.15, h:0.30},
+  {id:'export_cable',     x:0.86, y:0.48, w:0.12, h:0.15},
+];
+
+function initLabeling() {
+  dropStates={};
+  const canvas=document.getElementById('labelCanvas');
+  canvas.width=canvas.parentElement.offsetWidth||900; canvas.height=380;
+  drawLabelCanvas();
+  const pool=document.getElementById('drag-pool');
+  const names=COMPONENTS.map(c=>c.name);
+  for(let i=names.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[names[i],names[j]]=[names[j],names[i]];}
+  pool.innerHTML=names.map(n=>'<div class="drag-chip" id="chip-'+n.replace(/\W/g,'_')+'" draggable="true" ondragstart="onDragStart(event,\''+n+'\')" ondragend="onDragEnd(event)">'+n+'</div>').join('');
+  renderDropZones(canvas);
+  if(EQF===5) buildKPIQuiz();
+  document.getElementById('kpi-quiz-panel').style.display=EQF===5?'block':'none';
+  labelSeconds=900; clearInterval(labelTimer);
+  labelTimer=setInterval(()=>{
+    labelSeconds--;
+    const m=Math.floor(labelSeconds/60),s=labelSeconds%60;
+    document.getElementById('l3-timer').textContent='⏱ '+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+    if(labelSeconds<=0){clearInterval(labelTimer);checkLabeling();}
+  },1000);
+}
+
+function drawLabelCanvas() {
+  const canvas=document.getElementById('labelCanvas');
+  if(!canvas) return;
+  canvas.width=canvas.parentElement.offsetWidth||900;
+  const ctx=canvas.getContext('2d'),W=canvas.width,H=canvas.height;
+  ctx.clearRect(0,0,W,H);
+  const sky=ctx.createLinearGradient(0,0,0,H*0.55);
+  sky.addColorStop(0,'#000820');sky.addColorStop(1,'#001535');
+  ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);
+  const seaG=ctx.createLinearGradient(0,H*0.55,0,H);
+  seaG.addColorStop(0,'rgba(0,30,100,0.8)');seaG.addColorStop(1,'rgba(0,10,50,0.9)');
+  ctx.fillStyle=seaG;ctx.fillRect(0,H*0.55,W,H*0.45);
+  // Seabed
+  ctx.fillStyle='#0a0804';ctx.fillRect(0,H*0.88,W,H*0.12);
+  // Tower
+  const mpX=W*0.40;
+  ctx.fillStyle='rgba(100,30,180,0.3)';ctx.strokeStyle='rgba(168,85,247,0.4)';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(mpX-12,H*0.55);ctx.lineTo(mpX-7,H*0.22);ctx.lineTo(mpX+7,H*0.22);ctx.lineTo(mpX+12,H*0.55);ctx.closePath();ctx.fill();ctx.stroke();
+  // Monopile under water
+  ctx.fillStyle='rgba(80,20,150,0.3)';
+  ctx.fillRect(mpX-12,H*0.55,24,H*0.33);ctx.strokeRect(mpX-12,H*0.55,24,H*0.33);
+  // TP
+  ctx.fillStyle='rgba(168,85,247,0.15)';ctx.strokeStyle='rgba(168,85,247,0.5)';
+  ctx.fillRect(mpX-18,H*0.50,36,H*0.10);ctx.strokeRect(mpX-18,H*0.50,36,H*0.10);
+  // Nacelle
+  ctx.fillStyle='rgba(245,166,35,0.15)';ctx.strokeStyle='rgba(245,166,35,0.4)';
+  ctx.fillRect(mpX-8,H*0.12,70,16);ctx.strokeRect(mpX-8,H*0.12,70,16);
+  // Rotor
+  ctx.strokeStyle='rgba(168,85,247,0.4)';ctx.lineWidth=3;
+  for(let i=0;i<3;i++){const a=i*Math.PI*2/3;ctx.beginPath();ctx.moveTo(mpX+2,H*0.20);ctx.lineTo(mpX+2+Math.cos(a)*50,H*0.20+Math.sin(a)*50);ctx.stroke();}
+  // Array cable
+  ctx.strokeStyle='rgba(0,212,255,0.3)';ctx.lineWidth=2;ctx.setLineDash([5,4]);
+  ctx.beginPath();ctx.moveTo(mpX+12,H*0.80);ctx.bezierCurveTo(W*0.60,H*0.80,W*0.68,H*0.75,W*0.73,H*0.70);ctx.stroke();
+  ctx.setLineDash([]);
+  // OSS
+  ctx.fillStyle='rgba(0,212,255,0.08)';ctx.strokeStyle='rgba(0,212,255,0.35)';ctx.lineWidth=2;
+  ctx.fillRect(W*0.72,H*0.37,W*0.14,H*0.27);ctx.strokeRect(W*0.72,H*0.37,W*0.14,H*0.27);
+  ctx.font='8px JetBrains Mono';ctx.fillStyle='rgba(0,212,255,0.4)';ctx.textAlign='center';
+  ctx.fillText('OSS',W*0.79,H*0.52);
+  // OSS foundation
+  ctx.fillStyle='rgba(0,80,140,0.3)';ctx.strokeStyle='rgba(0,212,255,0.25)';
+  ctx.fillRect(W*0.774,H*0.64,14,H*0.24);ctx.strokeRect(W*0.774,H*0.64,14,H*0.24);
+  // Export cable
+  ctx.strokeStyle='rgba(34,197,94,0.4)';ctx.lineWidth=2.5;ctx.setLineDash([8,4]);
+  ctx.beginPath();ctx.moveTo(W*0.86,H*0.55);ctx.bezierCurveTo(W*0.92,H*0.75,W*0.96,H*0.70,W,H*0.68);ctx.stroke();
+  ctx.setLineDash([]);
+  // Drop zones
+  DROP_ZONES.forEach(dz=>{
+    const x=dz.x*W,y=dz.y*H,w=dz.w*W,h=dz.h*H;
+    const st=dropStates[dz.id];
+    if(st&&st.checked){ctx.fillStyle=st.correct?'rgba(34,197,94,0.2)':'rgba(239,68,68,0.2)';ctx.strokeStyle=st.correct?'#22c55e':'#ef4444';}
+    else if(st){ctx.fillStyle='rgba(168,85,247,0.1)';ctx.strokeStyle='rgba(168,85,247,0.6)';}
+    else{ctx.fillStyle='rgba(255,255,255,0.01)';ctx.strokeStyle='rgba(255,255,255,0.1)';}
+    ctx.lineWidth=1.5;ctx.setLineDash([4,3]);
+    ctx.fillRect(x,y,w,h);ctx.strokeRect(x,y,w,h);ctx.setLineDash([]);
+    if(st){
+      ctx.font='bold 8px JetBrains Mono';
+      ctx.fillStyle=st.checked?(st.correct?'#22c55e':'#ef4444'):'#a855f7';
+      ctx.textAlign='center';ctx.textBaseline='middle';
+      const lines=st.label.split(' ');
+      lines.forEach((l,li)=>ctx.fillText(l.substring(0,14),x+w/2,y+h/2+(li-lines.length/2+0.5)*13));
+      ctx.textBaseline='alphabetic';
+    }
+  });
+}
+
+function renderDropZones(canvas) {
+  document.querySelectorAll('.drop-zone').forEach(e=>e.remove());
+  const wrap=document.getElementById('labeling-canvas-wrap');
+  DROP_ZONES.forEach(dz=>{
+    const el=document.createElement('div');
+    el.className='drop-zone';el.id='dz-'+dz.id;
+    el.style.left=(dz.x*100)+'%';el.style.top=(dz.y*100)+'%';
+    el.style.width=(dz.w*100)+'%';el.style.height=(dz.h*100)+'%';
+    el.textContent='Drop here';
+    el.addEventListener('dragover',e=>{e.preventDefault();el.classList.add('over')});
+    el.addEventListener('dragleave',()=>el.classList.remove('over'));
+    el.addEventListener('drop',e=>{e.preventDefault();onDrop(e,dz.id);el.classList.remove('over')});
+    wrap.appendChild(el);
+  });
+}
+
+function onDragStart(e,name){draggedChip=name;e.dataTransfer.setData('text/plain',name);e.target.classList.add('dragging')}
+function onDragEnd(e){e.target.classList.remove('dragging');draggedChip=null}
+function onDrop(e,dzId){
+  const name=e.dataTransfer.getData('text/plain')||draggedChip;
+  if(!name) return;
+  dropStates[dzId]={label:name,checked:false,correct:false};
+  const chip=document.getElementById('chip-'+name.replace(/\W/g,'_'));
+  if(chip) chip.classList.add('used');
+  const dzEl=document.getElementById('dz-'+dzId);
+  if(dzEl){dzEl.textContent=name;dzEl.classList.add('filled')}
+  drawLabelCanvas();
+  document.getElementById('l3-remaining').textContent=(7-Object.keys(dropStates).length)+' remaining';
+}
+
+function checkLabeling(){
+  let correct=0;
+  DROP_ZONES.forEach(dz=>{
+    const st=dropStates[dz.id];if(!st) return;
+    const comp=COMPONENTS.find(c=>c.id===dz.id);
+    st.checked=true;st.correct=(st.label===comp.name);
+    if(st.correct) correct++;
+    const dzEl=document.getElementById('dz-'+dz.id);
+    if(dzEl){dzEl.classList.remove('filled');dzEl.classList.add(st.correct?'correct':'wrong');dzEl.textContent=(st.correct?'✓ ':'✗ ')+st.label;}
+  });
+  document.getElementById('l3-score').textContent=correct+' / 7';
+  document.getElementById('l3-score').style.color=correct>=6?'var(--green)':correct>=4?'var(--amber)':'var(--red)';
+  drawLabelCanvas();
+  progress.l3=correct>=5;updateProgress();
+}
+
+function resetLabeling(){
+  dropStates={};clearInterval(labelTimer);labelSeconds=900;
+  document.getElementById('l3-timer').textContent='⏱ 15:00';
+  document.getElementById('l3-score').textContent='0 / 7';
+  document.getElementById('l3-score').style.color='var(--purple)';
+  document.querySelectorAll('.drag-chip').forEach(c=>c.classList.remove('used'));
+  document.querySelectorAll('.drop-zone').forEach(el=>{el.className='drop-zone';el.textContent='Drop here'});
+  document.getElementById('l3-remaining').textContent='7 remaining';
+  drawLabelCanvas();initLabeling();
+}
+
+/* KPI QUIZ */
+const QUIZ_PARAMS=[
+  {name:'Wave Height Hs',      correct:'w1 = 0.40 (highest)'},
+  {name:'Wave Period Tp',      correct:'w2 = 0.15 (lowest)'},
+  {name:'Current Speed v_cur', correct:'w3 = 0.25'},
+  {name:'Platform Motion δ',   correct:'w4 = 0.20'},
+];
+const QUIZ_OPTIONS=['w1 = 0.40 (highest)','w2 = 0.15 (lowest)','w3 = 0.25','w4 = 0.20'];
+
+function buildKPIQuiz(){
+  const quiz=document.getElementById('kpi-quiz');
+  if(!quiz) return;
+  quiz.innerHTML=QUIZ_PARAMS.map((q,i)=>
+    '<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;align-items:center;padding:8px;border:1px solid var(--border);border-radius:var(--r)">'
+    +'<span style="font-size:12px;color:var(--purple);font-weight:600">'+q.name+'</span>'
+    +'<select id="kq-'+i+'" style="background:var(--bg0);border:1px solid var(--border);color:var(--text1);font-family:var(--font-mono);font-size:10px;padding:5px 8px;border-radius:3px;outline:none">'
+    +'<option value="">Select weight in R_sea…</option>'
+    +QUIZ_OPTIONS.map(o=>'<option value="'+o+'">'+o+'</option>').join('')
+    +'</select></div>'
+  ).join('');
+}
+
+function checkKPIQuiz(){
+  let score=0;
+  QUIZ_PARAMS.forEach((q,i)=>{
+    const sel=document.getElementById('kq-'+i);if(!sel) return;
+    const ok=sel.value===q.correct;
+    if(ok) score++;
+    sel.style.borderColor=ok?'var(--green)':'var(--red)';
+  });
+  const res=document.getElementById('kpi-quiz-result');
+  res.textContent='Score: '+score+'/4 '+(score>=3?'✓ Pass':'✗ Review R_sea formula weights');
+  res.style.color=score>=3?'var(--green)':'var(--red)';
+}
+
+function exportReport(){
+  const r=Offshore.calculate(P);
+  const correct=DROP_ZONES.filter(dz=>{const st=dropStates[dz.id];return st&&st.checked&&COMPONENTS.find(c=>c.id===dz.id).name===st.label}).length;
+  const report={title:'Offshore Wind Component Identification Report',module:'OFF-U01',eqfLevel:'EQF '+EQF,
+    date:new Date().toISOString(),labelingScore:correct+'/7',labelingPass:correct>=6,
+    physicsResults:{R_sea:r.R_sea.toFixed(3),E_net:r.E_net.toFixed(0),crewAccess:r.access,maintDaily:r.maint_daily.toFixed(0)},
+    parameters:P,components:DROP_ZONES.map(dz=>({zone:dz.id,placed:dropStates[dz.id]?.label||'—',correct:dropStates[dz.id]?.correct||false}))};
+  const blob=new Blob([JSON.stringify(report,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);const a=document.createElement('a');
+  a.href=url;a.download='OFF-U01-report.json';a.click();URL.revokeObjectURL(url);
+}
+
+/* ── GLOBAL ── */
+function updateProgress(){
+  const done=[progress.l1,progress.l2,progress.l3].filter(Boolean).length;
+  document.getElementById('topProgress').textContent=Math.round(done/3*100)+'%';
+}
+function setEQF(level){
+  EQF=level;
+  document.getElementById('eqf4btn').classList.toggle('active',level===4);
+  document.getElementById('eqf5btn').classList.toggle('active',level===5);
+  document.getElementById('eqf5-kpi-panel').style.display=level===5?'block':'none';
+  document.getElementById('kpi-quiz-panel').style.display=level===5&&currentLevel===3?'block':'none';
+  if(level===5) buildKPIQuiz();
+  buildKPIMap();
+}
+function switchLevel(n){
+  currentLevel=n;
+  [1,2,3].forEach(i=>{
+    document.getElementById('panel'+i).classList.toggle('active',i===n);
+    document.getElementById('ltab'+i).classList.toggle('active',i===n);
+    document.querySelectorAll('.nav-tab').forEach((t,ti)=>t.classList.toggle('active',ti===n-1));
+  });
+  if(n===2){runPhysics();buildAnomalyGrid();}
+  if(n===3){initLabeling();document.getElementById('kpi-quiz-panel').style.display=EQF===5?'block':'none';}
+}
+
+/* ── INIT ── */
+document.addEventListener('DOMContentLoaded',()=>{
+  initOffshoreCanvas();initTooltip();updateKPIs();buildChecklist();buildKPIMap();buildParamSliders();
+  // Animate waves + turbine
+  const animate=()=>{
+    waveOffset+=1.5;
+    drawOffshoreDiagram();
+    requestAnimationFrame(animate);
+  };
+  animate();
+  window.addEventListener('resize',()=>{
+    setTimeout(()=>{initOffshoreCanvas();if(currentLevel===3) drawLabelCanvas();},100);
+  });
+});
+</script>
+</body>
+</html>
