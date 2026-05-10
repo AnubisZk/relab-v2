@@ -916,6 +916,71 @@ input[type=range]::-webkit-slider-thumb {
 
 /* Plotly overrides */
 .plotly-mini .js-plotly-plot { background: transparent !important; }
+
+/* ── TAB SECTIONS ── */
+.tab-section { display:none; padding:12px; overflow-y:auto; flex:1; }
+.tab-section.active { display:flex; flex-direction:column; gap:12px; }
+#main { display:flex; flex-direction:column; }
+
+/* Simulation */
+.sim-ab { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+@media(max-width:900px){ .sim-ab{ grid-template-columns:1fr; } }
+.sim-col { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; }
+.sim-col-hdr { padding:10px 14px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; background:rgba(0,0,0,0.2); }
+.sim-col-title { font-family:var(--font-mono); font-size:11px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; }
+.sim-col-a .sim-col-title { color:var(--cyan); }
+.sim-col-b .sim-col-title { color:var(--amber); }
+.sim-params { padding:12px 14px; display:flex; flex-direction:column; gap:8px; }
+.sim-param-row { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+.sim-param-label { font-size:11px; color:var(--text-2); flex:1; }
+.sim-param-input { width:80px; background:var(--bg-input); border:1px solid rgba(255,255,255,0.08); color:var(--text-1); font-family:var(--font-mono); font-size:12px; font-weight:600; padding:4px 8px; border-radius:3px; outline:none; text-align:right; -moz-appearance:textfield; }
+.sim-param-input::-webkit-inner-spin-button { -webkit-appearance:none; }
+.sim-param-input:focus { border-color:var(--cyan); }
+.sim-compare-table { width:100%; border-collapse:collapse; }
+.sim-compare-table th { font-family:var(--font-mono); font-size:9px; letter-spacing:0.12em; color:var(--text-3); text-transform:uppercase; padding:8px 12px; text-align:left; border-bottom:1px solid var(--border); }
+.sim-compare-table td { font-size:12px; color:var(--text-2); padding:8px 12px; border-bottom:1px solid var(--border); }
+.sim-compare-table tr:last-child td { border-bottom:none; }
+.sim-compare-table td.val-a { font-family:var(--font-mono); font-weight:700; color:var(--cyan); }
+.sim-compare-table td.val-b { font-family:var(--font-mono); font-weight:700; color:var(--amber); }
+.sim-compare-table td.val-diff-pos { font-family:var(--font-mono); font-weight:700; color:var(--green); }
+.sim-compare-table td.val-diff-neg { font-family:var(--font-mono); font-weight:700; color:var(--red); }
+
+/* Optimization tab */
+.opt-leaderboard { width:100%; border-collapse:collapse; }
+.opt-leaderboard th { font-family:var(--font-mono); font-size:9px; letter-spacing:0.12em; color:var(--text-3); text-transform:uppercase; padding:8px 12px; text-align:left; border-bottom:1px solid var(--border); }
+.opt-leaderboard td { font-size:11px; color:var(--text-2); padding:8px 12px; border-bottom:1px solid var(--border); font-family:var(--font-mono); }
+.opt-leaderboard tr:first-child td { color:var(--amber); }
+.opt-leaderboard tr:hover td { background:rgba(255,255,255,0.02); }
+.rank-badge { display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:50%; font-weight:700; font-size:10px; }
+.rank-1 { background:rgba(245,166,35,0.2); color:var(--amber); border:1px solid rgba(245,166,35,0.4); }
+.rank-2 { background:rgba(200,220,255,0.08); color:var(--text-2); border:1px solid rgba(200,220,255,0.15); }
+.rank-3 { background:rgba(176,96,255,0.1); color:var(--purple); border:1px solid rgba(176,96,255,0.25); }
+.rank-n { background:rgba(255,255,255,0.04); color:var(--text-3); border:1px solid rgba(255,255,255,0.08); }
+.opt-radar { width:100%; height:280px; }
+
+/* Scenarios tab */
+.scenario-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:12px; }
+.scenario-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; transition:all .2s; }
+.scenario-card:hover { border-color:var(--border-b); transform:translateY(-2px); }
+.scenario-card-hdr { padding:10px 14px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+.scenario-name { font-family:var(--font-mono); font-size:11px; font-weight:700; color:var(--cyan); letter-spacing:0.1em; }
+.scenario-date { font-family:var(--font-mono); font-size:9px; color:var(--text-3); }
+.scenario-body { padding:12px 14px; display:flex; flex-direction:column; gap:6px; }
+.scenario-stat { display:flex; justify-content:space-between; align-items:center; }
+.scenario-stat-label { font-size:11px; color:var(--text-3); }
+.scenario-stat-val { font-family:var(--font-mono); font-size:11px; font-weight:700; color:var(--text-1); }
+.scenario-actions { display:flex; gap:6px; padding:10px 14px; border-top:1px solid var(--border); }
+.sc-btn { font-family:var(--font-mono); font-size:9px; font-weight:700; letter-spacing:0.1em; padding:5px 10px; border:1px solid; border-radius:3px; cursor:pointer; transition:all .2s; }
+.sc-btn-load { color:var(--cyan); border-color:rgba(0,212,255,0.3); background:var(--cyan-d); }
+.sc-btn-load:hover { background:var(--cyan-g); color:#000; }
+.sc-btn-del  { color:var(--red);  border-color:rgba(239,68,68,0.3);  background:var(--red-d); }
+.sc-btn-del:hover { background:rgba(239,68,68,0.3); color:#fff; }
+.sc-btn-cmp  { color:var(--purple); border-color:rgba(168,85,247,0.3); background:var(--purple-d); }
+.sc-btn-cmp:hover { background:rgba(168,85,247,0.3); color:#fff; }
+.empty-state { text-align:center; padding:40px 20px; color:var(--text-3); font-family:var(--font-mono); font-size:11px; letter-spacing:0.1em; }
+.save-scenario-form { display:flex; gap:8px; align-items:center; padding:12px 0; }
+.save-scenario-input { flex:1; background:var(--bg-input); border:1px solid var(--border-b); color:var(--text-1); font-family:var(--font-mono); font-size:12px; padding:8px 12px; border-radius:var(--radius); outline:none; }
+.save-scenario-input:focus { border-color:var(--cyan); }
 </style>
 </head>
 <body>
@@ -927,12 +992,11 @@ input[type=range]::-webkit-slider-thumb {
     <div class="brand-sub">Advanced Simulation &amp; Optimization System · ZSK Solutions</div>
   </div>
   <nav class="nav-tabs">
-    <div class="nav-tab active"><span class="tab-icon">⬡</span> Dashboard</div>
-    <div class="nav-tab"><span class="tab-icon">⚙</span> Simulation</div>
-    <div class="nav-tab"><span class="tab-icon">⚡</span> Optimization</div>
-    <div class="nav-tab"><span class="tab-icon">🧠</span> World Model</div>
-    <div class="nav-tab"><span class="tab-icon">📋</span> Scenarios</div>
-    <div class="nav-tab"><span class="tab-icon">⚙</span> Settings</div>
+    <div class="nav-tab active" onclick="App.switchTab('dashboard')"><span class="tab-icon">⬡</span> Dashboard</div>
+    <div class="nav-tab" onclick="App.switchTab('simulation')"><span class="tab-icon">⚙</span> Simulation</div>
+    <div class="nav-tab" onclick="App.switchTab('optimization')"><span class="tab-icon">⚡</span> Optimization</div>
+    <div class="nav-tab" onclick="App.switchTab('worldmodel')"><span class="tab-icon">🧠</span> World Model</div>
+    <div class="nav-tab" onclick="App.switchTab('scenarios')"><span class="tab-icon">📋</span> Scenarios</div>
     <div class="nav-tab" onclick="window.open('solar-training.html','_blank')" style="color:var(--amber);border-bottom-color:transparent;margin-left:8px;border-left:1px solid var(--border);padding-left:16px;">
       <span class="tab-icon">☀</span> Solar Training
       <span style="font-size:8px;padding:1px 5px;border-radius:3px;background:rgba(245,166,35,0.15);border:1px solid rgba(245,166,35,0.3);margin-left:4px;">SOL-U01</span>
@@ -1530,8 +1594,230 @@ input[type=range]::-webkit-slider-thumb {
     </div>
 
   </div><!-- end main -->
-</div><!-- end layout -->
 
+  <!-- ═══ SIMULATION TAB ═══ -->
+  <div class="tab-section" id="tab-simulation">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+      <div>
+        <div style="font-family:var(--font-head);font-size:18px;font-weight:800;color:var(--cyan);letter-spacing:0.06em">SIMULATION — Scenario A vs B</div>
+        <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-3);margin-top:4px">Adjust parameters independently for each scenario — compare results side by side</div>
+      </div>
+      <button class="action-btn btn-calc" onclick="App.runSimulation()">▶ Run Comparison</button>
+    </div>
+
+    <div class="sim-ab">
+      <!-- SCENARIO A -->
+      <div class="sim-col sim-col-a">
+        <div class="sim-col-hdr">
+          <span class="sim-col-title">⬡ Scenario A — Baseline</span>
+          <span class="tag tag-info">Current Inputs</span>
+        </div>
+        <div class="sim-params" id="sim-a-params">
+          <div class="sim-param-row"><span class="sim-param-label">Panel Area (m²)</span><input class="sim-param-input" id="sa-area" type="number" value="5000"></div>
+          <div class="sim-param-row"><span class="sim-param-label">Irradiance (W/m²)</span><input class="sim-param-input" id="sa-irr" type="number" value="850"></div>
+          <div class="sim-param-row"><span class="sim-param-label">Panel Efficiency (%)</span><input class="sim-param-input" id="sa-eta" type="number" value="22.5"></div>
+          <div class="sim-param-row"><span class="sim-param-label">Tilt Angle (°)</span><input class="sim-param-input" id="sa-tilt" type="number" value="32"></div>
+          <div class="sim-param-row"><span class="sim-param-label">Wind Speed (m/s)</span><input class="sim-param-input" id="sa-wspd" type="number" value="8.5"></div>
+          <div class="sim-param-row"><span class="sim-param-label">Turbine Count</span><input class="sim-param-input" id="sa-nt" type="number" value="5"></div>
+          <div class="sim-param-row"><span class="sim-param-label">Battery Capacity (kWh)</span><input class="sim-param-input" id="sa-bcap" type="number" value="1500"></div>
+          <div class="sim-param-row"><span class="sim-param-label">Dust Loss (%)</span><input class="sim-param-input" id="sa-dust" type="number" value="15"></div>
+        </div>
+      </div>
+      <!-- SCENARIO B -->
+      <div class="sim-col sim-col-b">
+        <div class="sim-col-hdr">
+          <span class="sim-col-title">⬡ Scenario B — Alternative</span>
+          <span class="tag tag-warn">Edit to compare</span>
+        </div>
+        <div class="sim-params">
+          <div class="sim-param-row"><span class="sim-param-label">Panel Area (m²)</span><input class="sim-param-input" id="sb-area" type="number" value="8000"></div>
+          <div class="sim-param-row"><span class="sim-param-label">Irradiance (W/m²)</span><input class="sim-param-input" id="sb-irr" type="number" value="920"></div>
+          <div class="sim-param-row"><span class="sim-param-label">Panel Efficiency (%)</span><input class="sim-param-input" id="sb-eta" type="number" value="24.0"></div>
+          <div class="sim-param-row"><span class="sim-param-label">Tilt Angle (°)</span><input class="sim-param-input" id="sb-tilt" type="number" value="30"></div>
+          <div class="sim-param-row"><span class="sim-param-label">Wind Speed (m/s)</span><input class="sim-param-input" id="sb-wspd" type="number" value="11.0"></div>
+          <div class="sim-param-row"><span class="sim-param-label">Turbine Count</span><input class="sim-param-input" id="sb-nt" type="number" value="8"></div>
+          <div class="sim-param-row"><span class="sim-param-label">Battery Capacity (kWh)</span><input class="sim-param-input" id="sb-bcap" type="number" value="2000"></div>
+          <div class="sim-param-row"><span class="sim-param-label">Dust Loss (%)</span><input class="sim-param-input" id="sb-dust" type="number" value="8"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COMPARISON TABLE -->
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden">
+      <div style="padding:10px 14px;border-bottom:1px solid var(--border);background:rgba(0,0,0,0.2);font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:0.14em;color:var(--text-2);text-transform:uppercase">
+        📊 Comparison Results
+      </div>
+      <div style="padding:0">
+        <table class="sim-compare-table" id="sim-compare-table">
+          <thead><tr>
+            <th>Metric</th>
+            <th>Scenario A</th>
+            <th>Scenario B</th>
+            <th>Difference</th>
+            <th>Winner</th>
+          </tr></thead>
+          <tbody id="sim-compare-body">
+            <tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-3);font-family:var(--font-mono)">Click ▶ Run Comparison to see results</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- COMPARISON CHART -->
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden">
+      <div style="padding:10px 14px;border-bottom:1px solid var(--border);background:rgba(0,0,0,0.2);font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:0.14em;color:var(--text-2);text-transform:uppercase">📈 Energy Breakdown Comparison</div>
+      <div id="sim-chart" style="width:100%;height:280px"></div>
+    </div>
+  </div>
+
+  <!-- ═══ OPTIMIZATION TAB ═══ -->
+  <div class="tab-section" id="tab-optimization">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+      <div>
+        <div style="font-family:var(--font-head);font-size:18px;font-weight:800;color:var(--amber);letter-spacing:0.06em">OPTIMIZATION — Grid Search Results</div>
+        <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-3);margin-top:4px">~312,000 combinations evaluated · Best feasible solution selected by Z objective</div>
+      </div>
+      <button class="action-btn btn-opt" onclick="App.startOptimize();App.switchTab('dashboard')">⚡ Run Auto Optimize</button>
+    </div>
+
+    <!-- STATUS -->
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;display:flex;align-items:center;gap:16px" id="opt-tab-status">
+      <div style="font-family:var(--font-mono);font-size:11px;color:var(--text-3)" id="opt-tab-msg">Run Auto Optimize from Dashboard to populate results here.</div>
+    </div>
+
+    <!-- LEADERBOARD -->
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden">
+      <div style="padding:10px 14px;border-bottom:1px solid var(--border);background:rgba(0,0,0,0.2);font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:0.14em;color:var(--amber);text-transform:uppercase">🏆 Top-5 Leaderboard</div>
+      <table class="opt-leaderboard" id="opt-leaderboard-table">
+        <thead><tr>
+          <th>Rank</th><th>Tilt</th><th>Azimuth</th><th>Yaw</th><th>Spacing</th><th>Bat.Cap</th><th>Cleaning</th><th>Z Score</th><th>Net Energy</th>
+        </tr></thead>
+        <tbody id="opt-leaderboard-body">
+          <tr><td colspan="9" style="text-align:center;padding:24px;color:var(--text-3)">No optimization run yet</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- RADAR CHART -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden">
+        <div style="padding:10px 14px;border-bottom:1px solid var(--border);background:rgba(0,0,0,0.2);font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:0.14em;color:var(--text-2);text-transform:uppercase">📡 Best vs Current — Radar</div>
+        <div id="opt-radar" class="opt-radar"></div>
+      </div>
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden">
+        <div style="padding:10px 14px;border-bottom:1px solid var(--border);background:rgba(0,0,0,0.2);font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:0.14em;color:var(--text-2);text-transform:uppercase">📈 Z Score Distribution</div>
+        <div id="opt-zdist" style="width:100%;height:260px"></div>
+      </div>
+    </div>
+
+    <!-- BEST PARAMS DETAIL -->
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden">
+      <div style="padding:10px 14px;border-bottom:1px solid var(--border);background:rgba(0,0,0,0.2);font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:0.14em;color:var(--amber);text-transform:uppercase">⚡ Best Configuration Detail</div>
+      <div style="padding:16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px" id="opt-best-detail">
+        <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-3)">No results yet — run Auto Optimize</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ WORLD MODEL TAB ═══ -->
+  <div class="tab-section" id="tab-worldmodel">
+    <div>
+      <div style="font-family:var(--font-head);font-size:18px;font-weight:800;color:var(--purple);letter-spacing:0.06em">WORLD MODEL — Surrogate Prediction Engine</div>
+      <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-3);margin-top:4px">Physics engine validates all results · World model provides fast prediction &amp; confidence scoring</div>
+    </div>
+    <div style="background:var(--bg-card);border:1px solid rgba(168,85,247,0.3);border-radius:var(--radius);padding:16px">
+      <div style="font-family:var(--font-mono);font-size:10px;font-weight:700;color:var(--purple);letter-spacing:0.14em;margin-bottom:12px">🧠 ARCHITECTURE STATUS</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">
+        <div style="padding:12px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg-2)">
+          <div style="font-family:var(--font-mono);font-size:9px;color:var(--text-3);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:6px">Physics Engine</div>
+          <div style="font-family:var(--font-mono);font-size:14px;font-weight:700;color:var(--green)">✓ ACTIVE</div>
+          <div style="font-size:11px;color:var(--text-2);margin-top:4px">All calculations formula-driven</div>
+        </div>
+        <div style="padding:12px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg-2)">
+          <div style="font-family:var(--font-mono);font-size:9px;color:var(--text-3);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:6px">JS Surrogate Model</div>
+          <div style="font-family:var(--font-mono);font-size:14px;font-weight:700;color:var(--amber)">⚡ MOCK</div>
+          <div style="font-size:11px;color:var(--text-2);margin-top:4px">±2–4% simulated error</div>
+        </div>
+        <div style="padding:12px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg-2)">
+          <div style="font-family:var(--font-mono);font-size:9px;color:var(--text-3);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:6px">FastAPI Backend</div>
+          <div style="font-family:var(--font-mono);font-size:14px;font-weight:700;color:var(--text-3)">⏳ PLANNED</div>
+          <div style="font-size:11px;color:var(--text-2);margin-top:4px">Railway deploy — next phase</div>
+        </div>
+        <div style="padding:12px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg-2)">
+          <div style="font-family:var(--font-mono);font-size:9px;color:var(--text-3);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:6px">Real ML Model</div>
+          <div style="font-family:var(--font-mono);font-size:14px;font-weight:700;color:var(--text-3)">⏳ PLANNED</div>
+          <div style="font-size:11px;color:var(--text-2);margin-top:4px">scikit-learn / MLP Regressor</div>
+        </div>
+      </div>
+    </div>
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden">
+      <div style="padding:10px 14px;border-bottom:1px solid var(--border);background:rgba(0,0,0,0.2);font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:0.14em;color:var(--purple);text-transform:uppercase">🔮 Live Prediction vs Physics</div>
+      <div class="wm-body" id="wm-body-tab" style="padding:12px"></div>
+    </div>
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden">
+      <div style="padding:10px 14px;border-bottom:1px solid var(--border);background:rgba(0,0,0,0.2);font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:0.14em;color:var(--text-2);text-transform:uppercase">🚀 FastAPI Integration Plan</div>
+      <div style="padding:16px;display:flex;flex-direction:column;gap:10px">
+        <div style="display:grid;grid-template-columns:140px 1fr;gap:12px;padding-bottom:10px;border-bottom:1px solid var(--border)">
+          <span style="font-family:var(--font-mono);font-size:10px;font-weight:700;color:var(--green)">POST /api/calculate</span>
+          <span style="font-family:var(--font-mono);font-size:10px;color:var(--text-2)">Physics engine in Python → returns JSON {Z, E_solar, E_wind, E_offshore, B_final, violations[]}</span>
+        </div>
+        <div style="display:grid;grid-template-columns:140px 1fr;gap:12px;padding-bottom:10px;border-bottom:1px solid var(--border)">
+          <span style="font-family:var(--font-mono);font-size:10px;font-weight:700;color:var(--amber)">POST /api/optimize</span>
+          <span style="font-family:var(--font-mono);font-size:10px;color:var(--text-2)">SciPy SLSQP replaces Grid Search → 1000× faster, gradient-based</span>
+        </div>
+        <div style="display:grid;grid-template-columns:140px 1fr;gap:12px;padding-bottom:10px;border-bottom:1px solid var(--border)">
+          <span style="font-family:var(--font-mono);font-size:10px;font-weight:700;color:var(--purple)">POST /api/wm/predict</span>
+          <span style="font-family:var(--font-mono);font-size:10px;color:var(--text-2)">scikit-learn MLPRegressor trained on 10,000 simulation runs → &lt;50ms inference</span>
+        </div>
+        <div style="display:grid;grid-template-columns:140px 1fr;gap:12px">
+          <span style="font-family:var(--font-mono);font-size:10px;font-weight:700;color:var(--cyan)">POST /api/vr/sync</span>
+          <span style="font-family:var(--font-mono);font-size:10px;color:var(--text-2)">Unity WebView → sends panel/turbine positions → receives optimized placement back</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ SCENARIOS TAB ═══ -->
+  <div class="tab-section" id="tab-scenarios">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+      <div>
+        <div style="font-family:var(--font-head);font-size:18px;font-weight:800;color:var(--green);letter-spacing:0.06em">SCENARIOS — Save · Load · Compare</div>
+        <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-3);margin-top:4px">Store named configurations · Reload anytime · Compare up to 3 scenarios</div>
+      </div>
+    </div>
+
+    <!-- SAVE FORM -->
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px">
+      <div style="font-family:var(--font-mono);font-size:10px;font-weight:700;color:var(--green);letter-spacing:0.14em;margin-bottom:10px;text-transform:uppercase">💾 Save Current Configuration</div>
+      <div class="save-scenario-form">
+        <input class="save-scenario-input" id="scenario-name-input" type="text" placeholder="Scenario name (e.g. Coastal High Wind)">
+        <button class="action-btn btn-calc" onclick="App.saveNamedScenario()">💾 Save</button>
+        <button class="action-btn" style="color:var(--text-3);border-color:var(--border);background:transparent" onclick="App.exportAllScenarios()">↓ Export All</button>
+      </div>
+    </div>
+
+    <!-- SAVED SCENARIOS GRID -->
+    <div>
+      <div style="font-family:var(--font-mono);font-size:10px;font-weight:700;color:var(--text-3);letter-spacing:0.14em;text-transform:uppercase;margin-bottom:8px">SAVED SCENARIOS</div>
+      <div class="scenario-grid" id="scenario-grid">
+        <div class="empty-state">No scenarios saved yet.<br>Configure the system and click Save.</div>
+      </div>
+    </div>
+
+    <!-- COMPARE PANEL -->
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden" id="compare-panel">
+      <div style="padding:10px 14px;border-bottom:1px solid var(--border);background:rgba(0,0,0,0.2);font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:0.14em;color:var(--purple);text-transform:uppercase;display:flex;align-items:center;justify-content:space-between">
+        🔀 Scenario Comparison
+        <button class="sc-btn sc-btn-del" onclick="App.clearComparison()" style="font-size:9px">Clear</button>
+      </div>
+      <div id="compare-body" style="padding:14px">
+        <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-3)">Select scenarios to compare using the Compare button on each card.</div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end main -->
+</div><!-- end layout -->
 <script>
 /**
  * ================================================================
@@ -3069,7 +3355,381 @@ const App = (() => {
     App._fieldTimer = setTimeout(() => calculate(), 200);
   }
 
-  function setView(v) {
+  /* ── TAB SWITCHING ──────────────────────────────────────── */
+  function switchTab(name) {
+    // Hide all tab sections + dashboard
+    const dashEl = document.getElementById('main');
+    // nav tabs
+    document.querySelectorAll('.nav-tab').forEach((t,i) => {
+      const tabMap = ['dashboard','simulation','optimization','worldmodel','scenarios'];
+      t.classList.toggle('active', tabMap[i] === name);
+    });
+    // show/hide dashboard content vs tab sections
+    const dashItems = ['kpi-grid','mid-row','bottom-row','optimize-row','constraint-bar'];
+    dashItems.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = name === 'dashboard' ? '' : 'none';
+    });
+    // tab sections
+    ['simulation','optimization','worldmodel','scenarios'].forEach(t => {
+      const el = document.getElementById('tab-'+t);
+      if (el) el.classList.toggle('active', t === name);
+    });
+    // refresh tab content
+    if (name === 'simulation')   initSimulationTab();
+    if (name === 'optimization') refreshOptimizationTab();
+    if (name === 'scenarios')    renderScenarioGrid();
+    if (name === 'worldmodel')   refreshWorldModelTab();
+    if (name === 'dashboard')    { calculate(); }
+  }
+
+  /* ── SIMULATION TAB ─────────────────────────────────────── */
+  function initSimulationTab() {
+    // Pre-fill Scenario A from current params
+    if (_params) {
+      const set = (id, v) => { const el=document.getElementById(id); if(el) el.value=v; };
+      set('sa-area', _params.solar.panelArea);
+      set('sa-irr',  _params.solar.irradiance);
+      set('sa-eta',  (_params.solar.efficiency*100).toFixed(1));
+      set('sa-tilt', _params.solar.tilt);
+      set('sa-wspd', _params.wind.windSpeed);
+      set('sa-nt',   _params.wind.turbineCount);
+      set('sa-bcap', _params.battery.capacity);
+      set('sa-dust', (_params.solar.dustLoss*100).toFixed(0));
+    }
+  }
+
+  function runSimulation() {
+    const g = id => parseFloat(document.getElementById(id)?.value) || 0;
+    const base = MockData.defaultParams;
+
+    const buildP = (prefix) => ({
+      solar: {
+        panelArea:  g(prefix+'-area'), irradiance: g(prefix+'-irr'),
+        efficiency: g(prefix+'-eta')/100, tilt: g(prefix+'-tilt'),
+        azimuth: base.solar.azimuth, cellTemp: base.solar.cellTemp,
+        refTemp:25, tempCoeff:0.0045,
+        dustLoss: g(prefix+'-dust')/100, shadeLoss: base.solar.shadeLoss,
+        cleaningCost: base.solar.cleaningCost, cleaningInterval: base.solar.cleaningInterval,
+        timeHours: base.solar.timeHours,
+      },
+      wind: {
+        turbineCount: g(prefix+'-nt'), rotorRadius: base.wind.rotorRadius,
+        hubHeight: base.wind.hubHeight, windSpeed: g(prefix+'-wspd'),
+        windDirection: base.wind.windDirection, yawAngle: 0,
+        powerCoeff: base.wind.powerCoeff, airDensity: base.wind.airDensity,
+        turbineSpacing: base.wind.turbineSpacing,
+        wakeLoss: base.wind.wakeLoss, turbulenceLoss: base.wind.turbulenceLoss,
+      },
+      offshore: { ...base.offshore },
+      battery:  { ...base.battery, capacity: g(prefix+'-bcap') },
+      cost:     { ...base.cost },
+    });
+
+    const rA = PhysicsEngine.calculate(buildP('sa'));
+    const rB = PhysicsEngine.calculate(buildP('sb'));
+
+    const rows = [
+      { label:'Solar Energy (kWh/day)',  a:rA.sRes.E_net,        b:rB.sRes.E_net,        hi:'b' },
+      { label:'Wind Energy (kWh/day)',   a:rA.wRes.E_net,        b:rB.wRes.E_net,        hi:'b' },
+      { label:'Offshore Energy (kWh/day)',a:rA.oRes.E_net,       b:rB.oRes.E_net,        hi:'b' },
+      { label:'Total Net Energy (kWh)',  a:rA.zRes.totalEnergy,  b:rB.zRes.totalEnergy,  hi:'b' },
+      { label:'Battery SOC (%)',         a:rA.bRes.SOC,          b:rB.bRes.SOC,          hi:'b' },
+      { label:'Performance Ratio',       a:rA.sRes.PR||0,        b:rB.sRes.PR||0,        hi:'b', dec:3 },
+      { label:'Total Cost ($/day)',      a:rA.zRes.totalCost,    b:rB.zRes.totalCost,    hi:'a' },
+      { label:'Renewable Coverage (%)',  a:rA.zRes.coverage,     b:rB.zRes.coverage,     hi:'b' },
+      { label:'CO₂ Saved (kg)',          a:rA.zRes.co2saved,     b:rB.zRes.co2saved,     hi:'b' },
+      { label:'Objective Z',             a:rA.zRes.Z,            b:rB.zRes.Z,            hi:'b' },
+    ];
+
+    const fmt = (v, dec=1) => isFinite(v) ? v.toFixed(dec) : '—';
+    const tbody = document.getElementById('sim-compare-body');
+    tbody.innerHTML = rows.map(r => {
+      const dec = r.dec || 1;
+      const diff = r.b - r.a;
+      const diffStr = (diff>0?'+':'')+diff.toFixed(dec);
+      const diffCls = (r.hi==='b'&&diff>0)||(r.hi==='a'&&diff<0) ? 'val-diff-pos' : 'val-diff-neg';
+      const winner = Math.abs(diff)<0.01 ? '=' : (r.hi==='b'?(diff>0?'B':'A'):(diff<0?'B':'A'));
+      const winnerCol = winner==='B'?'var(--amber)':winner==='A'?'var(--cyan)':'var(--text-3)';
+      return `<tr>
+        <td>${r.label}</td>
+        <td class="val-a">${fmt(r.a,dec)}</td>
+        <td class="val-b">${fmt(r.b,dec)}</td>
+        <td class="${diffCls}">${diffStr}</td>
+        <td style="font-family:var(--font-mono);font-weight:700;color:${winnerCol}">${winner}</td>
+      </tr>`;
+    }).join('');
+
+    // Bar chart
+    Plotly.react('sim-chart', [
+      { name:'Scenario A', x:['Solar','Wind','Offshore','Total'], y:[rA.sRes.E_net,rA.wRes.E_net,rA.oRes.E_net,rA.zRes.totalEnergy], type:'bar', marker:{color:'rgba(0,212,255,0.7)'} },
+      { name:'Scenario B', x:['Solar','Wind','Offshore','Total'], y:[rB.sRes.E_net,rB.wRes.E_net,rB.oRes.E_net,rB.zRes.totalEnergy], type:'bar', marker:{color:'rgba(245,166,35,0.7)'} },
+    ], {
+      paper_bgcolor:'rgba(0,0,0,0)', plot_bgcolor:'rgba(0,0,0,0)',
+      font:{family:'JetBrains Mono',color:'rgba(140,170,210,0.7)',size:10},
+      margin:{l:50,r:20,t:20,b:40}, barmode:'group',
+      xaxis:{gridcolor:'rgba(0,180,255,0.06)',tickfont:{size:10}},
+      yaxis:{gridcolor:'rgba(0,180,255,0.06)',title:{text:'kWh/day',font:{size:10}}},
+      legend:{font:{size:10},bgcolor:'rgba(0,0,0,0)'},
+    }, {displayModeBar:false,responsive:true});
+  }
+
+  /* ── OPTIMIZATION TAB ───────────────────────────────────── */
+  function refreshOptimizationTab() {
+    const best = Optimizer.getBest();
+    const msg  = document.getElementById('opt-tab-msg');
+    if (!best || !best.result) {
+      if (msg) msg.textContent = 'Run Auto Optimize from Dashboard to populate results here.';
+      return;
+    }
+    if (msg) msg.innerHTML = `<span style="color:var(--green);font-family:var(--font-mono);font-weight:700">✓ Optimization complete</span> &nbsp;·&nbsp; <span style="color:var(--text-2)">${best.leaderboard.length} feasible solutions found</span>`;
+
+    // Leaderboard
+    const tbody = document.getElementById('opt-leaderboard-body');
+    const ranks = ['rank-1','rank-2','rank-3','rank-n','rank-n'];
+    tbody.innerHTML = best.leaderboard.map((lb,i) => `
+      <tr>
+        <td><span class="rank-badge ${ranks[i]||'rank-n'}">${i+1}</span></td>
+        <td>${lb.combo.tilt}°</td>
+        <td>${lb.combo.azimuth}°</td>
+        <td>${lb.combo.yaw}°</td>
+        <td>${lb.combo.spacing}D</td>
+        <td>${lb.combo.bcap} kWh</td>
+        <td>${lb.combo.cleaning}d</td>
+        <td style="color:var(--amber)">${Math.round(lb.Z).toLocaleString()}</td>
+        <td style="color:var(--green)">${Math.round(lb.zRes.totalEnergy).toLocaleString()} kWh</td>
+      </tr>`).join('');
+
+    // Best detail
+    const bc = best.combo, br = best.result;
+    document.getElementById('opt-best-detail').innerHTML = [
+      { k:'Tilt Angle',      v:bc.tilt+'°' },
+      { k:'Azimuth',         v:bc.azimuth+'°' },
+      { k:'Yaw Error',       v:bc.yaw+'°' },
+      { k:'Turbine Spacing', v:bc.spacing+'D' },
+      { k:'Battery Capacity',v:bc.bcap+' kWh' },
+      { k:'Cleaning Interval',v:bc.cleaning+' days' },
+      { k:'Net Energy',      v:Math.round(br.zRes.totalEnergy).toLocaleString()+' kWh/day' },
+      { k:'Objective Z',     v:Math.round(br.zRes.Z).toLocaleString() },
+      { k:'Coverage',        v:br.zRes.coverage.toFixed(1)+'%' },
+      { k:'CO₂ Saved',       v:Math.round(br.zRes.co2saved)+' kg/day' },
+    ].map(item=>`
+      <div style="padding:10px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg-2)">
+        <div style="font-family:var(--font-mono);font-size:8px;color:var(--text-3);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:4px">${item.k}</div>
+        <div style="font-family:var(--font-mono);font-size:16px;font-weight:700;color:var(--amber)">${item.v}</div>
+      </div>`).join('');
+
+    // Radar chart — current vs best
+    if (_result && best.result) {
+      const cats = ['Solar E','Wind E','Coverage','Z Score','PR'];
+      const maxE = Math.max(_result.zRes.totalEnergy, best.result.zRes.totalEnergy, 1);
+      const norm = v => Math.min(100, Math.round(v/maxE*100));
+      Plotly.react('opt-radar', [{
+        type:'scatterpolar', r:[
+          norm(_result.sRes.E_net), norm(_result.wRes.E_net),
+          _result.zRes.coverage, Math.max(0,Math.min(100,_result.zRes.Z/maxE*100)),
+          (_result.sRes.PR||0)*100],
+        theta:cats, fill:'toself', name:'Current',
+        line:{color:'rgba(0,212,255,0.8)'}, fillcolor:'rgba(0,212,255,0.1)',
+      },{
+        type:'scatterpolar', r:[
+          norm(best.result.sRes.E_net), norm(best.result.wRes.E_net),
+          best.result.zRes.coverage, Math.max(0,Math.min(100,best.result.zRes.Z/maxE*100)),
+          (best.result.sRes.PR||0)*100],
+        theta:cats, fill:'toself', name:'Optimized',
+        line:{color:'rgba(245,166,35,0.8)'}, fillcolor:'rgba(245,166,35,0.1)',
+      }], {
+        polar:{bgcolor:'rgba(0,0,0,0)',radialaxis:{visible:true,range:[0,100],gridcolor:'rgba(255,255,255,0.08)',tickfont:{size:8,color:'rgba(140,170,210,0.5)'}},angularaxis:{gridcolor:'rgba(255,255,255,0.08)'}},
+        paper_bgcolor:'rgba(0,0,0,0)', plot_bgcolor:'rgba(0,0,0,0)',
+        font:{family:'JetBrains Mono',color:'rgba(140,170,210,0.7)',size:10},
+        legend:{font:{size:10},bgcolor:'rgba(0,0,0,0)'},
+        margin:{l:40,r:40,t:40,b:40},
+      },{displayModeBar:false,responsive:true});
+
+      // Z distribution
+      const zScores = best.leaderboard.map(l=>l.Z);
+      Plotly.react('opt-zdist',[{
+        x:zScores, type:'bar',
+        marker:{color:zScores.map((_,i)=>i===0?'rgba(245,166,35,0.9)':'rgba(0,212,255,0.5)')},
+        text:zScores.map(z=>Math.round(z).toLocaleString()),
+        textposition:'outside',
+      }],{
+        paper_bgcolor:'rgba(0,0,0,0)', plot_bgcolor:'rgba(0,0,0,0)',
+        font:{family:'JetBrains Mono',color:'rgba(140,170,210,0.6)',size:9},
+        margin:{l:50,r:20,t:30,b:40},
+        xaxis:{title:{text:'Rank',font:{size:9}},tickfont:{size:9},gridcolor:'rgba(0,180,255,0.06)'},
+        yaxis:{title:{text:'Z Score',font:{size:9}},tickfont:{size:9},gridcolor:'rgba(0,180,255,0.06)'},
+      },{displayModeBar:false,responsive:true});
+    }
+  }
+
+  /* ── WORLD MODEL TAB ────────────────────────────────────── */
+  function refreshWorldModelTab() {
+    if (!_result) return;
+    const wm  = MockData.mockWorldModelPrediction(_result);
+    const body = document.getElementById('wm-body-tab');
+    if (!body) return;
+    const items = [
+      { name:'Solar Energy (kWh/day)', phys:_result.sRes.E_net,  pred:wm.predicted_solar },
+      { name:'Wind Energy (kWh/day)',  phys:_result.wRes.E_net,  pred:wm.predicted_wind },
+      { name:'Offshore Energy (kWh)',  phys:_result.oRes.E_net,  pred:wm.predicted_offshore },
+      { name:'Battery Final (kWh)',    phys:_result.bRes.B_next, pred:wm.predicted_battery },
+      { name:'Objective Value (Z)',    phys:_result.zRes.Z,      pred:wm.predicted_Z },
+    ];
+    const maxVal = Math.max(...items.flatMap(i=>[i.phys,i.pred]),1);
+    body.innerHTML = items.map(item=>{
+      const err=Math.abs(item.phys-item.pred);
+      const errPct=item.phys>0?(err/item.phys*100).toFixed(1):'0.0';
+      const physW=(item.phys/maxVal*100).toFixed(1);
+      const predW=(item.pred/maxVal*100).toFixed(1);
+      return `<div class="wm-row">
+        <span class="wm-metric-name">${item.name}</span>
+        <div class="wm-bar-wrap">
+          <div class="wm-bar-track">
+            <div class="wm-bar-physics" style="width:${physW}%"></div>
+            <div class="wm-bar-wm" style="width:${predW}%;opacity:0.6"></div>
+          </div>
+          <span class="wm-error" style="color:${parseFloat(errPct)>5?'var(--amber)':'var(--text-3)'}">${errPct}%</span>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  /* ── SCENARIOS ──────────────────────────────────────────── */
+  let _compareList = [];
+
+  function saveNamedScenario() {
+    const nameInput = document.getElementById('scenario-name-input');
+    const name = nameInput?.value?.trim() || ('Scenario ' + new Date().toLocaleTimeString());
+    if (!name) return;
+    const p   = readParams();
+    const res = PhysicsEngine.calculate(p);
+    const scenario = {
+      id:    Date.now(),
+      name,
+      savedAt: new Date().toISOString(),
+      params: p,
+      results: {
+        totalEnergy: res.zRes.totalEnergy,
+        Z:           res.zRes.Z,
+        coverage:    res.zRes.coverage,
+        co2saved:    res.zRes.co2saved,
+        solarE:      res.sRes.E_net,
+        windE:       res.wRes.E_net,
+        offshoreE:   res.oRes.E_net,
+        PR:          res.sRes.PR||0,
+      },
+    };
+    const saved = JSON.parse(localStorage.getItem('relab_scenarios') || '[]');
+    saved.unshift(scenario);
+    localStorage.setItem('relab_scenarios', JSON.stringify(saved));
+    if (nameInput) nameInput.value = '';
+    renderScenarioGrid();
+  }
+
+  function renderScenarioGrid() {
+    const saved = JSON.parse(localStorage.getItem('relab_scenarios') || '[]');
+    const grid  = document.getElementById('scenario-grid');
+    if (!grid) return;
+    if (saved.length === 0) {
+      grid.innerHTML = '<div class="empty-state">No scenarios saved yet.<br>Configure the system and click Save.</div>';
+      return;
+    }
+    grid.innerHTML = saved.map(s => `
+      <div class="scenario-card">
+        <div class="scenario-card-hdr">
+          <span class="scenario-name">${s.name}</span>
+          <span class="scenario-date">${new Date(s.savedAt).toLocaleDateString()}</span>
+        </div>
+        <div class="scenario-body">
+          <div class="scenario-stat"><span class="scenario-stat-label">Net Energy</span><span class="scenario-stat-val">${Math.round(s.results.totalEnergy).toLocaleString()} kWh/day</span></div>
+          <div class="scenario-stat"><span class="scenario-stat-label">Objective Z</span><span class="scenario-stat-val" style="color:var(--amber)">${Math.round(s.results.Z).toLocaleString()}</span></div>
+          <div class="scenario-stat"><span class="scenario-stat-label">Coverage</span><span class="scenario-stat-val">${s.results.coverage.toFixed(1)}%</span></div>
+          <div class="scenario-stat"><span class="scenario-stat-label">Solar / Wind / Offshore</span><span class="scenario-stat-val" style="font-size:10px">${Math.round(s.results.solarE)} / ${Math.round(s.results.windE)} / ${Math.round(s.results.offshoreE)}</span></div>
+        </div>
+        <div class="scenario-actions">
+          <button class="sc-btn sc-btn-load" onclick="App.loadNamedScenario(${s.id})">↑ Load</button>
+          <button class="sc-btn sc-btn-cmp"  onclick="App.addToCompare(${s.id})">⇄ Compare</button>
+          <button class="sc-btn sc-btn-del"  onclick="App.deleteScenario(${s.id})">✕ Delete</button>
+        </div>
+      </div>`).join('');
+  }
+
+  function loadNamedScenario(id) {
+    const saved = JSON.parse(localStorage.getItem('relab_scenarios') || '[]');
+    const sc    = saved.find(s=>s.id===id);
+    if (!sc) return;
+    // Apply key params to inputs
+    const p = sc.params;
+    const setSlider = (spanId, val) => { const el=document.getElementById(spanId); if(el) el.textContent=val; };
+    setSlider('sv-parea', p.solar.panelArea);
+    setSlider('sv-tilt',  p.solar.tilt+'°');
+    setSlider('sv-azimuth', p.solar.azimuth+'°');
+    setSlider('sv-dust',  (p.solar.dustLoss*100).toFixed(0)+'%');
+    setSlider('sv-wspd',  p.wind.windSpeed);
+    const setInp = (id, v) => { const el=document.getElementById(id); if(el) el.value=v; };
+    setInp('i-eta',    (p.solar.efficiency*100).toFixed(1));
+    setInp('i-irr',    p.solar.irradiance);
+    setInp('i-tcount', p.wind.turbineCount);
+    setInp('i-bcap',   p.battery.capacity);
+    switchTab('dashboard');
+    calculate();
+  }
+
+  function deleteScenario(id) {
+    const saved = JSON.parse(localStorage.getItem('relab_scenarios') || '[]');
+    localStorage.setItem('relab_scenarios', JSON.stringify(saved.filter(s=>s.id!==id)));
+    renderScenarioGrid();
+  }
+
+  function addToCompare(id) {
+    if (_compareList.includes(id)) return;
+    _compareList.push(id);
+    if (_compareList.length > 3) _compareList.shift();
+    renderComparison();
+  }
+
+  function clearComparison() {
+    _compareList = [];
+    const el = document.getElementById('compare-body');
+    if (el) el.innerHTML = '<div style="font-family:var(--font-mono);font-size:10px;color:var(--text-3)">Select scenarios to compare using the Compare button on each card.</div>';
+  }
+
+  function renderComparison() {
+    const saved = JSON.parse(localStorage.getItem('relab_scenarios') || '[]');
+    const scs   = _compareList.map(id=>saved.find(s=>s.id===id)).filter(Boolean);
+    if (!scs.length) return;
+    const cols  = ['var(--cyan)','var(--amber)','var(--purple)'];
+    const metrics = ['totalEnergy','Z','coverage','solarE','windE','offshoreE'];
+    const labels  = ['Total Energy (kWh)','Z Score','Coverage (%)','Solar (kWh)','Wind (kWh)','Offshore (kWh)'];
+    const el = document.getElementById('compare-body');
+    el.innerHTML = `
+      <table style="width:100%;border-collapse:collapse">
+        <thead><tr>
+          <th style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.12em;color:var(--text-3);text-transform:uppercase;padding:8px 12px;text-align:left;border-bottom:1px solid var(--border)">Metric</th>
+          ${scs.map((s,i)=>`<th style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.1em;color:${cols[i]};text-transform:uppercase;padding:8px 12px;text-align:right;border-bottom:1px solid var(--border)">${s.name}</th>`).join('')}
+        </tr></thead>
+        <tbody>
+          ${metrics.map((m,mi)=>`<tr>
+            <td style="font-size:11px;color:var(--text-2);padding:8px 12px;border-bottom:1px solid var(--border)">${labels[mi]}</td>
+            ${scs.map((s,i)=>{
+              const vals = scs.map(sc=>sc.results[m]);
+              const best = m==='Z'||m==='totalEnergy'||m==='coverage'||m.endsWith('E') ? Math.max(...vals) : Math.min(...vals);
+              const isBest = Math.abs(s.results[m]-best)<0.01;
+              return `<td style="font-family:var(--font-mono);font-size:11px;font-weight:700;color:${isBest?cols[i]:'var(--text-2)'};padding:8px 12px;text-align:right;border-bottom:1px solid var(--border)">${Math.round(s.results[m]*10)/10}${isBest?' ★':''}</td>`;
+            }).join('')}
+          </tr>`).join('')}
+        </tbody>
+      </table>`;
+  }
+
+  function exportAllScenarios() {
+    const saved = localStorage.getItem('relab_scenarios') || '[]';
+    const blob  = new Blob([saved],{type:'application/json'});
+    const url   = URL.createObjectURL(blob);
+    const a     = document.createElement('a'); a.href=url; a.download='relab-scenarios.json'; a.click();
+    URL.revokeObjectURL(url);
+  }
     document.querySelectorAll('.scene-ctrl').forEach(b => b.classList.remove('active'));
     event.target.classList.add('active');
     drawScene();
@@ -3118,6 +3778,14 @@ const App = (() => {
     setView,
     saveScenario,
     loadScenario,
+    switchTab,
+    runSimulation,
+    saveNamedScenario,
+    loadNamedScenario,
+    deleteScenario,
+    addToCompare,
+    clearComparison,
+    exportAllScenarios,
   };
 
 })();
