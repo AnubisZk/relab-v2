@@ -1,0 +1,1535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Renewable Optimization Lab — ZSK Solutions</title>
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@700;800&display=swap">
+<style>
+/* ================================================================
+   RE OPTIMIZATION LAB v2 — DESIGN SYSTEM
+   Reference: dashboard screenshot (dark navy, cyan/amber accents)
+   ================================================================ */
+
+:root {
+  --bg-0:     #070d17;
+  --bg-1:     #0c1525;
+  --bg-2:     #111e30;
+  --bg-3:     #172438;
+  --bg-card:  #0f1c2e;
+  --bg-input: #08111e;
+
+  --cyan:     #00d4ff;
+  --cyan-d:   rgba(0,212,255,0.12);
+  --cyan-g:   rgba(0,212,255,0.35);
+  --amber:    #f5a623;
+  --amber-d:  rgba(245,166,35,0.12);
+  --green:    #22c55e;
+  --green-d:  rgba(34,197,94,0.12);
+  --red:      #ef4444;
+  --red-d:    rgba(239,68,68,0.12);
+  --purple:   #a855f7;
+  --purple-d: rgba(168,85,247,0.12);
+  --blue:     #3b82f6;
+  --blue-d:   rgba(59,130,246,0.12);
+
+  --text-1:   #f0f6ff;
+  --text-2:   rgba(200,220,255,0.65);
+  --text-3:   rgba(140,170,210,0.45);
+  --border:   rgba(0,180,255,0.10);
+  --border-b: rgba(0,180,255,0.25);
+
+  --font-ui:   'Space Grotesk', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --font-head: 'Syne', sans-serif;
+
+  --sidebar-w: 260px;
+  --topbar-h:  52px;
+  --radius:    6px;
+}
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { font-size:14px; }
+body {
+  background: var(--bg-0);
+  color: var(--text-1);
+  font-family: var(--font-ui);
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── SCROLLBARS ─────────────────────────────────────────────── */
+::-webkit-scrollbar { width:5px; height:5px; }
+::-webkit-scrollbar-track { background: var(--bg-1); }
+::-webkit-scrollbar-thumb { background: rgba(0,180,255,0.25); border-radius:3px; }
+
+/* ── TOP BAR ────────────────────────────────────────────────── */
+#topbar {
+  height: var(--topbar-h);
+  background: var(--bg-1);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  gap: 0;
+  flex-shrink: 0;
+  z-index: 100;
+}
+
+.brand {
+  display: flex;
+  flex-direction: column;
+  margin-right: 28px;
+  flex-shrink: 0;
+}
+.brand-name {
+  font-family: var(--font-head);
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--cyan);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  line-height: 1;
+}
+.brand-sub {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--text-3);
+  letter-spacing: 0.08em;
+  margin-top: 2px;
+}
+
+.nav-tabs {
+  display: flex;
+  gap: 2px;
+  flex: 1;
+}
+.nav-tab {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  color: var(--text-3);
+  padding: 6px 14px;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: all .2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.nav-tab:hover { color: var(--text-2); border-bottom-color: rgba(0,212,255,0.3); }
+.nav-tab.active { color: var(--cyan); border-bottom-color: var(--cyan); }
+.nav-tab .tab-icon { font-size: 12px; }
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+.live-indicator {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--green);
+  letter-spacing: 0.15em;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.live-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 8px var(--green);
+  animation: blink 1.5s infinite;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+.action-btn {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  padding: 7px 16px;
+  border: 1px solid;
+  cursor: pointer;
+  transition: all .2s;
+  text-transform: uppercase;
+  border-radius: var(--radius);
+}
+.btn-calc {
+  color: var(--cyan);
+  border-color: var(--cyan);
+  background: var(--cyan-d);
+}
+.btn-calc:hover { background: var(--cyan-g); color: #000; }
+.btn-opt {
+  color: var(--amber);
+  border-color: var(--amber);
+  background: var(--amber-d);
+}
+.btn-opt:hover { background: rgba(245,166,35,0.35); color: #000; }
+
+/* ── MAIN LAYOUT ────────────────────────────────────────────── */
+#layout {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ── LEFT SIDEBAR ────────────────────────────────────────────── */
+#sidebar {
+  width: var(--sidebar-w);
+  background: var(--bg-1);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-header {
+  padding: 12px 14px 8px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.sidebar-title {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: var(--text-3);
+  text-transform: uppercase;
+}
+.sidebar-actions {
+  display: flex;
+  gap: 6px;
+}
+.sidebar-act-btn {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 0.1em;
+  padding: 3px 8px;
+  border: 1px solid rgba(0,212,255,0.2);
+  color: var(--cyan);
+  background: var(--cyan-d);
+  cursor: pointer;
+  border-radius: 3px;
+  transition: all .2s;
+}
+.sidebar-act-btn:hover { background: var(--cyan-g); color: #000; }
+
+/* Input sections */
+.input-section { border-bottom: 1px solid var(--border); }
+.section-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 14px;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  transition: background .2s;
+}
+.section-toggle:hover { background: rgba(255,255,255,0.03); }
+.section-toggle-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.section-color-bar {
+  width: 3px;
+  height: 16px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+.solar-color   { background: var(--amber); }
+.wind-color    { background: var(--cyan); }
+.offshore-color{ background: var(--purple); }
+.battery-color { background: var(--green); }
+.cost-color    { background: var(--text-3); }
+.section-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.solar-label    { color: var(--amber); }
+.wind-label     { color: var(--cyan); }
+.offshore-label { color: var(--purple); }
+.battery-label  { color: var(--green); }
+.cost-label     { color: var(--text-2); }
+.toggle-arrow {
+  font-size: 10px;
+  color: var(--text-3);
+  transition: transform .25s;
+}
+.toggle-arrow.open { transform: rotate(180deg); }
+
+.section-body { padding: 8px 14px 12px; }
+.section-body.collapsed { display: none; }
+
+/* Input rows */
+.inp-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 7px;
+}
+.inp-label {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--text-2);
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.inp-value-wrap {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.inp-field {
+  width: 68px;
+  background: var(--bg-input);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: var(--text-1);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 3px 6px;
+  border-radius: 3px;
+  outline: none;
+  transition: border-color .2s;
+  -moz-appearance: textfield;
+  text-align: right;
+}
+.inp-field::-webkit-inner-spin-button,
+.inp-field::-webkit-outer-spin-button { -webkit-appearance: none; }
+.inp-field:focus { border-color: var(--cyan); box-shadow: 0 0 0 2px rgba(0,212,255,0.08); }
+.inp-unit {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--text-3);
+  width: 28px;
+  text-align: left;
+  flex-shrink: 0;
+}
+
+/* Sliders inside sidebar */
+.inp-slider-row { margin-bottom: 9px; }
+.inp-slider-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+.inp-slider-val {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-1);
+}
+input[type=range] {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 3px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 0;
+  outline: none;
+  cursor: pointer;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 11px; height: 11px;
+  border-radius: 2px;
+  background: var(--thumb-color, var(--cyan));
+  box-shadow: 0 0 6px var(--thumb-color, var(--cyan));
+  cursor: pointer;
+}
+.solar-slider   { --thumb-color: var(--amber); }
+.wind-slider    { --thumb-color: var(--cyan); }
+.offshore-slider{ --thumb-color: var(--purple); }
+.battery-slider { --thumb-color: var(--green); }
+
+/* ── MAIN CONTENT ───────────────────────────────────────────── */
+#main {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px;
+  background: var(--bg-0);
+}
+
+/* ── KPI CARDS ──────────────────────────────────────────────── */
+#kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+@media(max-width:1200px){ #kpi-grid{ grid-template-columns:repeat(4,1fr); } }
+
+.kpi-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-top: 2px solid;
+  padding: 12px 14px;
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius);
+  cursor: default;
+  transition: transform .2s, box-shadow .2s;
+}
+.kpi-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+.kpi-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 48px;
+  background: linear-gradient(to bottom, var(--kpi-dim, rgba(0,212,255,0.06)), transparent);
+  pointer-events: none;
+}
+.kpi-c  { --kpi-clr:var(--cyan);   --kpi-dim:rgba(0,212,255,0.08);   border-top-color:var(--cyan); }
+.kpi-a  { --kpi-clr:var(--amber);  --kpi-dim:rgba(245,166,35,0.08);  border-top-color:var(--amber); }
+.kpi-g  { --kpi-clr:var(--green);  --kpi-dim:rgba(34,197,94,0.08);   border-top-color:var(--green); }
+.kpi-p  { --kpi-clr:var(--purple); --kpi-dim:rgba(168,85,247,0.08);  border-top-color:var(--purple); }
+.kpi-r  { --kpi-clr:var(--red);    --kpi-dim:rgba(239,68,68,0.08);   border-top-color:var(--red); }
+.kpi-b  { --kpi-clr:var(--blue);   --kpi-dim:rgba(59,130,246,0.08);  border-top-color:var(--blue); }
+
+.kpi-icon-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 6px;
+}
+.kpi-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  color: var(--text-3);
+  text-transform: uppercase;
+  line-height: 1;
+}
+.kpi-icon { font-size: 16px; opacity: 0.7; }
+.kpi-value {
+  font-family: var(--font-mono);
+  font-size: clamp(20px,2vw,28px);
+  font-weight: 700;
+  color: var(--kpi-clr);
+  text-shadow: 0 0 20px var(--kpi-clr);
+  line-height: 1;
+  margin-bottom: 2px;
+}
+.kpi-unit  { font-family: var(--font-mono); font-size: 10px; color: var(--text-3); }
+.kpi-delta {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.kpi-spark {
+  width: 100%;
+  height: 24px;
+  margin-top: 6px;
+  position: relative;
+  overflow: hidden;
+}
+.kpi-spark canvas { width: 100% !important; height: 100% !important; }
+
+/* ── MID ROW ────────────────────────────────────────────────── */
+#mid-row {
+  display: grid;
+  grid-template-columns: 1fr 260px;
+  gap: 8px;
+}
+
+/* 3D Scene panel */
+#scene-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  position: relative;
+}
+.scene-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(0,0,0,0.2);
+}
+.scene-title {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--cyan);
+  text-transform: uppercase;
+}
+.scene-controls { display: flex; gap: 6px; }
+.scene-ctrl {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 0.1em;
+  padding: 3px 8px;
+  border: 1px solid var(--border-b);
+  color: var(--text-3);
+  background: var(--cyan-d);
+  cursor: pointer;
+  border-radius: 3px;
+  transition: all .2s;
+}
+.scene-ctrl:hover, .scene-ctrl.active { color: var(--cyan); border-color: var(--cyan); }
+#sceneCanvas {
+  width: 100%;
+  height: 260px;
+  display: block;
+  background: radial-gradient(ellipse at 50% 60%, #001828 0%, #000d18 100%);
+  cursor: crosshair;
+}
+
+/* Energy breakdown panel */
+#breakdown-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.panel-hdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(0,0,0,0.2);
+  flex-shrink: 0;
+}
+.panel-hdr-title {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--text-2);
+  text-transform: uppercase;
+}
+#donut-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px;
+  gap: 6px;
+}
+#donutChart { width: 100%; height: 160px; }
+.breakdown-legend { width: 100%; }
+.bdl-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 6px;
+  border-radius: 3px;
+  transition: background .15s;
+}
+.bdl-item:hover { background: rgba(255,255,255,0.04); }
+.bdl-left { display: flex; align-items: center; gap: 7px; }
+.bdl-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+.bdl-name { font-size: 11px; color: var(--text-2); }
+.bdl-right { display: flex; flex-direction: column; align-items: flex-end; }
+.bdl-val  { font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--text-1); }
+.bdl-pct  { font-family: var(--font-mono); font-size: 9px; color: var(--text-3); }
+
+/* ── LOSSES + GRAPHS ROW ──────────────────────────────────── */
+#bottom-row {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 8px;
+}
+
+/* Loss breakdown table */
+#losses-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.loss-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(0,0,0,0.2);
+}
+.loss-header-title {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--text-2);
+  text-transform: uppercase;
+}
+.loss-body { padding: 6px; }
+.loss-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px 6px;
+  border-radius: 3px;
+  transition: background .15s;
+  gap: 8px;
+}
+.loss-row:hover { background: rgba(255,255,255,0.04); }
+.loss-name { font-size: 11px; color: var(--text-2); flex: 1; }
+.loss-val  {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--red);
+  text-align: right;
+  white-space: nowrap;
+}
+.loss-pct {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--text-3);
+  text-align: right;
+  white-space: nowrap;
+  width: 36px;
+}
+.loss-total-row {
+  border-top: 1px solid var(--border);
+  margin-top: 4px;
+  padding-top: 6px;
+}
+.loss-total-row .loss-name { font-weight: 700; color: var(--text-1); }
+.loss-total-row .loss-val  { color: var(--amber); }
+
+/* Graphs grid */
+#graphs-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.graphs-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  height: 100%;
+}
+.graph-cell {
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  overflow: hidden;
+}
+.graph-cell:nth-child(3n){ border-right: none; }
+.graph-cell:nth-last-child(-n+3){ border-bottom: none; }
+.graph-title {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--text-3);
+  text-transform: uppercase;
+  padding: 6px 10px 2px;
+  border-bottom: 1px solid var(--border);
+}
+.plotly-mini { width: 100%; height: 120px; }
+
+/* ── OPTIMIZE ROW ────────────────────────────────────────────── */
+#optimize-row {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 8px;
+}
+
+/* Progress / Optimize Result */
+#optimize-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.optimize-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(0,0,0,0.2);
+}
+.opt-trophy { font-size: 14px; }
+.optimize-title {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--amber);
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.opt-status {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--green);
+  letter-spacing: 0.1em;
+}
+
+/* Progress bar */
+#progress-wrap {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+}
+.progress-meta {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--amber);
+  letter-spacing: 0.08em;
+  margin-bottom: 6px;
+}
+.progress-track {
+  width: 100%;
+  height: 4px;
+  background: rgba(245,166,35,0.1);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(to right, var(--amber), var(--cyan));
+  border-radius: 2px;
+  transition: width .1s linear;
+  box-shadow: 0 0 8px rgba(245,166,35,0.5);
+}
+.progress-detail {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--text-3);
+  letter-spacing: 0.06em;
+  margin-top: 4px;
+}
+
+/* Optimize result grid */
+#opt-result-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+}
+.opt-param {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  transition: background .2s;
+}
+.opt-param:hover { background: rgba(255,255,255,0.03); }
+.opt-param-label { font-family: var(--font-mono); font-size: 8px; letter-spacing: 0.12em; color: var(--text-3); text-transform: uppercase; }
+.opt-param-value { font-family: var(--font-mono); font-size: 15px; font-weight: 700; color: var(--amber); }
+.opt-param-delta { font-family: var(--font-mono); font-size: 9px; }
+.delta-pos { color: var(--green); }
+.delta-neg { color: var(--red); }
+
+/* Optimize summary row */
+#opt-summary {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 8px 14px;
+}
+.opt-sum-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 12px;
+  border-right: 1px solid var(--border);
+}
+.opt-sum-item:first-child { padding-left: 0; }
+.opt-sum-item:last-child  { border-right: none; }
+.opt-sum-label { font-family: var(--font-mono); font-size: 8px; letter-spacing: 0.12em; color: var(--text-3); text-transform: uppercase; }
+.opt-sum-value { font-family: var(--font-mono); font-size: 13px; font-weight: 700; color: var(--text-1); }
+.opt-sum-delta { font-family: var(--font-mono); font-size: 9px; color: var(--green); }
+
+.apply-btn {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  padding: 8px 16px;
+  border: none;
+  background: var(--green);
+  color: #000;
+  cursor: pointer;
+  border-radius: var(--radius);
+  transition: all .2s;
+  white-space: nowrap;
+}
+.apply-btn:hover { background: #16a34a; transform: scale(1.02); }
+.apply-btn:disabled { background: var(--text-3); color: var(--bg-1); cursor: not-allowed; }
+
+/* World model panel */
+#world-model-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.wm-confidence {
+  text-align: center;
+  padding: 10px;
+  border-top: 1px solid var(--border);
+}
+.wm-conf-value {
+  font-family: var(--font-mono);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--green);
+  text-shadow: 0 0 16px var(--green);
+}
+.wm-conf-label {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 0.14em;
+  color: var(--text-3);
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+.wm-body { flex: 1; padding: 8px; display: flex; flex-direction: column; gap: 4px; }
+.wm-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 4px;
+}
+.wm-metric-name { font-size: 11px; color: var(--text-2); }
+.wm-bar-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 140px;
+}
+.wm-bar-track {
+  flex: 1;
+  height: 4px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 2px;
+  overflow: hidden;
+  position: relative;
+}
+.wm-bar-physics {
+  position: absolute;
+  top: 0; left: 0;
+  height: 100%;
+  background: var(--cyan);
+  border-radius: 2px;
+}
+.wm-bar-wm {
+  position: absolute;
+  top: 0; left: 0;
+  height: 100%;
+  background: var(--amber);
+  border-radius: 2px;
+  opacity: 0.7;
+}
+.wm-error {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--text-3);
+  white-space: nowrap;
+}
+
+/* ── CONSTRAINT BOX ─────────────────────────────────────────── */
+#constraint-bar {
+  display: none;
+  padding: 6px 14px;
+  background: rgba(239,68,68,0.06);
+  border: 1px solid rgba(239,68,68,0.3);
+  border-radius: var(--radius);
+  gap: 8px;
+  flex-wrap: wrap;
+}
+#constraint-bar.visible { display: flex; }
+#constraint-bar.ok {
+  background: rgba(34,197,94,0.05);
+  border-color: rgba(34,197,94,0.25);
+}
+.cbar-item {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.cbar-error   { color: var(--red); }
+.cbar-warning { color: var(--amber); }
+.cbar-ok      { color: var(--green); }
+
+/* ── UTILS ──────────────────────────────────────────────────── */
+.hidden { display: none !important; }
+.tag {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 0.1em;
+  padding: 2px 7px;
+  border-radius: 3px;
+  border: 1px solid;
+  text-transform: uppercase;
+}
+.tag-ok      { color:var(--green);  border-color:rgba(34,197,94,0.3);  background:var(--green-d); }
+.tag-warn    { color:var(--amber);  border-color:rgba(245,166,35,0.3); background:var(--amber-d); }
+.tag-error   { color:var(--red);    border-color:rgba(239,68,68,0.3);  background:var(--red-d); }
+.tag-info    { color:var(--cyan);   border-color:rgba(0,212,255,0.3);  background:var(--cyan-d); }
+
+/* Plotly overrides */
+.plotly-mini .js-plotly-plot { background: transparent !important; }
+</style>
+</head>
+<body>
+
+<!-- ── TOP BAR ──────────────────────────────────────────────── -->
+<div id="topbar">
+  <div class="brand">
+    <div class="brand-name">Renewable Optimization Lab</div>
+    <div class="brand-sub">Advanced Simulation &amp; Optimization System · ZSK Solutions</div>
+  </div>
+  <nav class="nav-tabs">
+    <div class="nav-tab active"><span class="tab-icon">⬡</span> Dashboard</div>
+    <div class="nav-tab"><span class="tab-icon">⚙</span> Simulation</div>
+    <div class="nav-tab"><span class="tab-icon">⚡</span> Optimization</div>
+    <div class="nav-tab"><span class="tab-icon">🧠</span> World Model</div>
+    <div class="nav-tab"><span class="tab-icon">📋</span> Scenarios</div>
+    <div class="nav-tab"><span class="tab-icon">⚙</span> Settings</div>
+  </nav>
+  <div class="topbar-right">
+    <div class="live-indicator"><div class="live-dot"></div> Live Data</div>
+    <button class="action-btn btn-calc" onclick="App.calculate()">▶ Calculate</button>
+    <button class="action-btn btn-opt"  onclick="App.startOptimize()">⚡ Auto Optimize</button>
+  </div>
+</div>
+
+<!-- ── LAYOUT ────────────────────────────────────────────────── -->
+<div id="layout">
+
+  <!-- ── LEFT SIDEBAR ────────────────────────────────────────── -->
+  <div id="sidebar">
+    <div class="sidebar-header">
+      <span class="sidebar-title">System Inputs</span>
+      <div class="sidebar-actions">
+        <button class="sidebar-act-btn" onclick="App.saveScenario()">Save</button>
+        <button class="sidebar-act-btn" onclick="App.loadScenario()">Load</button>
+      </div>
+    </div>
+
+    <!-- SOLAR -->
+    <div class="input-section">
+      <button class="section-toggle" onclick="App.toggleSection('solar')">
+        <div class="section-toggle-left">
+          <div class="section-color-bar solar-color"></div>
+          <span class="section-label solar-label">☀ Solar Panel System</span>
+        </div>
+        <span class="toggle-arrow open" id="arr-solar">▾</span>
+      </button>
+      <div class="section-body" id="body-solar">
+        <div class="inp-slider-row">
+          <div class="inp-slider-header">
+            <span class="inp-label">Panel Area (m²)</span>
+            <span class="inp-slider-val" id="sv-parea">5000</span>
+          </div>
+          <input type="range" class="solar-slider" min="100" max="20000" value="5000" step="100" oninput="App.slider('solar','panelArea',this.value,'sv-parea','')">
+        </div>
+        <div class="inp-row">
+          <span class="inp-label">Panel Efficiency (%)</span>
+          <div class="inp-value-wrap">
+            <input class="inp-field" type="number" id="i-eta" value="22.5" step="0.5" min="5" max="50" oninput="App.fieldChange()">
+            <span class="inp-unit">%</span>
+          </div>
+        </div>
+        <div class="inp-slider-row">
+          <div class="inp-slider-header">
+            <span class="inp-label">Tilt Angle (°)</span>
+            <span class="inp-slider-val" id="sv-tilt">32</span>
+          </div>
+          <input type="range" class="solar-slider" min="0" max="90" value="32" step="1" oninput="App.slider('solar','tilt',this.value,'sv-tilt','°')">
+        </div>
+        <div class="inp-slider-row">
+          <div class="inp-slider-header">
+            <span class="inp-label">Azimuth Angle (°)</span>
+            <span class="inp-slider-val" id="sv-azimuth">180</span>
+          </div>
+          <input type="range" class="solar-slider" min="90" max="270" value="180" step="5" oninput="App.slider('solar','azimuth',this.value,'sv-azimuth','°')">
+        </div>
+        <div class="inp-row">
+          <span class="inp-label">Irradiance (W/m²)</span>
+          <div class="inp-value-wrap">
+            <input class="inp-field" type="number" id="i-irr" value="850" step="10" oninput="App.fieldChange()">
+            <span class="inp-unit">W/m²</span>
+          </div>
+        </div>
+        <div class="inp-row">
+          <span class="inp-label">Cell Temperature (°C)</span>
+          <div class="inp-value-wrap">
+            <input class="inp-field" type="number" id="i-tcell" value="35" step="1" oninput="App.fieldChange()">
+            <span class="inp-unit">°C</span>
+          </div>
+        </div>
+        <div class="inp-slider-row">
+          <div class="inp-slider-header">
+            <span class="inp-label">Dust Loss (%)</span>
+            <span class="inp-slider-val" id="sv-dust">15</span>
+          </div>
+          <input type="range" class="solar-slider" min="0" max="60" value="15" step="1" oninput="App.slider('solar','dustLoss',this.value,'sv-dust','%',0.01)">
+        </div>
+        <div class="inp-slider-row">
+          <div class="inp-slider-header">
+            <span class="inp-label">Shade Loss (%)</span>
+            <span class="inp-slider-val" id="sv-shade">5</span>
+          </div>
+          <input type="range" class="solar-slider" min="0" max="50" value="5" step="1" oninput="App.slider('solar','shadeLoss',this.value,'sv-shade','%',0.01)">
+        </div>
+        <div class="inp-slider-row">
+          <div class="inp-slider-header">
+            <span class="inp-label">Cleaning Interval (days)</span>
+            <span class="inp-slider-val" id="sv-cint">14</span>
+          </div>
+          <input type="range" class="solar-slider" min="1" max="90" value="14" step="1" oninput="App.slider('solar','cleaningInterval',this.value,'sv-cint','d')">
+        </div>
+        <div class="inp-row">
+          <span class="inp-label">Cleaning Cost ($)</span>
+          <div class="inp-value-wrap">
+            <input class="inp-field" type="number" id="i-ccost" value="120" step="10" oninput="App.fieldChange()">
+            <span class="inp-unit">$</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- WIND -->
+    <div class="input-section">
+      <button class="section-toggle" onclick="App.toggleSection('wind')">
+        <div class="section-toggle-left">
+          <div class="section-color-bar wind-color"></div>
+          <span class="section-label wind-label">⟳ Wind Turbine System</span>
+        </div>
+        <span class="toggle-arrow open" id="arr-wind">▾</span>
+      </button>
+      <div class="section-body" id="body-wind">
+        <div class="inp-row">
+          <span class="inp-label">Turbine Count</span>
+          <div class="inp-value-wrap">
+            <input class="inp-field" type="number" id="i-tcount" value="5" step="1" min="1" oninput="App.fieldChange()">
+            <span class="inp-unit">—</span>
+          </div>
+        </div>
+        <div class="inp-row">
+          <span class="inp-label">Rotor Radius (m)</span>
+          <div class="inp-value-wrap">
+            <input class="inp-field" type="number" id="i-rrad" value="60" step="1" oninput="App.fieldChange()">
+            <span class="inp-unit">m</span>
+          </div>
+        </div>
+        <div class="inp-row">
+          <span class="inp-label">Hub Height (m)</span>
+          <div class="inp-value-wrap">
+            <input class="inp-field" type="number" id="i-hhub" value="100" step="5" oninput="App.fieldChange()">
+            <span class="inp-unit">m</span>
+          </div>
+        </div>
+        <div class="inp-slider-row">
+          <div class="inp-slider-header">
+            <span class="inp-label">Wind Speed (m/s)</span>
+            <span class="inp-slider-val" id="sv-wspd">8.5</span>
+          </div>
+          <input type="range" class="wind-slider" min="0" max="25" value="8.5" step="0.1" oninput="App.slider('wind','windSpeed',this.value,'sv-wspd','m/s')">
+        </div>
+        <div class="inp-slider-row">
+          <div class="inp-slider-header">
+            <span class="inp-label">Wind Direction (°)</span>
+            <span class="inp-slider-val" id="sv-wdir">230</span>
+          </div>
+          <input type="range" class="wind-slider" min="0" max="360" value="230" step="5" oninput="App.slider('wind','windDirection',this.value,'sv-wdir','°')">
+        </div>
+        <div class="inp-slider-row">
+          <div class="inp-slider-header">
+            <span class="inp-label">Yaw Angle (°)</span>
+            <span class="inp-slider-val" id="sv-yaw">230</span>
+          </div>
+          <input type="range" class="wind-slider" min="0" max="180" value="10" step="1" oninput="App.slider('wind','yawAngle',this.value,'sv-yaw','°')">
+        </div>
+        <div class="inp-row">
+          <span class="inp-label">Power Coefficient (Cp)</span>
+          <div class="inp-value-wrap">
+            <input class="inp-field" type="number" id="i-cp" value="0.45" step="0.01" min="0.1" max="0.593" oninput="App.fieldChange()">
+            <span class="inp-unit">—</span>
+          </div>
+        </div>
+        <div class="inp-row">
+          <span class="inp-label">Air Density (kg/m³)</span>
+          <div class="inp-value-wrap">
+            <input class="inp-field" type="number" id="i-rho" value="1.225" step="0.001" oninput="App.fieldChange()">
+            <span class="inp-unit">kg/m³</span>
+          </div>
+        </div>
+        <div class="inp-slider-row">
+          <div class="inp-slider-header">
+            <span class="inp-label">Turbine Spacing (×D)</span>
+            <span class="inp-slider-val" id="sv-spacing">7</span>
+          </div>
+          <input type="range" class="wind-slider" min="3" max="12" value="7" step="0.5" oninput="App.slider('wind','turbineSpacing',this.value,'sv-spacing','D')">
+        </div>
+        <div class="inp-row">
+          <span class="inp-label">Wake Loss (%)</span>
+          <div class="inp-value-wrap">
+            <input class="inp-field" type="number" id="i-wake" value="12" step="1" oninput="App.fieldChange()">
+            <span class="inp-unit">%</span>
+          </div>
+        </div>
+        <div class="inp-row">
+          <span class="inp-label">Turbulence Loss (%)</span>
+          <div class="inp-value-wrap">
+            <input class="inp-field" type="number" id="i-turb" value="5" step="1" oninput="App.fieldChange()">
+            <span class="inp-unit">%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- OFFSHORE -->
+    <div class="input-section">
+      <button class="section-toggle" onclick="App.toggleSection('offshore')">
+        <div class="section-toggle-left">
+          <div class="section-color-bar offshore-color"></div>
+          <span class="section-label offshore-label">⚓ Offshore Turbine System</span>
+        </div>
+        <span class="toggle-arrow" id="arr-offshore">▾</span>
+      </button>
+      <div class="section-body collapsed" id="body-offshore">
+        <div class="inp-row">
+          <span class="inp-label">Offshore Turbine Count</span>
+          <div class="inp-value-wrap">
+            <input class="inp-field" type="number" id="i-otcount" value="3" step="1" min="0" oninput="App.fieldChange()">
+            <span class="inp-unit">—</span>
+          </div>
+        </div>
+        <div class="inp-slider-row">
+          <div class="inp-slider-header">
+            <span class="inp-label">Wave Height Hs (m)</span>
+            <span class="inp-slider-val" id="sv-wh">1.8</span>
+          </div>
+          <input type="range" class="offshore-slider" min="0" max="10" value="1.8" step="0.1" oninput="App.slider('offshore','waveHeight',this.value,'sv-wh','m')">
+        </div>
+        <div class="inp-row">
+          <span class="inp-label">Wave Period (s)</span>
+          <div class="inp-value-wrap">
+            <input class="inp-field" type="number" id="i-wper" value="6.5" step="0.5" oninput="App.fieldChange()">
+            <span class="inp-unit">s</span>
+          </div>
+        </div>
+        <div class="inp-slider-row">
+          <div class="inp-slider-header">
+            <span class="inp-label">Current Speed (m/s)</span>
+            <span class="inp-slider-val" id="sv-curr">0.9</span>
+          </div>
+          <input type="range" class="offshore-slider" min="0" max="3" value="0.9" step="0.1" oninput="App.slider('offshore','currentSpeed',this.value,'sv-curr','m/s')">
+        </div>
+        <div class="inp-slider-row">
+          <div class="inp-slider-header">
+            <span class="inp-label">Platform Motion (m)</span>
+            <span class="inp-slider-val" id="sv-plat">0.6</span>
+          </div>
+          <input type="range" class="offshore-slider" min="0" max="5" value="0.6" step="0.1" oninput="App.slider('offshore','platformMotion',this.value,'sv-plat','m')">
+        </div>
+        <div class="inp-row">
+          <span class="inp-label">Corrosion Loss (%)</span>
+          <div class="inp-value-wrap">
+            <input class="inp-field" type="number" id="i-corr" value="8" step="1" oninput="App.fieldChange()">
+            <span class="inp-unit">%</span>
+          </div>
+        </div>
+        <div class="inp-row">
+          <span class="inp-label">Wave Loss (%)</span>
+          <div class="inp-value-wrap">
+            <input class="inp-field" type="number" id="i-wloss" value="10" step="1" oninput="App.fieldChange()">
+            <span class="inp-unit">%</span>
+          </div>
+        </div>
+        <div class="inp-row">
+          <span class="inp-label">Maintenance Cost ($/yr)</span>
+          <div class="inp-value-wrap">
+            <input class="inp-field" type="number" id="i-maint" value="35000" step="1000" oninput="App.fieldChange()">
+            <span class="inp-unit">$/yr</span>
+          </div>
+        </div>
+        <div class="inp-row">
+          <span class="inp-label">Max Offshore Risk Score</span>
+          <div class="inp-value-wrap">
+            <input class="inp-field" type="number" id="i-riskmax" value="100" step="5" oninput="App.fieldChange()">
+            <span class="inp-unit">—</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BATTERY -->
+    <div class="input-section">
+      <button class="section-toggle" onclick="App.toggleSection('battery')">
+        <div class="section-toggle-left">
+          <div class="section-color-bar battery-color"></div>
+          <span class="section-label battery-label">⚡ Battery System</span>
+        </div>
+        <span class="toggle-arrow" id="arr-battery">▾</span>
+      </button>
+      <div class="section-body collapsed" id="body-battery">
+        <div class="inp-row">
+          <span class="inp-label">Battery Capacity (kWh)</span>
+          <div class="inp-value-wrap">
+            <input class="inp-field" type="number" id="i-bcap" value="1500" step="50" oninput="App.fieldChange()">
+            <span class="inp-unit">kWh</span>
+          </div>
+        </div>
+        <div class="inp-slider-row">
+          <div class="inp-slider-header">
+            <span class="inp-label">Current Charge (kWh)</span>
+            <span class="inp-slider-val" id="sv-bcur">750</span>
+          </div>
+          <input type="range" class="battery-slider" min="0" max="1500" value="750" step="50" oninput="App.slider('battery','currentCharge',this.value,'sv-bcur','kWh')">
+        </div>
+        <div class="inp-row">
+          <span class="inp-label">Charge Efficiency (%)</span>
+          <div class="inp-value-wrap">
+            <input class="inp-field" type="number" id="i-etac" value="95" step="1" oninput="App.fieldChange()">
+            <span class="inp-unit">%</span>
+          </div>
+        </div>
+        <div class="inp-row">
+          <span class="inp-label">Discharge Efficiency (%)</span>
+          <div class="inp-value-wrap">
+            <input class="inp-field" type="number" id="i-etad" value="95" step="1" oninput="App.fieldChange()">
+            <span class="inp-unit">%</span>
+          </div>
+        </div>
+        <div class="inp-row">
+          <span class="inp-label">Minimum Reserve (%)</span>
+          <div class="inp-value-wrap">
+            <input class="inp-field" type="number" id="i-minres" value="20" step="5" oninput="App.fieldChange()">
+            <span class="inp-unit">%</span>
+          </div>
+        </div>
+        <div class="inp-row">
+          <span class="inp-label">Daily Demand (kWh)</span>
+          <div class="inp-value-wrap">
+            <input class="inp-field" type="number" id="i-demand" value="4000" step="100" oninput="App.fieldChange()">
+            <span class="inp-unit">kWh</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COST -->
+    <div class="input-section">
+      <button class="section-toggle" onclick="App.toggleSection('cost')">
+        <div class="section-toggle-left">
+          <div class="section-color-bar cost-color"></div>
+          <span class="section-label cost-label">⬡ Cost &amp; Constraints</span>
+        </div>
+        <span class="toggle-arrow" id="arr-cost">▾</span>
+      </button>
+      <div class="section-body collapsed" id="body-cost">
+        <div class="inp-row">
+          <span class="inp-label">Installation Budget ($)</span>
+          <div class="inp-value-wrap">
+            <input class="inp-field" type="number" id="i-budget" value="2500000" step="50000" oninput="App.fieldChange()">
+            <span class="inp-unit">$</span>
+          </div>
+        </div>
+        <div class="inp-row">
+          <span class="inp-label">Available Area (m²)</span>
+          <div class="inp-value-wrap">
+            <input class="inp-field" type="number" id="i-avarea" value="20000" step="500" oninput="App.fieldChange()">
+            <span class="inp-unit">m²</span>
+          </div>
+        </div>
+        <div class="inp-row">
+          <span class="inp-label">Max Offshore Risk Score</span>
+          <div class="inp-value-wrap">
+            <input class="inp-field" type="number" id="i-maxrisk" value="100" step="5" oninput="App.fieldChange()">
+            <span class="inp-unit">—</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div><!-- end sidebar -->
+
+  <!-- ── MAIN CONTENT ──────────────────────────────────────── -->
+  <div id="main">
+
+    <!-- CONSTRAINT BAR -->
+    <div id="constraint-bar"></div>
+
+    <!-- KPI CARDS -->
+    <div id="kpi-grid">
+      <div class="kpi-card kpi-c">
+        <div class="kpi-icon-row">
+          <div>
+            <div class="kpi-label">Total Net Energy</div>
+          </div>
+          <div class="kpi-icon">⚡</div>
+        </div>
+        <div class="kpi-value" id="kpi-total">—</div>
+        <div class="kpi-unit">kWh/day</div>
+        <div class="kpi-delta" id="kpi-total-d"></div>
+      </div>
+      <div class="kpi-card kpi-a">
+        <div class="kpi-icon-row">
+          <div><div class="kpi-label">Solar Energy</div></div>
+          <div class="kpi-icon">☀</div>
+        </div>
+        <div class="kpi-value" id="kpi-solar">—</div>
+        <div class="kpi-unit">kWh/day</div>
+        <div class="kpi-delta" id="kpi-solar-d"></div>
+      </div>
+      <div class="kpi-card kpi-c">
+        <div class="kpi-icon-row">
+          <div><div class="kpi-label">Wind Energy</div></div>
+          <div class="kpi-icon">⟳</div>
+        </div>
+        <div class="kpi-value" id="kpi-wind">—</div>
+        <div class="kpi-unit">kWh/day</div>
+        <div class="kpi-delta" id="kpi-wind-d"></div>
+      </div>
+      <div class="kpi-card kpi-p">
+        <div class="kpi-icon-row">
+          <div><div class="kpi-label">Offshore Energy</div></div>
+          <div class="kpi-icon">⚓</div>
+        </div>
+        <div class="kpi-value" id="kpi-offshore">—</div>
+        <div class="kpi-unit">kWh/day</div>
+        <div class="kpi-delta" id="kpi-offshore-d"></div>
+      </div>
+      <div class="kpi-card kpi-g">
+        <div class="kpi-icon-row">
+          <div><div class="kpi-label">Battery State</div></div>
+          <div class="kpi-icon">🔋</div>
+        </div>
+        <div class="kpi-value" id="kpi-battery">—</div>
+        <div class="kpi-unit">% SOC</div>
+        <div class="kpi-delta" id="kpi-battery-d"></div>
+      </div>
+      <div class="kpi-card kpi-r">
+        <div class="kpi-icon-row">
+          <div><div class="kpi-label">Total Cost</div></div>
+          <div class="kpi-icon">💲</div>
+        </div>
+        <div class="kpi-value" id="kpi-cost">—</div>
+        <div class="kpi-unit">$/day</div>
+        <div class="kpi-delta" id="kpi-cost-d"></div>
+      </div>
+      <div class="kpi-card kpi-c">
+        <div class="kpi-icon-row">
+          <div><div class="kpi-label">Objective Value (Z)</div></div>
+          <div class="kpi-icon">⬡</div>
+        </div>
+        <div class="kpi-value" id="kpi-Z">—</div>
+        <div class="kpi-unit">Higher is better</div>
+        <div class="kpi-delta" id="kpi-Z-d"></div>
+      </div>
+      <div class="kpi-card kpi-g">
+        <div class="kpi-icon-row">
+          <div><div class="kpi-label">Renewable Coverage</div></div>
+          <div class="kpi-icon">♻</div>
+        </div>
+        <div class="kpi-value" id="kpi-cov">—</div>
+        <div class="kpi-unit">% of total demand</div>
+        <div class="kpi-delta" id="kpi-cov-d"></div>
+      </div>
+      <div class="kpi-card kpi-g">
+        <div class="kpi-icon-row">
+          <div><div class="kpi-label">Carbon Saving</div></div>
+          <div class="kpi-icon">🌱</div>
+        </div>
+        <div class="kpi-value" id="kpi-co2">—</div>
+        <div class="kpi-unit">ton CO₂/day</div>
+        <div class="kpi-delta" id="kpi-co2-d"></div>
+      </div>
+      <div class="kpi-card kpi-b">
+        <div class="kpi-icon-row">
+          <div><div class="kpi-label">System Risk Score</div></div>
+          <div class="kpi-icon">🛡</div>
+        </div>
+        <div class="kpi-value" id="kpi-risk">—</div>
+        <div class="kpi-unit">/ 100</div>
+        <div class="kpi-delta" id="kpi-risk-d"></div>
+      </div>
+    </div><!-- end kpi-grid -->
+
+    <!-- MID ROW: Scene + Breakdown -->
+    <div id="mid-row">
+      <div id="scene-panel">
+        <div class="scene-header">
+          <span class="scene-title">3D System Overview</span>
+          <div class="scene-controls">
+            <button class="scene-ctrl active" onclick="App.setView('top')">Top</button>
+            <button class="scene-ctrl" onclick="App.setView('iso')">Iso</button>
+            <button class="scene-ctrl" onclick="App.setView('side')">Side</button>
+          </div>
+        </div>
+        <canvas id="sceneCanvas"></canvas>
+      </div>
+
+      <div id="breakdown-panel">
+        <div class="panel-hdr">
+          <span class="panel-hdr-title">Energy &amp; Loss Breakdown</span>
+          <span class="tag tag-info" id="breakdown-total-tag">—</span>
+        </div>
+        <div id="donut-wrap">
+          <div id="donutChart"></div>
+          <div class="breakdown-legend" id="breakdown-legend"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BOTTOM ROW: Losses + Graphs -->
+    <div id="bottom-row">
+      <div id="losses-panel">
+        <div class="loss-header">
+          <span class="loss-header-title">Losses Breakdown</span>
+          <button style="background:none;border:none;color:var(--text-3);cursor:pointer;font-size:12px;" onclick="this.closest('#losses-panel').style.display='none'">✕</button>
+        </div>
+        <div class="loss-body" id="loss-body"></div>
+      </div>
+
+      <div id="graphs-panel">
+        <div class="graphs-grid">
+          <div class="graph-cell">
+            <div class="graph-title">Solar: Tilt Angle vs Energy</div>
+            <div class="plotly-mini" id="g-tilt"></div>
+          </div>
+          <div class="graph-cell">
+            <div class="graph-title">Wind: Speed vs Power</div>
+            <div class="plotly-mini" id="g-wind"></div>
+          </div>
+          <div class="graph-cell">
+            <div class="graph-title">Spacing vs Wake Loss</div>
+            <div class="plotly-mini" id="g-wake"></div>
+          </div>
+          <div class="graph-cell">
+            <div class="graph-title">Battery Capacity vs Unmet Demand</div>
+            <div class="plotly-mini" id="g-battery"></div>
+          </div>
+          <div class="graph-cell">
+            <div class="graph-title">Wave Height vs Risk Score</div>
+            <div class="plotly-mini" id="g-wave"></div>
+          </div>
+          <div class="graph-cell">
+            <div class="graph-title">Total Cost vs Net Energy</div>
+            <div class="plotly-mini" id="g-cost"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- OPTIMIZE ROW -->
+    <div id="optimize-row">
+      <div id="optimize-panel">
+        <div class="optimize-header">
+          <div class="optimize-title">
+            <span class="opt-trophy">🏆</span>
+            Auto Optimize Result
+            <span class="opt-status" id="opt-status">Ready</span>
+          </div>
+          <button class="apply-btn" id="apply-btn" onclick="App.applyOptimized()" disabled>Apply Optimized Configuration</button>
+        </div>
+
+        <div id="progress-wrap">
+          <div class="progress-meta">
+            <span id="prog-text">Awaiting optimization run…</span>
+            <span id="prog-pct">0%</span>
+          </div>
+          <div class="progress-track"><div class="progress-fill" id="prog-fill"></div></div>
+          <div class="progress-detail" id="prog-detail">Click ⚡ Auto Optimize to start Grid Search (~312,000 combinations)</div>
+        </div>
+
+        <div id="opt-result-grid">
+          <div class="opt-param"><div class="opt-param-label">Tilt Angle</div><div class="opt-param-value" id="op-tilt">—</div><div class="opt-param-delta" id="op-tilt-d">—</div></div>
+          <div class="opt-param"><div class="opt-param-label">Azimuth Angle</div><div class="opt-param-value" id="op-az">—</div><div class="opt-param-delta" id="op-az-d">—</div></div>
+          <div class="opt-param"><div class="opt-param-label">Yaw Angle</div><div class="opt-param-value" id="op-yaw">—</div><div class="opt-param-delta" id="op-yaw-d">—</div></div>
+          <div class="opt-param"><div class="opt-param-label">Turbine Spacing</div><div class="opt-param-value" id="op-sp">—</div><div class="opt-param-delta" id="op-sp-d">—</div></div>
+          <div class="opt-param"><div class="opt-param-label">Battery Capacity</div><div class="opt-param-value" id="op-bc">—</div><div class="opt-param-delta" id="op-bc-d">—</div></div>
+          <div class="opt-param"><div class="opt-param-label">Cleaning Interval</div><div class="opt-param-value" id="op-cl">—</div><div class="opt-param-delta" id="op-cl-d">—</div></div>
+        </div>
+
+        <div id="opt-summary">
+          <div class="opt-sum-item">
+            <div class="opt-sum-label">Expected Net Energy</div>
+            <div class="opt-sum-value" id="os-energy">—</div>
+            <div class="opt-sum-delta" id="os-energy-d"></div>
+          </div>
+          <div class="opt-sum-item">
+            <div class="opt-sum-label">Expected Cost</div>
+            <div class="opt-sum-value" id="os-cost">—</div>
+            <div class="opt-sum-delta" id="os-cost-d"></div>
+          </div>
+          <div class="opt-sum-item">
+            <div class="opt-sum-label">Objective Value (Z)</div>
+            <div class="opt-sum-value" id="os-Z">—</div>
+            <div class="opt-sum-delta" id="os-Z-d"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- WORLD MODEL PANEL -->
+      <div id="world-model-panel">
+        <div class="panel-hdr">
+          <span class="panel-hdr-title">🧠 World Model Prediction</span>
+          <span class="tag tag-info">Surrogate</span>
+        </div>
+        <div class="wm-body" id="wm-body"></div>
+        <div class="wm-confidence">
+          <div class="wm-conf-value" id="wm-conf">—</div>
+          <div class="wm-conf-label">World Model Confidence</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end main -->
+</div><!-- end layout -->
+
+<script src="physicsEngine.js"></script>
+<script src="optimizer.js"></script>
+<script src="mockData.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
