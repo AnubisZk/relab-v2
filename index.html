@@ -83,12 +83,12 @@ body {
 .brand {
   display: flex;
   flex-direction: column;
-  margin-right: 28px;
+  margin-right: 12px;
   flex-shrink: 0;
 }
 .brand-name {
   font-family: var(--font-head);
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 800;
   color: var(--cyan);
   letter-spacing: 0.06em;
@@ -97,32 +97,39 @@ body {
 }
 .brand-sub {
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: 8px;
   color: var(--text-3);
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   margin-top: 2px;
+  display: none;
 }
 
 .nav-tabs {
   display: flex;
   gap: 2px;
   flex: 1;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  min-width: 0;
 }
+.nav-tabs::-webkit-scrollbar { display: none; }
 .nav-tab {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 500;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
   color: var(--text-3);
-  padding: 6px 14px;
+  padding: 6px 10px;
   border-bottom: 2px solid transparent;
   cursor: pointer;
   transition: all .2s;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   text-transform: uppercase;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 .nav-tab:hover { color: var(--text-2); border-bottom-color: rgba(0,212,255,0.3); }
 .nav-tab.active { color: var(--cyan); border-bottom-color: var(--cyan); }
@@ -918,7 +925,7 @@ input[type=range]::-webkit-slider-thumb {
 .plotly-mini .js-plotly-plot { background: transparent !important; }
 
 /* ── TAB SECTIONS ── */
-.tab-section { display:none; padding:12px; overflow-y:auto; flex:1; }
+.tab-section { display:none; padding:12px; overflow-y:auto; flex:1; height:calc(100vh - var(--topbar-h) - 52px); }
 .tab-section.active { display:flex; flex-direction:column; gap:12px; }
 #main { display:flex; flex-direction:column; }
 
