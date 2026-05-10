@@ -1721,9 +1721,15 @@ input[type=range]::-webkit-slider-thumb {
 
   <!-- ═══ WORLD MODEL TAB ═══ -->
   <div class="tab-section" id="tab-worldmodel">
-    <div>
-      <div style="font-family:var(--font-head);font-size:18px;font-weight:800;color:var(--purple);letter-spacing:0.06em">WORLD MODEL — Surrogate Prediction Engine</div>
-      <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-3);margin-top:4px">Physics engine validates all results · World model provides fast prediction &amp; confidence scoring</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+      <div>
+        <div style="font-family:var(--font-head);font-size:18px;font-weight:800;color:var(--purple);letter-spacing:0.06em">WORLD MODEL — Surrogate Prediction Engine</div>
+        <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-3);margin-top:4px">Physics engine validates all results · World model provides fast prediction &amp; confidence scoring</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <div style="font-family:var(--font-mono);font-size:11px;color:var(--text-3)">Confidence: <span id="wm-conf-tab" style="color:var(--green);font-weight:700">—</span></div>
+        <button class="action-btn" style="color:var(--purple);border-color:var(--purple);background:rgba(168,85,247,0.1)" onclick="App.trainWorldModel()">🧠 Retrain Model</button>
+      </div>
     </div>
     <div style="background:var(--bg-card);border:1px solid rgba(168,85,247,0.3);border-radius:var(--radius);padding:16px">
       <div style="font-family:var(--font-mono);font-size:10px;font-weight:700;color:var(--purple);letter-spacing:0.14em;margin-bottom:12px">🧠 ARCHITECTURE STATUS</div>
@@ -2803,7 +2809,59 @@ const App = (() => {
     };
   }
 
-  /* ── CALCULATE ──────────────────────────────────────────── */
+  /* ── API CONFIG ─────────────────────────────────────────── */
+  const API_BASE = 'https://web-production-0c418.up.railway.app';
+
+  async function apiCalculate(params) {
+    try {
+      const res = await fetch(`${API_BASE}/api/calculate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(params),
+      });
+      return await res.json();
+    } catch (e) { return null; }
+  }
+
+  async function apiOptimize(params, method='slsqp') {
+    try {
+      const res = await fetch(`${API_BASE}/api/optimize`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...params, method }),
+      });
+      return await res.json();
+    } catch (e) { return null; }
+  }
+
+  async function apiWMCompare(params) {
+    try {
+      const res = await fetch(`${API_BASE}/api/world-model/compare`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(params),
+      });
+      return await res.json();
+    } catch (e) { return null; }
+  }
+
+  async function apiModelStatus() {
+    try {
+      const res = await fetch(`${API_BASE}/api/model-status`);
+      return await res.json();
+    } catch (e) { return null; }
+  }
+
+  async function apiTrainWM(nSamples=3000) {
+    try {
+      const res = await fetch(`${API_BASE}/api/world-model/train`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ n_samples: nSamples }),
+      });
+      return await res.json();
+    } catch (e) { return null; }
+  }
   function calculate() {
     _prevResult = _result;
     _params     = readParams();
@@ -3380,8 +3438,7 @@ const App = (() => {
     if (name === 'optimization') refreshOptimizationTab();
     if (name === 'scenarios')    renderScenarioGrid();
     if (name === 'worldmodel')   refreshWorldModelTab();
-    if (name === 'dashboard')    { calculate(); }
-  }
+    if (name === 'dashboard')    { calculate(); }  }
 
   /* ── SIMULATION TAB ─────────────────────────────────────── */
   function initSimulationTab() {
@@ -3564,35 +3621,81 @@ const App = (() => {
   }
 
   /* ── WORLD MODEL TAB ────────────────────────────────────── */
-  function refreshWorldModelTab() {
-    if (!_result) return;
-    const wm  = MockData.mockWorldModelPrediction(_result);
+  async function refreshWorldModelTab() {
     const body = document.getElementById('wm-body-tab');
-    if (!body) return;
+    const confEl = document.getElementById('wm-conf');
+
+    // Get model status from API
+    const status = await apiModelStatus();
+    if (status) {
+      const conf = status.metrics?.confidence || 0;
+      if (confEl) {
+        confEl.textContent = conf.toFixed(1) + '%';
+        confEl.style.color = conf > 75 ? 'var(--green)' : conf > 50 ? 'var(--amber)' : 'var(--red)';
+      }
+      // Update architecture status cards
+      const wmCard = document.querySelector('#tab-worldmodel .wm-body');
+    }
+
+    if (!_result || !body) return;
+
+    // Get real WM comparison from API
+    const params = readParams();
+    const apiRes = await apiWMCompare(params);
+
+    let wm, surprise;
+    if (apiRes && apiRes.world_model) {
+      wm       = apiRes.world_model;
+      surprise = apiRes.surprise;
+    } else {
+      // Fallback to mock
+      const mockWM = MockData.mockWorldModelPrediction(_result);
+      wm = {
+        E_solar_net:   mockWM.predicted_solar,
+        E_wind_net:    mockWM.predicted_wind,
+        E_offshore_net:mockWM.predicted_offshore,
+        battery_final: mockWM.predicted_battery,
+        Z:             mockWM.predicted_Z,
+      };
+    }
+
     const items = [
-      { name:'Solar Energy (kWh/day)', phys:_result.sRes.E_net,  pred:wm.predicted_solar },
-      { name:'Wind Energy (kWh/day)',  phys:_result.wRes.E_net,  pred:wm.predicted_wind },
-      { name:'Offshore Energy (kWh)',  phys:_result.oRes.E_net,  pred:wm.predicted_offshore },
-      { name:'Battery Final (kWh)',    phys:_result.bRes.B_next, pred:wm.predicted_battery },
-      { name:'Objective Value (Z)',    phys:_result.zRes.Z,      pred:wm.predicted_Z },
+      { name:'Solar Energy (kWh/day)',  phys:_result.sRes.E_net,  pred:wm.E_solar_net    || 0 },
+      { name:'Wind Energy (kWh/day)',   phys:_result.wRes.E_net,  pred:wm.E_wind_net     || 0 },
+      { name:'Offshore Energy (kWh)',   phys:_result.oRes.E_net,  pred:wm.E_offshore_net || 0 },
+      { name:'Battery Final (kWh)',     phys:_result.bRes.B_next, pred:wm.battery_final  || 0 },
+      { name:'Objective Value (Z)',     phys:_result.zRes.Z,      pred:wm.Z              || 0 },
     ];
-    const maxVal = Math.max(...items.flatMap(i=>[i.phys,i.pred]),1);
+    const maxVal = Math.max(...items.flatMap(i=>[Math.abs(i.phys),Math.abs(i.pred)]),1);
     body.innerHTML = items.map(item=>{
-      const err=Math.abs(item.phys-item.pred);
-      const errPct=item.phys>0?(err/item.phys*100).toFixed(1):'0.0';
-      const physW=(item.phys/maxVal*100).toFixed(1);
-      const predW=(item.pred/maxVal*100).toFixed(1);
-      return `<div class="wm-row">
-        <span class="wm-metric-name">${item.name}</span>
-        <div class="wm-bar-wrap">
-          <div class="wm-bar-track">
-            <div class="wm-bar-physics" style="width:${physW}%"></div>
-            <div class="wm-bar-wm" style="width:${predW}%;opacity:0.6"></div>
+      const err    = Math.abs(item.phys - item.pred);
+      const errPct = item.phys > 0 ? (err/item.phys*100).toFixed(1) : '0.0';
+      const physW  = (Math.abs(item.phys)/maxVal*100).toFixed(1);
+      const predW  = (Math.abs(item.pred)/maxVal*100).toFixed(1);
+      return `<div class="wm-row" style="display:grid;grid-template-columns:1fr auto;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">
+        <span style="font-size:11px;color:var(--text-2)">${item.name}</span>
+        <div style="display:flex;align-items:center;gap:8px;width:200px">
+          <div style="flex:1;height:4px;background:rgba(255,255,255,0.06);border-radius:2px;position:relative;overflow:hidden">
+            <div style="position:absolute;top:0;left:0;height:100%;width:${physW}%;background:var(--cyan);border-radius:2px"></div>
+            <div style="position:absolute;top:0;left:0;height:100%;width:${predW}%;background:var(--amber);border-radius:2px;opacity:0.7"></div>
           </div>
-          <span class="wm-error" style="color:${parseFloat(errPct)>5?'var(--amber)':'var(--text-3)'}">${errPct}%</span>
+          <span style="font-family:var(--font-mono);font-size:9px;color:${parseFloat(errPct)>10?'var(--amber)':'var(--text-3)'}">±${errPct}%</span>
         </div>
       </div>`;
     }).join('');
+
+    // Anomaly warning
+    if (surprise?.anomaly_detected) {
+      body.innerHTML += `<div style="margin-top:10px;padding:10px;border:1px solid var(--red);background:var(--red-d);border-radius:var(--radius);font-family:var(--font-mono);font-size:10px;color:var(--red)">
+        ⚠ ANOMALY DETECTED — ${surprise.message} (surprise score: ${surprise.mean_surprise?.toFixed(3)})
+      </div>`;
+    }
+
+    // Update confidence in dashboard WM panel too
+    const dashConf = document.getElementById('wm-conf');
+    if (dashConf && status?.metrics?.confidence) {
+      dashConf.textContent = status.metrics.confidence.toFixed(1) + '%';
+    }
   }
 
   /* ── SCENARIOS ──────────────────────────────────────────── */
@@ -3786,6 +3889,21 @@ const App = (() => {
     addToCompare,
     clearComparison,
     exportAllScenarios,
+    trainWorldModel: async () => {
+      const btn = document.querySelector('[onclick="App.trainWorldModel()"]');
+      if (btn) { btn.textContent = '⏳ Training…'; btn.disabled = true; }
+      await apiTrainWM(3000);
+      const poll = setInterval(async () => {
+        const st = await apiModelStatus();
+        if (st?.metrics?.n_samples) {
+          clearInterval(poll);
+          if (btn) { btn.textContent = '🧠 Retrain Model'; btn.disabled = false; }
+          const confEl = document.getElementById('wm-conf-tab');
+          if (confEl) confEl.textContent = (st.metrics.confidence||0).toFixed(1) + '%';
+          refreshWorldModelTab();
+        }
+      }, 3000);
+    },
   };
 
 })();
