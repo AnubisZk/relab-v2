@@ -3377,12 +3377,10 @@ const App = (() => {
           source: 'railway-slsqp',
         };
 
-        switchTab('dashboard');
-        setTimeout(() => {
-          renderOptimizeResult(_optResult, Z, 'RAILWAY SLSQP');
-          const ab = document.getElementById('apply-btn');
-          if (ab) ab.disabled = false;
-        }, 100);
+        renderOptimizeResult(_optResult, Z, 'RAILWAY SLSQP');
+        const ab = document.getElementById('apply-btn');
+        if (ab) ab.disabled = false;
+        refreshOptimizationTab();
         return;
       }
     } catch (err) {
@@ -3411,15 +3409,13 @@ const App = (() => {
           return;
         }
         _optResult = { combo, result, source: 'js-gridsearch' };
-        // Switch to dashboard first so DOM elements are visible
-        switchTab('dashboard');
-        // Small delay to let DOM update
-        setTimeout(() => {
-          renderOptimizeResult(_optResult, Z, 'JS GRID SEARCH');
-          if (statusEl) { statusEl.textContent = '✓ Optimal Found (JS)'; statusEl.style.color = 'var(--green)'; }
-          const applyBtn = document.getElementById('apply-btn');
-          if (applyBtn) applyBtn.disabled = false;
-        }, 100);
+        // Render on dashboard
+        renderOptimizeResult(_optResult, Z, 'JS GRID SEARCH');
+        if (statusEl) { statusEl.textContent = '✓ Optimal Found (JS)'; statusEl.style.color = 'var(--green)'; }
+        const applyBtn = document.getElementById('apply-btn');
+        if (applyBtn) applyBtn.disabled = false;
+        // Also refresh optimization tab if it's open
+        refreshOptimizationTab();
       },
     });
   }
@@ -3645,82 +3641,111 @@ const App = (() => {
 
   /* ── OPTIMIZATION TAB ───────────────────────────────────── */
   function refreshOptimizationTab() {
-    const best = Optimizer.getBest();
-    const msg  = document.getElementById('opt-tab-msg');
-    if (!best || !best.result) {
+    const msg = document.getElementById('opt-tab-msg');
+
+    // Resolve best result from either Railway (_optResult) or JS Grid Search
+    let best = null;
+    const jsBest = Optimizer.getBest();
+
+    if (_optResult && _optResult.source === 'railway-slsqp' && _optResult.result) {
+      const Z = _optResult.result.zRes?.Z || 0;
+      best = {
+        combo:  _optResult.combo,
+        result: _optResult.result,
+        leaderboard: [{ combo: _optResult.combo, Z, zRes: _optResult.result.zRes || {} }],
+      };
+    } else if (jsBest && jsBest.result) {
+      best = jsBest;
+    }
+
+    if (!best) {
       if (msg) msg.textContent = 'Run Auto Optimize from Dashboard to populate results here.';
       return;
     }
-    if (msg) msg.innerHTML = `<span style="color:var(--green);font-family:var(--font-mono);font-weight:700">✓ Optimization complete</span> &nbsp;·&nbsp; <span style="color:var(--text-2)">${best.leaderboard.length} feasible solutions found</span>`;
+
+    const source = _optResult?.source === 'railway-slsqp' ? 'RAILWAY SLSQP' : 'JS GRID SEARCH';
+    if (msg) msg.innerHTML =
+      '<span style="color:var(--green);font-family:var(--font-mono);font-weight:700">\u2713 Optimization complete</span>'
+      + ' &nbsp;&middot;&nbsp; <span style="color:var(--text-2)">' + source + ' &middot; '
+      + best.leaderboard.length + ' solution(s) found</span>';
 
     // Leaderboard
     const tbody = document.getElementById('opt-leaderboard-body');
     const ranks = ['rank-1','rank-2','rank-3','rank-n','rank-n'];
-    tbody.innerHTML = best.leaderboard.map((lb,i) => `
-      <tr>
-        <td><span class="rank-badge ${ranks[i]||'rank-n'}">${i+1}</span></td>
-        <td>${lb.combo.tilt}°</td>
-        <td>${lb.combo.azimuth}°</td>
-        <td>${lb.combo.yaw}°</td>
-        <td>${lb.combo.spacing}D</td>
-        <td>${lb.combo.bcap} kWh</td>
-        <td>${lb.combo.cleaning}d</td>
-        <td style="color:var(--amber)">${Math.round(lb.Z).toLocaleString()}</td>
-        <td style="color:var(--green)">${Math.round(lb.zRes.totalEnergy).toLocaleString()} kWh</td>
-      </tr>`).join('');
+    if (tbody) tbody.innerHTML = best.leaderboard.map(function(lb,i) {
+      const c = lb.combo || {};
+      return '<tr>'
+        + '<td><span class="rank-badge ' + (ranks[i]||'rank-n') + '">' + (i+1) + '</span></td>'
+        + '<td>' + (c.tilt||0).toFixed(1) + '\u00b0</td>'
+        + '<td>' + (c.azimuth||0).toFixed(1) + '\u00b0</td>'
+        + '<td>' + (c.yaw||0).toFixed(1) + '\u00b0</td>'
+        + '<td>' + (c.spacing||0).toFixed(1) + 'D</td>'
+        + '<td>' + Math.round(c.bcap||c.battery_capacity||0) + ' kWh</td>'
+        + '<td>' + (c.cleaning||c.cleaning_interval||0) + 'd</td>'
+        + '<td style="color:var(--amber)">' + Math.round(lb.Z||0).toLocaleString() + '</td>'
+        + '<td style="color:var(--green)">' + Math.round((lb.zRes||{}).totalEnergy||0).toLocaleString() + ' kWh</td>'
+        + '</tr>';
+    }).join('');
 
-    // Best detail
-    const bc = best.combo, br = best.result;
-    document.getElementById('opt-best-detail').innerHTML = [
-      { k:'Tilt Angle',      v:bc.tilt+'°' },
-      { k:'Azimuth',         v:bc.azimuth+'°' },
-      { k:'Yaw Error',       v:bc.yaw+'°' },
-      { k:'Turbine Spacing', v:bc.spacing+'D' },
-      { k:'Battery Capacity',v:bc.bcap+' kWh' },
-      { k:'Cleaning Interval',v:bc.cleaning+' days' },
-      { k:'Net Energy',      v:Math.round(br.zRes.totalEnergy).toLocaleString()+' kWh/day' },
-      { k:'Objective Z',     v:Math.round(br.zRes.Z).toLocaleString() },
-      { k:'Coverage',        v:br.zRes.coverage.toFixed(1)+'%' },
-      { k:'CO₂ Saved',       v:Math.round(br.zRes.co2saved)+' kg/day' },
-    ].map(item=>`
-      <div style="padding:10px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg-2)">
-        <div style="font-family:var(--font-mono);font-size:8px;color:var(--text-3);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:4px">${item.k}</div>
-        <div style="font-family:var(--font-mono);font-size:16px;font-weight:700;color:var(--amber)">${item.v}</div>
-      </div>`).join('');
+    // Best detail cards
+    const bc = best.combo || {};
+    const br = best.result || {};
+    const zr = br.zRes || {};
+    const detEl = document.getElementById('opt-best-detail');
+    if (detEl) detEl.innerHTML = [
+      { k:'Tilt Angle',       v:(bc.tilt||0).toFixed(1)+'\u00b0' },
+      { k:'Azimuth',          v:(bc.azimuth||0).toFixed(1)+'\u00b0' },
+      { k:'Yaw Error',        v:(bc.yaw||0).toFixed(1)+'\u00b0' },
+      { k:'Turbine Spacing',  v:(bc.spacing||0).toFixed(1)+'D' },
+      { k:'Battery Capacity', v:Math.round(bc.bcap||bc.battery_capacity||0).toLocaleString()+' kWh' },
+      { k:'Cleaning Interval',v:(bc.cleaning||bc.cleaning_interval||0)+' days' },
+      { k:'Net Energy',       v:Math.round(zr.totalEnergy||0).toLocaleString()+' kWh/day' },
+      { k:'Objective Z',      v:Math.round(zr.Z||0).toLocaleString() },
+      { k:'Coverage',         v:(zr.coverage||0).toFixed(1)+'%' },
+      { k:'CO\u2082 Saved',  v:Math.round(zr.co2saved||0)+' kg/day' },
+    ].map(function(item){
+      return '<div style="padding:10px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg-2)">'
+        + '<div style="font-family:var(--font-mono);font-size:8px;color:var(--text-3);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:4px">' + item.k + '</div>'
+        + '<div style="font-family:var(--font-mono);font-size:16px;font-weight:700;color:var(--amber)">' + item.v + '</div>'
+        + '</div>';
+    }).join('');
 
-    // Radar chart — current vs best
+    // Radar + Z distribution charts
     if (_result && best.result) {
-      const cats = ['Solar E','Wind E','Coverage','Z Score','PR'];
-      const maxE = Math.max(_result.zRes.totalEnergy, best.result.zRes.totalEnergy, 1);
-      const norm = v => Math.min(100, Math.round(v/maxE*100));
-      Plotly.react('opt-radar', [{
-        type:'scatterpolar', r:[
-          norm(_result.sRes.E_net), norm(_result.wRes.E_net),
-          _result.zRes.coverage, Math.max(0,Math.min(100,_result.zRes.Z/maxE*100)),
-          (_result.sRes.PR||0)*100],
-        theta:cats, fill:'toself', name:'Current',
-        line:{color:'rgba(0,212,255,0.8)'}, fillcolor:'rgba(0,212,255,0.1)',
-      },{
-        type:'scatterpolar', r:[
-          norm(best.result.sRes.E_net), norm(best.result.wRes.E_net),
-          best.result.zRes.coverage, Math.max(0,Math.min(100,best.result.zRes.Z/maxE*100)),
-          (best.result.sRes.PR||0)*100],
-        theta:cats, fill:'toself', name:'Optimized',
-        line:{color:'rgba(245,166,35,0.8)'}, fillcolor:'rgba(245,166,35,0.1)',
-      }], {
-        polar:{bgcolor:'rgba(0,0,0,0)',radialaxis:{visible:true,range:[0,100],gridcolor:'rgba(255,255,255,0.08)',tickfont:{size:8,color:'rgba(140,170,210,0.5)'}},angularaxis:{gridcolor:'rgba(255,255,255,0.08)'}},
+      const curZ  = _result.zRes || {};
+      const optZ  = (best.result.zRes || {});
+      const curS  = _result.sRes || {};
+      const curW  = _result.wRes || {};
+      const optS  = best.result.sRes || {};
+      const optW  = best.result.wRes || {};
+      const cats  = ['Solar E','Wind E','Coverage','Z Score','PR'];
+      const maxE  = Math.max(curZ.totalEnergy||1, optZ.totalEnergy||1, 1);
+      const norm  = function(v){ return Math.min(100, Math.round(v/maxE*100)); };
+
+      Plotly.react('opt-radar', [
+        { type:'scatterpolar', fill:'toself', name:'Current',
+          r:[norm(curS.E_net||0), norm(curW.E_net||0), curZ.coverage||0,
+             Math.max(0,Math.min(100,(curZ.Z||0)/maxE*100)), (curS.PR||0)*100],
+          theta:cats, line:{color:'rgba(0,212,255,0.8)'}, fillcolor:'rgba(0,212,255,0.1)' },
+        { type:'scatterpolar', fill:'toself', name:'Optimized',
+          r:[norm(optS.E_net||0), norm(optW.E_net||0), optZ.coverage||0,
+             Math.max(0,Math.min(100,(optZ.Z||0)/maxE*100)), (optS.PR||0)*100],
+          theta:cats, line:{color:'rgba(245,166,35,0.8)'}, fillcolor:'rgba(245,166,35,0.1)' },
+      ], {
+        polar:{bgcolor:'rgba(0,0,0,0)',
+          radialaxis:{visible:true,range:[0,100],gridcolor:'rgba(255,255,255,0.08)',tickfont:{size:8,color:'rgba(140,170,210,0.5)'}},
+          angularaxis:{gridcolor:'rgba(255,255,255,0.08)'}},
         paper_bgcolor:'rgba(0,0,0,0)', plot_bgcolor:'rgba(0,0,0,0)',
         font:{family:'JetBrains Mono',color:'rgba(140,170,210,0.7)',size:10},
         legend:{font:{size:10},bgcolor:'rgba(0,0,0,0)'},
         margin:{l:40,r:40,t:40,b:40},
       },{displayModeBar:false,responsive:true});
 
-      // Z distribution
-      const zScores = best.leaderboard.map(l=>l.Z);
+      const zScores = best.leaderboard.map(function(l){return l.Z||0;});
       Plotly.react('opt-zdist',[{
-        x:zScores, type:'bar',
-        marker:{color:zScores.map((_,i)=>i===0?'rgba(245,166,35,0.9)':'rgba(0,212,255,0.5)')},
-        text:zScores.map(z=>Math.round(z).toLocaleString()),
+        x:zScores.map(function(_,i){return i+1;}), y:zScores, type:'bar',
+        marker:{color:zScores.map(function(_,i){return i===0?'rgba(245,166,35,0.9)':'rgba(0,212,255,0.5)';})},
+        text:zScores.map(function(z){return Math.round(z).toLocaleString();}),
         textposition:'outside',
       }],{
         paper_bgcolor:'rgba(0,0,0,0)', plot_bgcolor:'rgba(0,0,0,0)',
