@@ -1767,7 +1767,7 @@ input[type=range]::-webkit-slider-thumb {
         <div style="padding:12px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg-2)">
           <div style="font-family:var(--font-mono);font-size:9px;color:var(--text-3);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:6px">Real ML Model</div>
           <div style="font-family:var(--font-mono);font-size:14px;font-weight:700;color:var(--green)">✓ ACTIVE</div>
-          <div style="font-size:11px;color:var(--text-2);margin-top:4px">scikit-learn MLPRegressor · <span id="wm-conf-tab">—</span> confidence</div>
+          <div style="font-size:11px;color:var(--text-2);margin-top:4px">scikit-learn MLPRegressor · <span id="wm-conf-arch">—</span> confidence</div>
         </div>
       </div>
     </div>
@@ -2878,6 +2878,21 @@ const App = (() => {
       return await res.json();
     } catch (e) { return null; }
   }
+
+  /* ── CONFIDENCE DISPLAY ─────────────────────────────────── */
+  async function updateConfidenceDisplay() {
+    const status = await apiModelStatus();
+    if (!status?.metrics?.confidence) return;
+    const conf = status.metrics.confidence;
+    const color = conf > 85 ? 'var(--green)' : conf > 70 ? 'var(--amber)' : 'var(--red)';
+    const el1 = document.getElementById('wm-conf');
+    if (el1) { el1.textContent = conf.toFixed(1) + '%'; el1.style.color = color; }
+    const el2 = document.getElementById('wm-conf-tab');
+    if (el2) { el2.textContent = conf.toFixed(1) + '%'; el2.style.color = color; }
+    const el3 = document.getElementById('wm-conf-arch');
+    if (el3) { el3.textContent = conf.toFixed(1) + '%'; el3.style.color = color; }
+  }
+
   function calculate() {
     _prevResult = _result;
     _params     = readParams();
@@ -2890,6 +2905,8 @@ const App = (() => {
     renderWorldModel(_result);
     renderCharts(_params);
     drawScene();
+    // Fetch real confidence from Railway
+    updateConfidenceDisplay();
   }
 
   /* ── KPI RENDERING ──────────────────────────────────────── */
