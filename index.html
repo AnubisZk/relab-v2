@@ -2825,7 +2825,8 @@ const App = (() => {
   }
 
   /* ── API CONFIG ─────────────────────────────────────────── */
-  const API_BASE = 'https://web-production-0c418.up.railway.app';
+  // Use Netlify proxy (/api/*) to avoid CORS — Netlify forwards to Railway
+  const API_BASE = '';
 
   async function apiCalculate(params) {
     try {

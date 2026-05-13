@@ -13,6 +13,13 @@
   [headers.values]
     Cache-Control = "public, max-age=86400"
 
+# Proxy: /api/* → Railway (bypasses CORS)
+[[redirects]]
+  from = "/api/*"
+  to = "https://web-production-0c418.up.railway.app/api/:splat"
+  status = 200
+  force = true
+
 [[redirects]]
   from = "/*"
   to = "/index.html"
