@@ -3377,8 +3377,12 @@ const App = (() => {
           source: 'railway-slsqp',
         };
 
-        renderOptimizeResult(_optResult, Z, 'RAILWAY SLSQP');
-        if (applyBtn) applyBtn.disabled = false;
+        switchTab('dashboard');
+        setTimeout(() => {
+          renderOptimizeResult(_optResult, Z, 'RAILWAY SLSQP');
+          const ab = document.getElementById('apply-btn');
+          if (ab) ab.disabled = false;
+        }, 100);
         return;
       }
     } catch (err) {
@@ -3400,13 +3404,22 @@ const App = (() => {
         if (progDetail) progDetail.textContent = `${count.toLocaleString()} / ${total.toLocaleString()} evaluated`;
       },
       onComplete: ({ found, result, combo, Z, totalEvaluated }) => {
-        if (statusEl) { statusEl.textContent = found ? '✓ Optimal Found (JS)' : '⚠ No Feasible Solution'; statusEl.style.color = found ? 'var(--green)' : 'var(--red)'; }
         if (progText) progText.textContent = `JS Grid Search complete — ${totalEvaluated.toLocaleString()} evaluated`;
         if (progFill) progFill.style.width = '100%';
-        if (!found || !result || !combo) return;
+        if (!found || !result || !combo) {
+          if (statusEl) { statusEl.textContent = '⚠ No Feasible Solution'; statusEl.style.color = 'var(--red)'; }
+          return;
+        }
         _optResult = { combo, result, source: 'js-gridsearch' };
-        renderOptimizeResult(_optResult, Z, 'JS GRID SEARCH');
-        if (applyBtn) applyBtn.disabled = false;
+        // Switch to dashboard first so DOM elements are visible
+        switchTab('dashboard');
+        // Small delay to let DOM update
+        setTimeout(() => {
+          renderOptimizeResult(_optResult, Z, 'JS GRID SEARCH');
+          if (statusEl) { statusEl.textContent = '✓ Optimal Found (JS)'; statusEl.style.color = 'var(--green)'; }
+          const applyBtn = document.getElementById('apply-btn');
+          if (applyBtn) applyBtn.disabled = false;
+        }, 100);
       },
     });
   }
